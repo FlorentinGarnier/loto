@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Joueur #{{ player.id }}{% endblock %}
+
+{% block body %}
+<div class="bg-white rounded shadow p-6">
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-bold">Joueur</h1>
+    <div>
+      <a href="{{ path('admin_player_edit', {id: player.id}) }}" class="px-3 py-1 bg-blue-600 text-white rounded">Éditer</a>
+      <a href="{{ path('admin_player_index') }}" class="px-3 py-1 bg-gray-200 rounded">Retour</a>
+    </div>
+  </div>
+
+  <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <dt class="font-semibold">Nom</dt>
+      <dd>{{ player.name }}</dd>
+    </div>
+    <div>
+      <dt class="font-semibold">Email</dt>
+      <dd>{{ player.email ?: '—' }}</dd>
+    </div>
+    <div>
+      <dt class="font-semibold">Téléphone</dt>
+      <dd>{{ player.phone ?: '—' }}</dd>
+    </div>
+    <div class="md:col-span-2">
+      <dt class="font-semibold">Remarques</dt>
+      <dd class="whitespace-pre-line">{{ player.notes ?: '—' }}</dd>
+    </div>
+  </dl>
+
+  <div class="mt-6">
+    <form method="post" action="{{ path('admin_player_delete', {id: player.id}) }}" onsubmit="return confirm('Supprimer ce joueur ?');">
+      <input type="hidden" name="_token" value="{{ csrf_token('delete_player_' ~ player.id) }}" />
+      <button class="px-3 py-1 bg-red-600 text-white rounded">Supprimer</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

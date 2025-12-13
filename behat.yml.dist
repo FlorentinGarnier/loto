@@ -1,0 +1,14 @@
+default:
+  suites:
+    default:
+      paths:
+        - '%paths.base%/features'
+      contexts:
+        - App\\Tests\\Behat\\FeatureContext
+  extensions:
+    FriendsOfBehat\\SymfonyExtension: ~
+    Behat\\MinkExtension:
+      default_session: symfony
+      sessions:
+        symfony:
+          symfony: ~

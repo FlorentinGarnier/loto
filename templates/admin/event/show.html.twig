@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Événement {{ event.name }}{% endblock %}
+
+{% block body %}
+<div class="bg-white rounded shadow p-6">
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-bold">{{ event.name }}</h1>
+    <a href="{{ path('admin_event_index') }}" class="px-3 py-2 bg-gray-200 rounded">Retour</a>
+  </div>
+
+  <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <dt class="text-sm text-gray-500">Nom</dt>
+      <dd class="text-lg">{{ event.name }}</dd>
+    </div>
+    <div>
+      <dt class="text-sm text-gray-500">Date</dt>
+      <dd class="text-lg">{{ event.date|date('Y-m-d') }}</dd>
+    </div>
+  </dl>
+
+  <div class="mt-6">
+    <a class="px-3 py-2 bg-purple-600 text-white rounded" href="{{ path('admin_game_index', {id: event.id}) }}">Gérer les parties</a>
+  </div>
+</div>
+{% endblock %}

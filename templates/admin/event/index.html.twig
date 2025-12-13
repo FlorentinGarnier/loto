@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Événements{% endblock %}
+
+{% block body %}
+<div class="bg-white rounded shadow p-6">
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-bold">Événements</h1>
+    <a href="{{ path('admin_event_new') }}" class="px-3 py-2 bg-blue-600 text-white rounded">Nouvel événement</a>
+  </div>
+
+  {% if events is empty %}
+    <p class="text-gray-600">Aucun événement pour le moment.</p>
+  {% else %}
+    <table class="min-w-full border">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left border">Nom</th>
+          <th class="p-2 text-left border">Date</th>
+          <th class="p-2 text-left border">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in events %}
+          <tr class="border-b">
+            <td class="p-2 border">{{ e.name }}</td>
+            <td class="p-2 border">{{ e.date|date('Y-m-d') }}</td>
+            <td class="p-2 border space-x-2">
+              <a class="px-2 py-1 text-sm bg-gray-200 rounded" href="{{ path('admin_event_show', {id: e.id}) }}">Voir</a>
+              <a class="px-2 py-1 text-sm bg-amber-500 text-white rounded" href="{{ path('admin_event_edit', {id: e.id}) }}">Éditer</a>
+              <form class="inline" method="post" action="{{ path('admin_event_delete', {id: e.id}) }}" onsubmit="return confirm('Supprimer cet événement ?');">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete_event_' ~ e.id) }}" />
+                <button class="px-2 py-1 text-sm bg-red-600 text-white rounded">Supprimer</button>
+              </form>
+              <a class="px-2 py-1 text-sm bg-purple-600 text-white rounded" href="{{ path('admin_game_index', {id: e.id}) }}">Parties</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</div>
+{% endblock %}

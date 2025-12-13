@@ -1,0 +1,13 @@
+{% form_theme form 'bootstrap_5_layout.html.twig' %}
+{{ form_start(form) }}
+  <div class="space-y-4">
+    {{ form_row(form.name) }}
+    {{ form_row(form.email) }}
+    {{ form_row(form.phone) }}
+    {{ form_row(form.notes) }}
+  </div>
+  <div class="mt-4">
+    <button class="px-4 py-2 bg-blue-600 text-white rounded">Enregistrer</button>
+    <a href="{{ path('admin_player_index') }}" class="ml-2 px-4 py-2 bg-gray-200 rounded">Annuler</a>
+  </div>
+{{ form_end(form) }}

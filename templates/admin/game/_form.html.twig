@@ -1,0 +1,30 @@
+<form method="post">
+    {{ form_start(form) }}
+    <div class="space-y-4">
+        <div>
+            {{ form_label(form.position) }}
+            {{ form_widget(form.position, {attr: {class: 'mt-1 block w-full border rounded p-2'}}) }}
+            {{ form_errors(form.position) }}
+        </div>
+        <div>
+            {{ form_label(form.rule) }}
+            {{ form_widget(form.rule, {attr: {class: 'mt-1 block w-full border rounded p-2'}}) }}
+            {{ form_errors(form.rule) }}
+        </div>
+        <div>
+            {{ form_label(form.prize) }}
+            {{ form_widget(form.prize, {attr: {class: 'mt-1 block w-full border rounded p-2'}}) }}
+            {{ form_errors(form.prize) }}
+        </div>
+        <div>
+            {{ form_label(form.status) }}
+            {{ form_widget(form.status, {attr: {class: 'mt-1 block w-full border rounded p-2'}}) }}
+            {{ form_errors(form.status) }}
+        </div>
+        <div class="pt-2">
+            <button class="px-4 py-2 bg-blue-600 text-white rounded">Enregistrer</button>
+            <a href="{{ path('admin_game_index', {id: event.id}) }}" class="ml-2 px-4 py-2 bg-gray-200 rounded">Annuler</a>
+        </div>
+    </div>
+    {{ form_end(form) }}
+</form>

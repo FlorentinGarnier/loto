@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Éditer la partie – {{ event.name }}{% endblock %}
+
+{% block body %}
+<div class="bg-white rounded shadow p-6">
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-bold">Éditer la partie – {{ event.name }}</h1>
+    <a href="{{ path('admin_game_index', {id: event.id}) }}" class="px-3 py-2 bg-gray-200 rounded">Retour</a>
+  </div>
+  {% include 'admin/game/_form.html.twig' with {form: form, event: event} %}
+</div>
+{% endblock %}

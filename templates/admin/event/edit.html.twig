@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Éditer l'événement {{ event.name }}{% endblock %}
+
+{% block body %}
+<div class="bg-white rounded shadow p-6">
+  <h1 class="text-2xl font-bold mb-4">Éditer l'événement</h1>
+  {% include 'admin/event/_form.html.twig' with {form: form} %}
+</div>
+{% endblock %}

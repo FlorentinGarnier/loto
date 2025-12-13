@@ -1,0 +1,54 @@
+
+###> symfony/framework-bundle ###
+/.env.local
+/.env.local.php
+/.env.*.local
+/config/secrets/*/*.decrypt.private.php
+/public/bundles/
+/var/
+/vendor/
+###< symfony/framework-bundle ###
+
+###> phpunit/phpunit ###
+/phpunit.xml
+/.phpunit.cache/
+/.phpunit.result.cache
+/coverage/
+###< phpunit/phpunit ###
+
+###> symfony/asset-mapper ###
+/public/assets/
+/assets/vendor/
+###< symfony/asset-mapper ###
+
+###> friends-of-behat/symfony-extension ###
+/behat.yml
+###< friends-of-behat/symfony-extension ###
+
+###> editors/ides/os ###
+/.idea/
+/.vscode/
+/.DS_Store
+Thumbs.db
+###< editors/ides/os ###
+
+###> local tools & assistants ###
+.junie/
+###< local tools & assistants ###
+
+.env.dev
+*.override.yaml
+
+###> package managers & builds (optional, safe to ignore if present) ###
+/node_modules/
+/build/
+###< package managers & builds (optional, safe to ignore if present) ###
+
+###> qa/tools caches ###
+/.php-cs-fixer.cache
+/.php-cs-fixer.dist.php
+/.phpstorm.meta.php
+/phpstan.neon.local
+/phpstan.cache
+###< qa/tools caches ###
+

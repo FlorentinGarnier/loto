@@ -1,0 +1,92 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Affichage public – {{ event ? event.name : 'Aucun événement' }}{% endblock %}
+
+{% block body %}
+<div class="bg-black text-green-100 rounded shadow p-6">
+  <h1 class="text-3xl font-bold mb-4 text-center">Affichage public</h1>
+  {% if current %}
+    <div class="text-center mb-6">
+      <div class="text-xl">Partie #{{ current.position }} – {{ current.rule.value }} – Lot: {{ current.prize }}</div>
+      <div class="mt-2">Statut: <span id="status" class="px-2 py-1 rounded {{ current.status.value == 'RUNNING' ? 'bg-green-700' : (current.status.value == 'FINISHED' ? 'bg-gray-700' : 'bg-amber-700') }}">{{ current.status.value }}</span></div>
+    </div>
+
+    <div class="mb-6 text-center">
+      <div class="text-5xl font-extrabold">Dernier numéro: <span id="last-number" class="text-yellow-300">—</span></div>
+      <div class="mt-2 text-lg">5 derniers: <span id="last-five" class="font-mono tracking-wider">—</span></div>
+    </div>
+
+    <div id="grid" class="grid grid-cols-10 gap-2">
+      {% for n in 1..90 %}
+        <div data-number="{{ n }}" class="cell px-2 py-2 rounded border border-green-900 text-center bg-green-950 text-green-200">{{ n }}</div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-center">Aucune partie en cours.</p>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  const grid = document.getElementById('grid');
+  const lastSpan = document.getElementById('last-number');
+  const lastFiveSpan = document.getElementById('last-five');
+  const statusEl = document.getElementById('status');
+  if (!grid) return;
+
+  const highlight = (num, on) => {
+    const el = grid.querySelector(`[data-number="${num}"]`);
+    if (el) {
+      el.classList.toggle('bg-yellow-500', !!on);
+      el.classList.toggle('text-black', !!on);
+    }
+  };
+  const mark = (num, on) => {
+    const el = grid.querySelector(`[data-number="${num}"]`);
+    if (el) {
+      el.classList.toggle('bg-green-600', !!on);
+      el.classList.toggle('text-white', !!on);
+    }
+  };
+
+  let previousLast = null;
+  function applyState(state){
+    // state: { gameId, status, draws: [numbers] }
+    // reset
+    grid.querySelectorAll('.cell').forEach(c => {
+      c.classList.remove('bg-green-600','text-white','bg-yellow-500','text-black');
+    });
+    // mark drawn
+    (state.draws || []).forEach(n => mark(n, true));
+    // last + last five
+    if (state.draws && state.draws.length) {
+      previousLast = state.draws[state.draws.length - 1];
+      lastSpan.textContent = previousLast;
+      highlight(previousLast, true);
+      const lastFive = state.draws.slice(-5);
+      if (lastFiveSpan) lastFiveSpan.textContent = lastFive.join(' · ');
+    } else {
+      lastSpan.textContent = '—';
+      if (lastFiveSpan) lastFiveSpan.textContent = '—';
+    }
+    if (statusEl) statusEl.textContent = state.status || '';
+  }
+
+  // Initial state could be rendered server-side later; for now rely on stream
+  const eventId = {{ event ? event.id : 'null' }};
+  const gameId = {{ current ? current.id : 'null' }};
+  if (eventId) {
+    const topic = encodeURIComponent(`/events/${eventId}/public`);
+    const hub = "{{ app.request.server.get('MERCURE_PUBLIC_URL') ? (app.request.server.get('MERCURE_PUBLIC_URL')) : 'null' }}";
+    const url = hub && hub !== 'null' ? `${hub}?topic=${topic}` : null;
+    const es = new EventSource(url);
+    es.onmessage = function(e){
+      try { const data = JSON.parse(e.data); applyState(data); } catch(err) { console.error(err); }
+    };
+    es.onerror = function(e){ console.warn('Mercure connection issue'); };
+  }
+})();
+</script>
+{% endblock %}

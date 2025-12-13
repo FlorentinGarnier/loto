@@ -1,0 +1,36 @@
+Feature: Gestion des événements et des parties
+    Afin d’organiser une soirée de loto
+    En tant qu’administrateur
+    Je veux créer un événement et définir les parties (règles + lots) à l’avance
+
+    Background:
+    Étant donné que je suis connecté en tant qu'administrateur
+
+    Scenario: Créer un nouvel événement de loto
+    Quand je crée un événement de loto nommé "Loto de la kermesse" pour le "2025-06-21"
+    Alors l’événement "Loto de la kermesse" doit exister
+    Et la date de l’événement "Loto de la kermesse" doit être "2025-06-21"
+
+    Scenario: Définir une séquence de parties pour un événement
+    Étant donné qu’un événement "Loto de la kermesse" existe
+    Quand je définis les parties suivantes pour l’événement "Loto de la kermesse":
+    | ordre | règle        | lot             |
+    | 1     | LINE         | Machine à café  |
+    | 2     | DOUBLE_LINE  | Bon d'achat     |
+    | 3     | FULL_CARD    | Voiture         |
+    Alors l’événement "Loto de la kermesse" doit avoir 3 parties
+    Et la partie d’ordre 1 doit avoir la règle "LINE" et le lot "Machine à café"
+    Et la partie d’ordre 2 doit avoir la règle "DOUBLE_LINE" et le lot "Bon d'achat"
+    Et la partie d’ordre 3 doit avoir la règle "FULL_CARD" et le lot "Voiture"
+
+    Scenario: Lancer la première partie d’un événement
+    Étant donné qu’un événement "Loto de la kermesse" existe
+    Et que les parties suivantes sont définies pour l’événement "Loto de la kermesse":
+    | ordre | règle        | lot             |
+    | 1     | LINE         | Machine à café  |
+    | 2     | DOUBLE_LINE  | Bon d'achat     |
+    | 3     | FULL_CARD    | Voiture         |
+    Quand je démarre la première partie de l’événement "Loto de la kermesse"
+    Alors la partie d’ordre 1 doit être en statut "RUNNING"
+    Et la partie d’ordre 2 doit être en statut "PENDING"
+    Et la partie d’ordre 3 doit être en statut "PENDING"

@@ -1,0 +1,207 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Administration - {{ event ? event.name : 'Aucun événement' }}{% endblock %}
+
+{% block body %}
+<div class="grid md:grid-cols-3 gap-6">
+    <div class="md:col-span-2 bg-white rounded shadow p-6">
+        <div class="flex items-center justify-between mb-2">
+            <h1 class="text-2xl font-bold">{{ event ? (event.name ~ ' – ' ~ (event.date|date('d/m/Y'))) : 'Aucun événement' }}</h1>
+            <div class="space-x-2">
+                <a href="{{ path('admin_event_index') }}" class="px-3 py-1 bg-gray-200 rounded">Événements</a>
+                <a href="{{ path('admin_player_index') }}" class="px-3 py-1 bg-gray-200 rounded">Joueurs</a>
+                <a href="{{ path('admin_card_index') }}" class="px-3 py-1 bg-gray-200 rounded">Cartons</a>
+            </div>
+        </div>
+        {% if current %}
+            <div class="flex flex-wrap items-center gap-4 mb-4">
+                <div><span class="font-semibold">Partie courante:</span> #{{ current.position }} ({{ current.rule.value }}) – Lot: {{ current.prize }} – Statut: <span class="px-2 py-1 rounded text-white {{ current.status.value == 'RUNNING' ? 'bg-green-600' : (current.status.value == 'FINISHED' ? 'bg-gray-600' : 'bg-amber-600') }}">{{ current.status.value }}</span></div>
+                <form method="post" action="{{ path('admin_game_start', {id: current.id}) }}"><button class="px-3 py-1 bg-blue-600 text-white rounded">Démarrer</button></form>
+                <form method="post" action="{{ path('admin_game_finish', {id: current.id}) }}"><button class="px-3 py-1 bg-gray-700 text-white rounded">Terminer</button></form>
+                <form method="post" action="{{ path('admin_game_next', {id: current.id}) }}"><button class="px-3 py-1 bg-purple-700 text-white rounded">Partie suivante</button></form>
+                <form method="post" action="{{ path('admin_game_demarque', {id: current.id}) }}"><button class="px-3 py-1 bg-amber-700 text-white rounded">Démarque (reset)</button></form>
+            </div>
+
+            {# Alertes tableau de bord #}
+            <div class="space-y-2 mb-4">
+                {% if current.status.value != 'RUNNING' %}
+                    <div class="p-3 rounded bg-amber-100 text-amber-900">Aucune partie en cours. Démarrez une partie pour activer le tirage.</div>
+                {% endif %}
+                {% if (cards_count ?? 0) == 0 %}
+                    <div class="p-3 rounded bg-blue-100 text-blue-900">Aucun carton enregistré pour cet événement. <a href="{{ path('admin_card_index') }}" class="underline">Enregistrer un carton</a>.</div>
+                {% endif %}
+                {% set potentials_count = potentials|length %}
+                {% set validated_count = current.winners|length %}
+                {% if potentials_count > 0 and validated_count == 0 %}
+                    <div class="p-3 rounded bg-indigo-100 text-indigo-900">Des gagnants potentiels existent mais aucun gagnant n'est validé.</div>
+                {% endif %}
+            </div>
+
+            {# KPIs #}
+            {% set draws_count = current.draws|length %}
+            <div class="grid grid-cols-3 gap-3 mb-4">
+                <div class="p-3 rounded border bg-gray-50">
+                    <div class="text-xs text-gray-500">Tirages</div>
+                    <div class="text-2xl font-bold">{{ draws_count }}</div>
+                </div>
+                <div class="p-3 rounded border bg-gray-50">
+                    <div class="text-xs text-gray-500">Progression</div>
+                    <div class="text-2xl font-bold">{{ draws_count }}/90</div>
+                </div>
+                <div class="p-3 rounded border bg-gray-50">
+                    <div class="text-xs text-gray-500">Potentiels</div>
+                    <div class="text-2xl font-bold">{{ potentials_count }}</div>
+                </div>
+            </div>
+
+            <h2 class="text-xl font-semibold mb-2">Grille des tirages (1–90)</h2>
+            <div class="flex items-center justify-between mb-2">
+                {% set last = current.draws|length > 0 ? (current.draws|last).number : null %}
+                <div class="text-sm text-gray-600">Dernier numéro:
+                    <span class="inline-block px-2 py-1 rounded {{ last ? 'bg-amber-600 text-white' : 'bg-gray-200' }}">{{ last ?? '—' }}</span>
+                </div>
+                <div class="text-sm text-gray-600">Mercure: <span id="mercure-status" class="px-2 py-0.5 rounded bg-gray-300">…</span></div>
+            </div>
+            <div id="grid" class="grid grid-cols-10 gap-2 mb-4">
+                {% set drawn = current.draws|map(d => d.number)|default([]) %}
+                {% for n in 1..90 %}
+                    {% set isDrawn = current.draws|filter(d => d.number == n)|length > 0 %}
+                    <button data-number="{{ n }}" class="cell px-2 py-2 rounded border text-center {{ isDrawn ? 'bg-green-600 text-white' : 'bg-white' }}">{{ n }}</button>
+                {% endfor %}
+            </div>
+
+            <h2 class="text-xl font-semibold mb-2">Gagnants potentiels</h2>
+            {% if potentials is empty %}
+                <p class="text-gray-500">Aucun gagnant potentiel pour le moment.</p>
+            {% else %}
+                <ul class="space-y-2">
+                {% for item in potentials %}
+                    <li class="flex items-center justify-between p-2 border rounded">
+                        <div>
+                            Carton {{ item.card.reference }} – Lignes complètes: {{ item.matchedLines }}
+                            {% if item.card.player %} ({{ item.card.player.name }}){% endif %}
+                        </div>
+                        <form method="post" action="{{ path('admin_winner_validate', {id: current.id}) }}">
+                            <input type="hidden" name="card_id" value="{{ item.card.id }}" />
+                            <input type="hidden" name="_token" value="{{ csrf_token('validate_winner_' ~ current.id ~ '_' ~ item.card.id) }}" />
+                            <button class="px-2 py-1 text-sm bg-green-700 text-white rounded">Valider</button>
+                        </form>
+                    </li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+
+            <div class="mt-6 border-t pt-4">
+                <h2 class="text-xl font-semibold mb-2">Gagnants déclarés</h2>
+                {% if current.winners is empty %}
+                    <p class="text-gray-500">Aucun gagnant déclaré.</p>
+                {% else %}
+                    <ul class="list-disc ml-6">
+                        {% for w in current.winners %}
+                            <li>
+                                {{ w.source.value }} – {{ w.reference ?? '—' }}{% if w.card %} · Carton {{ w.card.reference }}{% endif %} · <span class="text-xs text-gray-500">{{ w.createdAt|date('H:i:s') }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                {% if winner_form is defined and winner_form %}
+                    <div class="mt-4">
+                        <h3 class="font-semibold mb-2">Déclarer un gagnant (OFFLINE)</h3>
+                        {{ form_start(winner_form, { action: path('admin_winner_offline', {id: current.id}) }) }}
+                            <div class="flex flex-col md:flex-row gap-2 items-end">
+                                <div class="grow">{{ form_row(winner_form.reference) }}</div>
+                                <div class="grow">{{ form_row(winner_form.card) }}</div>
+                                <div><button class="px-3 py-2 bg-green-700 text-white rounded">Enregistrer</button></div>
+                            </div>
+                        {{ form_end(winner_form) }}
+                    </div>
+                {% endif %}
+            </div>
+        {% else %}
+            <p>Aucune partie définie.</p>
+        {% endif %}
+    </div>
+
+    <div class="bg-white rounded shadow p-6">
+        <h2 class="text-xl font-semibold mb-2">Parties</h2>
+        <ul class="space-y-2">
+            {% for g in games %}
+                <li class="flex items-center justify-between p-2 border rounded {{ (current and g.id == current.id) ? 'bg-amber-50' : '' }}">
+                    <div>
+                        #{{ g.position }} – {{ g.rule.value }} – {{ g.prize }}
+                        <span class="ml-2 text-xs px-2 py-0.5 rounded {{ g.status.value == 'RUNNING' ? 'bg-green-600 text-white' : (g.status.value == 'FINISHED' ? 'bg-gray-600 text-white' : 'bg-amber-600 text-white') }}">{{ g.status.value }}</span>
+                    </div>
+                    <form method="post" action="{{ path('admin_game_start', {id: g.id}) }}"><button class="px-2 py-1 text-sm bg-blue-600 text-white rounded">Basculer</button></form>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+{% if current %}
+const grid = document.getElementById('grid');
+if (grid) {
+  grid.addEventListener('click', async (e) => {
+    const btn = e.target.closest('button.cell');
+    if (!btn) return;
+    const num = btn.dataset.number;
+    try {
+      const res = await fetch('{{ path('admin_toggle_number', {id: current.id, number: 0}) }}'.replace('/0', '/' + num), { method: 'POST' });
+      if (res.ok) {
+          btn.classList.toggle('bg-white')
+        btn.classList.toggle('bg-green-600');
+        btn.classList.toggle('text-white');
+      }
+    } catch (err) { console.error(err); }
+  });
+}
+{% endif %}
+// Confirm demarque
+{% if current %}
+const demarqueForm = document.querySelector('form[action="{{ path('admin_game_demarque', {id: current.id}) }}"]');
+if (demarqueForm) {
+  demarqueForm.addEventListener('submit', function(e){
+    if (!confirm('Confirmer la démarque (réinitialiser tous les tirages) ?')) {
+      e.preventDefault();
+    }
+  });
+}
+{% endif %}
+// Mercure connection indicator
+(function(){
+  const badge = document.getElementById('mercure-status');
+  if (!badge) return;
+  const setStatus = (ok) => {
+    badge.textContent = ok ? 'OK' : 'Hors ligne';
+    badge.classList.remove('bg-gray-300','bg-red-200','bg-green-200','text-red-900','text-green-900');
+    if (ok) {
+      badge.classList.add('bg-green-200','text-green-900');
+    } else {
+      badge.classList.add('bg-red-200','text-red-900');
+    }
+  };
+  setStatus(false);
+  const eventId = {{ event ? event.id : 'null' }};
+  if (!eventId) return;
+  try {
+    const topic = encodeURIComponent(`/events/${eventId}/public`);
+    const hub = "{{ app.request.server.get('MERCURE_PUBLIC_URL') ? (app.request.server.get('MERCURE_PUBLIC_URL')) : 'null' }}";
+    const url = hub && hub !== 'null' ? `${hub}?topic=${topic}` : null;
+    const es = new EventSource(url);
+    es.onopen = function(){ setStatus(true); };
+    es.onmessage = function(){ /* receiving data is not required here */ };
+    es.onerror = function(){ setStatus(false); };
+    document.addEventListener('visibilitychange', function(){
+      if (document.visibilityState === 'visible') {
+        // a tiny visual refresh on focus
+        setStatus(es.readyState === 1);
+      }
+    });
+  } catch (e) { setStatus(false); }
+})();
+</script>
+{% endblock %}

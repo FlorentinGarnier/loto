@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Parties – {{ event.name }}{% endblock %}
+
+{% block body %}
+<div class="bg-white rounded shadow p-6">
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-bold">Parties – {{ event.name }} ({{ event.date|date('Y-m-d') }})</h1>
+    <div class="space-x-2">
+      <a href="{{ path('admin_event_index') }}" class="px-3 py-2 bg-gray-200 rounded">Événements</a>
+      <a href="{{ path('admin_game_new', {id: event.id}) }}" class="px-3 py-2 bg-blue-600 text-white rounded">Nouvelle partie</a>
+    </div>
+  </div>
+
+  {% if games is empty %}
+    <p class="text-gray-600">Aucune partie définie pour cet événement.</p>
+  {% else %}
+    <table class="min-w-full border">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left border">Ordre</th>
+          <th class="p-2 text-left border">Règle</th>
+          <th class="p-2 text-left border">Lot</th>
+          <th class="p-2 text-left border">Statut</th>
+          <th class="p-2 text-left border">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for g in games %}
+          <tr class="border-b">
+            <td class="p-2 border">#{{ g.position }}</td>
+            <td class="p-2 border">{{ g.rule.value }}</td>
+            <td class="p-2 border">{{ g.prize }}</td>
+            <td class="p-2 border">{{ g.status.value }}</td>
+            <td class="p-2 border space-x-2">
+              <a class="px-2 py-1 text-sm bg-amber-500 text-white rounded" href="{{ path('admin_game_edit', {id: event.id, gameId: g.id}) }}">Éditer</a>
+              <form class="inline" method="post" action="{{ path('admin_game_delete', {id: event.id, gameId: g.id}) }}" onsubmit="return confirm('Supprimer cette partie ?');">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete_game_' ~ g.id) }}" />
+                <button class="px-2 py-1 text-sm bg-red-600 text-white rounded">Supprimer</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvel événement{% endblock %}
+
+{% block body %}
+<div class="bg-white rounded shadow p-6">
+  <h1 class="text-2xl font-bold mb-4">Nouvel événement</h1>
+  {% include 'admin/event/_form.html.twig' with {form: form} %}
+</div>
+{% endblock %}

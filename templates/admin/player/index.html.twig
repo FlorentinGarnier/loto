@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Joueurs{% endblock %}
+
+{% block body %}
+<div class="bg-white rounded shadow p-6">
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-bold">Joueurs</h1>
+    <a href="{{ path('admin_player_new') }}" class="px-3 py-1 bg-blue-600 text-white rounded">Nouveau</a>
+  </div>
+
+  {% if app.flashes('success') is not empty %}
+    <div class="mb-4">
+      {% for msg in app.flashes('success') %}
+        <div class="p-2 bg-green-100 text-green-800 rounded">{{ msg }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full border">
+      <thead>
+        <tr class="bg-gray-100">
+          <th class="p-2 text-left border">ID</th>
+          <th class="p-2 text-left border">Nom</th>
+          <th class="p-2 text-left border">Email</th>
+          <th class="p-2 text-left border">Téléphone</th>
+          <th class="p-2 text-left border">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in players %}
+          <tr>
+            <td class="p-2 border">{{ p.id }}</td>
+            <td class="p-2 border">{{ p.name }}</td>
+            <td class="p-2 border">{{ p.email ?: '—' }}</td>
+            <td class="p-2 border">{{ p.phone ?: '—' }}</td>
+            <td class="p-2 border">
+              <a href="{{ path('admin_player_show', {id: p.id}) }}" class="px-2 py-1 text-sm bg-gray-200 rounded">Voir</a>
+              <a href="{{ path('admin_player_edit', {id: p.id}) }}" class="px-2 py-1 text-sm bg-blue-600 text-white rounded">Éditer</a>
+              <form method="post" action="{{ path('admin_player_delete', {id: p.id}) }}" class="inline" onsubmit="return confirm('Supprimer ce joueur ?');">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete_player_' ~ p.id) }}" />
+                <button class="px-2 py-1 text-sm bg-red-600 text-white rounded">Supprimer</button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td class="p-2 border text-center" colspan="5">Aucun joueur.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
