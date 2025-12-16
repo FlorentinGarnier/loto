@@ -1,14 +1,15 @@
 <?php
+
 namespace App\Form;
 
 use App\Entity\Card;
 use App\Entity\Event;
+use Doctrine\ORM\EntityRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Doctrine\ORM\EntityRepository;
 
 final class WinnerOfflineType extends AbstractType
 {
@@ -35,6 +36,7 @@ final class WinnerOfflineType extends AbstractType
                     if ($event) {
                         $qb->andWhere('c.event = :event')->setParameter('event', $event);
                     }
+
                     return $qb->orderBy('c.id', 'ASC');
                 },
             ])

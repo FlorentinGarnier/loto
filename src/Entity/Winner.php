@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Entity;
 
 use App\Enum\WinnerSource;
@@ -36,19 +37,61 @@ class Winner
         $this->createdAt = new \DateTimeImmutable();
     }
 
-    public function getId(): ?int { return $this->id; }
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
 
-    public function getGame(): ?Game { return $this->game; }
-    public function setGame(?Game $game): self { $this->game = $game; return $this; }
+    public function getGame(): ?Game
+    {
+        return $this->game;
+    }
 
-    public function getCard(): ?Card { return $this->card; }
-    public function setCard(?Card $card): self { $this->card = $card; return $this; }
+    public function setGame(?Game $game): self
+    {
+        $this->game = $game;
 
-    public function getSource(): WinnerSource { return $this->source; }
-    public function setSource(WinnerSource $source): self { $this->source = $source; return $this; }
+        return $this;
+    }
 
-    public function getReference(): ?string { return $this->reference; }
-    public function setReference(?string $reference): self { $this->reference = $reference; return $this; }
+    public function getCard(): ?Card
+    {
+        return $this->card;
+    }
 
-    public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
+    public function setCard(?Card $card): self
+    {
+        $this->card = $card;
+
+        return $this;
+    }
+
+    public function getSource(): WinnerSource
+    {
+        return $this->source;
+    }
+
+    public function setSource(WinnerSource $source): self
+    {
+        $this->source = $source;
+
+        return $this;
+    }
+
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(?string $reference): self
+    {
+        $this->reference = $reference;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller\Admin;
 
 use App\Entity\Event;
@@ -16,12 +17,14 @@ final class EventCrudController extends AbstractController
     public function __construct(
         private readonly EventRepository $eventRepo,
         private readonly EntityManagerInterface $em,
-    ){}
+    ) {
+    }
 
     #[Route('', name: 'admin_event_index')]
     public function index(): Response
     {
         $events = $this->eventRepo->findBy([], ['date' => 'DESC']);
+
         return $this->render('admin/event/index.html.twig', [
             'events' => $events,
         ]);
@@ -37,8 +40,10 @@ final class EventCrudController extends AbstractController
             $this->em->persist($event);
             $this->em->flush();
             $this->addFlash('success', 'Événement créé');
+
             return $this->redirectToRoute('admin_event_index');
         }
+
         return $this->render('admin/event/new.html.twig', [
             'form' => $form,
         ]);
@@ -60,8 +65,10 @@ final class EventCrudController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->flush();
             $this->addFlash('success', 'Événement mis à jour');
+
             return $this->redirectToRoute('admin_event_index');
         }
+
         return $this->render('admin/event/edit.html.twig', [
             'form' => $form,
             'event' => $event,
@@ -80,6 +87,7 @@ final class EventCrudController extends AbstractController
         } else {
             $this->addFlash('error', 'Jeton CSRF invalide');
         }
+
         return $this->redirectToRoute('admin_event_index');
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Form;
 
 use App\Entity\Game;
@@ -15,9 +16,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 final class GameType extends AbstractType
 {
     public function __construct(
-        private TranslatorInterface $translator
-    ){
-
+        private TranslatorInterface $translator,
+    ) {
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
@@ -29,8 +29,8 @@ final class GameType extends AbstractType
             ->add('rule', ChoiceType::class, [
                 'label' => 'Règle',
                 'choices' => $this->choicesFromEnum(RuleType::cases()),
-                'choice_value' => fn(?RuleType $r) => $r?->trans($this->translator),
-                'choice_label' => fn(RuleType $r) => $r->trans($this->translator),
+                'choice_value' => fn (?RuleType $r) => $r?->trans($this->translator),
+                'choice_label' => fn (RuleType $r) => $r->trans($this->translator),
             ])
             ->add('prize', TextType::class, [
                 'label' => 'Lot',
@@ -38,15 +38,17 @@ final class GameType extends AbstractType
             ->add('status', ChoiceType::class, [
                 'label' => 'Statut',
                 'choices' => $this->choicesFromEnum(GameStatus::cases()),
-                'choice_value' => fn(?GameStatus $s) => $s?->trans($this->translator),
-                'choice_label' => fn(GameStatus $s) => $s->trans($this->translator),
+                'choice_value' => fn (?GameStatus $s) => $s?->trans($this->translator),
+                'choice_label' => fn (GameStatus $s) => $s->trans($this->translator),
             ])
         ;
     }
 
     /**
      * @template T of \UnitEnum
+     *
      * @param array<int, T> $cases
+     *
      * @return array<string, T>
      */
     private function choicesFromEnum(array $cases): array
@@ -55,6 +57,7 @@ final class GameType extends AbstractType
         foreach ($cases as $case) {
             $choices[$case->name] = $case; // label => case object
         }
+
         return $choices;
     }
 

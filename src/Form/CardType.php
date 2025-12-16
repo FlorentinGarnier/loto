@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Form;
 
 use App\Entity\Card;
@@ -23,7 +24,6 @@ final class CardType extends AbstractType
                 'choice_label' => 'name',
                 'label' => 'Événement',
                 'placeholder' => '— Choisir —',
-                'constraints' => [new NotBlank(message: 'Choisissez un événement.')],
             ])
             ->add('reference', TextType::class, [
                 'label' => 'Référence du carton',

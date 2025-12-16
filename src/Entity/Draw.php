@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Entity;
 
 use App\Repository\DrawRepository;
@@ -7,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: DrawRepository::class)]
 #[ORM\Table(name: 'draw')]
-#[ORM\UniqueConstraint(name: 'uniq_game_number', columns: ['game_id','number'])]
+#[ORM\UniqueConstraint(name: 'uniq_game_number', columns: ['game_id', 'number'])]
 class Draw
 {
     #[ORM\Id]
@@ -33,16 +34,49 @@ class Draw
         $this->createdAt = new \DateTimeImmutable();
     }
 
-    public function getId(): ?int { return $this->id; }
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
 
-    public function getGame(): ?Game { return $this->game; }
-    public function setGame(?Game $game): self { $this->game = $game; return $this; }
+    public function getGame(): ?Game
+    {
+        return $this->game;
+    }
 
-    public function getNumber(): int { return $this->number; }
-    public function setNumber(int $number): self { $this->number = $number; return $this; }
+    public function setGame(?Game $game): self
+    {
+        $this->game = $game;
 
-    public function getOrderIndex(): int { return $this->orderIndex; }
-    public function setOrderIndex(int $orderIndex): self { $this->orderIndex = $orderIndex; return $this; }
+        return $this;
+    }
 
-    public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
+    public function getNumber(): int
+    {
+        return $this->number;
+    }
+
+    public function setNumber(int $number): self
+    {
+        $this->number = $number;
+
+        return $this;
+    }
+
+    public function getOrderIndex(): int
+    {
+        return $this->orderIndex;
+    }
+
+    public function setOrderIndex(int $orderIndex): self
+    {
+        $this->orderIndex = $orderIndex;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
 }

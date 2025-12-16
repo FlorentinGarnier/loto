@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Service;
 
 use App\Entity\Card;
@@ -24,20 +25,28 @@ final class WinnerDetectionService
         foreach ($cards as $card) {
             $linesMatched = 0;
             $grid = $card->getGrid(); // expected 3 arrays of 5 ints
-            for ($i = 0; $i < 3; $i++) {
+            for ($i = 0; $i < 3; ++$i) {
                 $line = $grid[$i] ?? [];
-                if (\count($line) !== 5) { continue; }
+                if (5 !== \count($line)) {
+                    continue;
+                }
                 $ok = true;
                 foreach ($line as $n) {
-                    if (!isset($drawn[$n])) { $ok = false; break; }
+                    if (!isset($drawn[$n])) {
+                        $ok = false;
+                        break;
+                    }
                 }
-                if ($ok) { $linesMatched++; }
+                if ($ok) {
+                    ++$linesMatched;
+                }
             }
 
             if ($this->meetsRule($game->getRule(), $linesMatched)) {
-                $result[] = [ 'card' => $card, 'matchedLines' => $linesMatched ];
+                $result[] = ['card' => $card, 'matchedLines' => $linesMatched];
             }
         }
+
         return $result;
     }
 

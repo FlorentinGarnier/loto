@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller;
 
 use App\Repository\EventRepository;
@@ -12,7 +13,8 @@ final class PublicController extends AbstractController
     public function __construct(
         private readonly EventRepository $eventRepo,
         private readonly GameRepository $gameRepo,
-    ) {}
+    ) {
+    }
 
     #[Route('/', name: 'home')]
     public function home(): Response

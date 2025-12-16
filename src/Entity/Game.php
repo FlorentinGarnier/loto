@@ -1,13 +1,14 @@
 <?php
+
 namespace App\Entity;
 
 use App\Enum\GameStatus;
 use App\Enum\RuleType;
 use App\Repository\GameRepository;
-use Doctrine\DBAL\Types\Types;
-use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: GameRepository::class)]
 #[ORM\Table(name: 'game')]
@@ -49,25 +50,76 @@ class Game
         $this->winners = new ArrayCollection();
     }
 
-    public function getId(): ?int { return $this->id; }
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
 
-    public function getEvent(): ?Event { return $this->event; }
-    public function setEvent(?Event $event): self { $this->event = $event; return $this; }
+    public function getEvent(): ?Event
+    {
+        return $this->event;
+    }
 
-    public function getPosition(): int { return $this->position; }
-    public function setPosition(int $position): self { $this->position = $position; return $this; }
+    public function setEvent(?Event $event): self
+    {
+        $this->event = $event;
 
-    public function getRule(): RuleType { return $this->rule; }
-    public function setRule(RuleType $rule): self { $this->rule = $rule; return $this; }
+        return $this;
+    }
 
-    public function getPrize(): string { return $this->prize; }
-    public function setPrize(string $prize): self { $this->prize = $prize; return $this; }
+    public function getPosition(): int
+    {
+        return $this->position;
+    }
 
-    public function getStatus(): GameStatus { return $this->status; }
-    public function setStatus(GameStatus $status): self { $this->status = $status; return $this; }
+    public function setPosition(int $position): self
+    {
+        $this->position = $position;
+
+        return $this;
+    }
+
+    public function getRule(): RuleType
+    {
+        return $this->rule;
+    }
+
+    public function setRule(RuleType $rule): self
+    {
+        $this->rule = $rule;
+
+        return $this;
+    }
+
+    public function getPrize(): string
+    {
+        return $this->prize;
+    }
+
+    public function setPrize(string $prize): self
+    {
+        $this->prize = $prize;
+
+        return $this;
+    }
+
+    public function getStatus(): GameStatus
+    {
+        return $this->status;
+    }
+
+    public function setStatus(GameStatus $status): self
+    {
+        $this->status = $status;
+
+        return $this;
+    }
 
     /** @return Collection<int, Draw> */
-    public function getDraws(): Collection { return $this->draws; }
+    public function getDraws(): Collection
+    {
+        return $this->draws;
+    }
 
     public function addDraw(Draw $draw): self
     {
@@ -75,19 +127,26 @@ class Game
             $this->draws->add($draw);
             $draw->setGame($this);
         }
+
         return $this;
     }
 
     public function removeDraw(Draw $draw): self
     {
         if ($this->draws->removeElement($draw)) {
-            if ($draw->getGame() === $this) { $draw->setGame(null); }
+            if ($draw->getGame() === $this) {
+                $draw->setGame(null);
+            }
         }
+
         return $this;
     }
 
     /** @return Collection<int, Winner> */
-    public function getWinners(): Collection { return $this->winners; }
+    public function getWinners(): Collection
+    {
+        return $this->winners;
+    }
 
     public function addWinner(Winner $winner): self
     {
@@ -95,14 +154,18 @@ class Game
             $this->winners->add($winner);
             $winner->setGame($this);
         }
+
         return $this;
     }
 
     public function removeWinner(Winner $winner): self
     {
         if ($this->winners->removeElement($winner)) {
-            if ($winner->getGame() === $this) { $winner->setGame(null); }
+            if ($winner->getGame() === $this) {
+                $winner->setGame(null);
+            }
         }
+
         return $this;
     }
 }

@@ -87,7 +87,9 @@
         "post-update-cmd": [
             "@auto-scripts"
         ],
-        "behat": "vendor/bin/behat -f progress"
+        "behat": "vendor/bin/behat -f progress",
+        "cs:check": "vendor/bin/php-cs-fixer fix --dry-run --diff",
+        "cs:fix": "vendor/bin/php-cs-fixer fix"
     },
     "conflict": {
         "symfony/symfony": "*"
@@ -99,6 +101,7 @@
         }
     },
     "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.64",
         "behat/behat": "^3.27",
         "behat/mink": "^1.13",
         "friends-of-behat/mink-browserkit-driver": "^1.6",

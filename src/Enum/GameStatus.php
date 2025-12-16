@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Enum;
 
 use Symfony\Contracts\Translation\TranslatableInterface;
@@ -10,7 +11,7 @@ enum GameStatus: string implements TranslatableInterface
     case RUNNING = 'RUNNING';
     case FINISHED = 'FINISHED';
 
-    public function trans(TranslatorInterface $translator, ?string $locale = null) : string
+    public function trans(TranslatorInterface $translator, ?string $locale = null): string
     {
         return $translator->trans('app.state.'.$this->value, locale: $locale);
     }

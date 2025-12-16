@@ -1,28 +1,28 @@
 <?php
+
 namespace App\Controller;
 
+use App\Entity\Card;
 use App\Entity\Event;
 use App\Entity\Game;
+use App\Entity\Winner;
 use App\Enum\GameStatus;
+use App\Enum\WinnerSource;
 use App\Repository\CardRepository;
 use App\Repository\EventRepository;
 use App\Repository\GameRepository;
 use App\Service\DrawService;
 use App\Service\WinnerDetectionService;
-use App\Entity\Winner;
-use App\Entity\Card;
-use App\Enum\WinnerSource;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Mercure\Update;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[Route('/admin')]
 final class AdminController extends AbstractController
@@ -36,7 +36,8 @@ final class AdminController extends AbstractController
         private readonly HubInterface $hub,
         private readonly UrlGeneratorInterface $urlGenerator,
         private readonly EntityManagerInterface $em,
-    ) {}
+    ) {
+    }
 
     #[Route('', name: 'admin_dashboard')]
     #[Route('/', name: 'admin_dashboard_slash')]
@@ -80,11 +81,12 @@ final class AdminController extends AbstractController
     #[Route('/game/{id}/toggle/{number}', name: 'admin_toggle_number', requirements: ['number' => '\\d+'], methods: ['POST'])]
     public function toggleNumber(Game $game, int $number): Response
     {
-        if ($game->getStatus() !== GameStatus::RUNNING) {
+        if (GameStatus::RUNNING !== $game->getStatus()) {
             if ($this->isXmlHttpRequest()) {
                 return new JsonResponse(['error' => 'Game not running'], 400);
             }
             $this->addFlash('error', 'Impossible de cocher: la partie n\'est pas en cours.');
+
             return $this->redirectToRoute('admin_dashboard');
         }
         $numbers = $this->drawService->toggleNumber($game, $number);
@@ -92,6 +94,7 @@ final class AdminController extends AbstractController
         if ($this->isXmlHttpRequest()) {
             return new JsonResponse(['numbers' => $numbers]);
         }
+
         return $this->redirectToRoute('admin_dashboard');
     }
 
@@ -101,10 +104,11 @@ final class AdminController extends AbstractController
         $event = $game->getEvent();
         // set running only this one
         foreach ($this->gameRepo->findByEventOrdered($event) as $g) {
-            $g->setStatus($g === $game ? GameStatus::RUNNING : ($g->getStatus() === GameStatus::RUNNING ? GameStatus::PENDING : $g->getStatus()));
+            $g->setStatus($g === $game ? GameStatus::RUNNING : (GameStatus::RUNNING === $g->getStatus() ? GameStatus::PENDING : $g->getStatus()));
         }
         $this->em->flush();
         $this->publishGameUpdate($game);
+
         return $this->redirectToRoute('admin_dashboard');
     }
 
@@ -114,6 +118,7 @@ final class AdminController extends AbstractController
         $game->setStatus(GameStatus::FINISHED);
         $this->em->flush();
         $this->publishGameUpdate($game);
+
         return $this->redirectToRoute('admin_dashboard');
     }
 
@@ -124,12 +129,15 @@ final class AdminController extends AbstractController
         $games = $this->gameRepo->findByEventOrdered($event);
         $next = null;
         foreach ($games as $g) {
-            if ($g->getPosition() > $game->getPosition()) { $next = $g; break; }
+            if ($g->getPosition() > $game->getPosition()) {
+                $next = $g;
+                break;
+            }
         }
         if ($next) {
             $game->setStatus(GameStatus::FINISHED);
             $next->setStatus(GameStatus::RUNNING);
-            if (!$next->getDraws()->isEmpty()){
+            if (!$next->getDraws()->isEmpty()) {
                 $draws = $next->getDraws();
                 $draws->clear();
             }
@@ -140,19 +148,22 @@ final class AdminController extends AbstractController
             $this->em->flush();
             $this->publishGameUpdate($next);
         }
+
         return $this->redirectToRoute('admin_dashboard');
     }
 
     #[Route('/game/{id}/demarque', name: 'admin_game_demarque', methods: ['POST'])]
     public function demarque(Game $game): RedirectResponse
     {
-        if ($game->getStatus() !== GameStatus::RUNNING) {
+        if (GameStatus::RUNNING !== $game->getStatus()) {
             $this->addFlash('error', 'Démarque impossible: la partie doit être en cours.');
+
             return $this->redirectToRoute('admin_dashboard');
         }
         $this->drawService->clearAll($game);
         $this->publishGameUpdate($game);
         $this->addFlash('success', 'Tirages réinitialisés pour la partie courante.');
+
         return $this->redirectToRoute('admin_dashboard');
     }
 
@@ -164,7 +175,7 @@ final class AdminController extends AbstractController
         $payload = [
             'gameId' => $gameId,
             'status' => $game->getStatus()->value,
-            'draws' => array_map(fn($d) => $d->getNumber(), $game->getDraws()->toArray()),
+            'draws' => array_map(fn ($d) => $d->getNumber(), $game->getDraws()->toArray()),
         ];
         $update = new Update($topic, json_encode($payload));
         $this->hub->publish($update);
@@ -180,6 +191,7 @@ final class AdminController extends AbstractController
         $form->handleRequest($request);
         if (!$form->isSubmitted() || !$form->isValid()) {
             $this->addFlash('error', 'Formulaire invalide pour le gagnant.');
+
             return $this->redirectToRoute('admin_dashboard');
         }
         $data = $form->getData();
@@ -193,32 +205,37 @@ final class AdminController extends AbstractController
         $this->em->persist($winner);
         $this->em->flush();
         $this->addFlash('success', 'Gagnant OFFLINE enregistré.');
+
         return $this->redirectToRoute('admin_dashboard');
     }
 
     #[Route('/game/{id}/winner/validate', name: 'admin_winner_validate', methods: ['POST'])]
     public function validateSystemWinner(Request $request, Game $game): RedirectResponse
     {
-        $cardId = (int)($request->request->get('card_id') ?? 0);
+        $cardId = (int) ($request->request->get('card_id') ?? 0);
         if ($cardId <= 0) {
             $this->addFlash('error', 'Carte invalide.');
+
             return $this->redirectToRoute('admin_dashboard');
         }
         // Optional CSRF check
         $token = $request->request->get('_token');
         if ($token && !$this->isCsrfTokenValid('validate_winner_'.$game->getId().'_'.$cardId, $token)) {
             $this->addFlash('error', 'Token CSRF invalide.');
+
             return $this->redirectToRoute('admin_dashboard');
         }
         $card = $this->cardRepo->find($cardId);
         if (!$card || $card->getEvent()?->getId() !== $game->getEvent()?->getId()) {
             $this->addFlash('error', 'La carte ne correspond pas à l’événement.');
+
             return $this->redirectToRoute('admin_dashboard');
         }
         // Prevent duplicates
         foreach ($game->getWinners() as $w) {
             if ($w->getCard() && $w->getCard()->getId() === $cardId) {
                 $this->addFlash('warning', 'Ce gagnant est déjà validé.');
+
                 return $this->redirectToRoute('admin_dashboard');
             }
         }
@@ -227,10 +244,14 @@ final class AdminController extends AbstractController
         $potentials = $this->winnerService->findPotentialWinners($game, $cards);
         $isPotential = false;
         foreach ($potentials as $p) {
-            if ($p['card']->getId() === $cardId) { $isPotential = true; break; }
+            if ($p['card']->getId() === $cardId) {
+                $isPotential = true;
+                break;
+            }
         }
         if (!$isPotential) {
             $this->addFlash('error', 'La carte ne remplit pas les conditions de la règle.');
+
             return $this->redirectToRoute('admin_dashboard');
         }
         $winner = (new Winner())
@@ -241,11 +262,12 @@ final class AdminController extends AbstractController
         $this->em->persist($winner);
         $this->em->flush();
         $this->addFlash('success', 'Gagnant validé.');
+
         return $this->redirectToRoute('admin_dashboard');
     }
 
     private function isXmlHttpRequest(): bool
     {
-        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 'xmlhttprequest' === strtolower($_SERVER['HTTP_X_REQUESTED_WITH']);
     }
 }

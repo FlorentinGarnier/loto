@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller\Admin;
 
 use App\Entity\Card;
@@ -16,7 +17,8 @@ final class CardCrudController extends AbstractController
     public function __construct(
         private readonly CardRepository $cards,
         private readonly EntityManagerInterface $em,
-    ) {}
+    ) {
+    }
 
     #[Route('', name: 'admin_card_index')]
     public function index(): Response
@@ -34,7 +36,7 @@ final class CardCrudController extends AbstractController
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $grid = $this->parseGrid($form->get('gridText')->getData());
-            if ($grid === null) {
+            if (null === $grid) {
                 $this->addFlash('error', 'La grille doit contenir 3 lignes de 5 nombres entre 1 et 90, sans doublons.');
             } else {
                 $card->setGrid($grid);
@@ -44,10 +46,12 @@ final class CardCrudController extends AbstractController
                     $this->em->persist($card);
                     $this->em->flush();
                     $this->addFlash('success', 'Carton créé.');
+
                     return $this->redirectToRoute('admin_card_index');
                 }
             }
         }
+
         return $this->render('admin/card/new.html.twig', [
             'form' => $form->createView(),
         ]);
@@ -62,7 +66,7 @@ final class CardCrudController extends AbstractController
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $grid = $this->parseGrid($form->get('gridText')->getData());
-            if ($grid === null) {
+            if (null === $grid) {
                 $this->addFlash('error', 'La grille doit contenir 3 lignes de 5 nombres entre 1 et 90, sans doublons.');
             } else {
                 $card->setGrid($grid);
@@ -71,10 +75,12 @@ final class CardCrudController extends AbstractController
                 } else {
                     $this->em->flush();
                     $this->addFlash('success', 'Carton mis à jour.');
+
                     return $this->redirectToRoute('admin_card_index');
                 }
             }
         }
+
         return $this->render('admin/card/edit.html.twig', [
             'form' => $form->createView(),
             'card' => $card,
@@ -91,40 +97,55 @@ final class CardCrudController extends AbstractController
         $this->em->remove($card);
         $this->em->flush();
         $this->addFlash('success', 'Carton supprimé.');
+
         return $this->redirectToRoute('admin_card_index');
     }
 
     private function parseGrid(?string $text): ?array
     {
-        if ($text === null) return null;
+        if (null === $text) {
+            return null;
+        }
         $lines = preg_split('/\r?\n/', trim($text));
-        if (count($lines) !== 3) return null;
+        if (3 !== count($lines)) {
+            return null;
+        }
         $grid = [];
         $seen = [];
         foreach ($lines as $line) {
             $parts = preg_split('/\s+/', trim($line));
-            if (count($parts) !== 5) return null;
+            if (5 !== count($parts)) {
+                return null;
+            }
             $row = [];
             foreach ($parts as $p) {
-                if (!preg_match('/^\d{1,2}$/', $p) && !preg_match('/^90$/', $p)) return null;
-                $n = (int)$p;
-                if ($n < 1 || $n > 90) return null;
-                if (isset($seen[$n])) return null; // unique per card
+                if (!preg_match('/^\d{1,2}$/', $p) && !preg_match('/^90$/', $p)) {
+                    return null;
+                }
+                $n = (int) $p;
+                if ($n < 1 || $n > 90) {
+                    return null;
+                }
+                if (isset($seen[$n])) {
+                    return null;
+                } // unique per card
                 $seen[$n] = true;
                 $row[] = $n;
             }
             $grid[] = $row;
         }
+
         return $grid;
     }
 
     private function gridToText(array $grid): string
     {
         $lines = [];
-        for ($i = 0; $i < 3; $i++) {
+        for ($i = 0; $i < 3; ++$i) {
             $row = $grid[$i] ?? [];
             $lines[] = implode(' ', $row);
         }
+
         return implode("\n", $lines);
     }
 
@@ -137,6 +158,7 @@ final class CardCrudController extends AbstractController
         if ($card->getId()) {
             $qb->andWhere('c.id != :id')->setParameter('id', $card->getId());
         }
+
         return (bool) $qb->getQuery()->getOneOrNullResult();
     }
 }

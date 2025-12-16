@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller\Admin;
 
 use App\Entity\Player;
@@ -16,7 +17,8 @@ final class PlayerCrudController extends AbstractController
     public function __construct(
         private readonly PlayerRepository $players,
         private readonly EntityManagerInterface $em,
-    ) {}
+    ) {
+    }
 
     #[Route('', name: 'admin_player_index')]
     public function index(): Response
@@ -36,8 +38,10 @@ final class PlayerCrudController extends AbstractController
             $this->em->persist($player);
             $this->em->flush();
             $this->addFlash('success', 'Joueur créé.');
+
             return $this->redirectToRoute('admin_player_index');
         }
+
         return $this->render('admin/player/new.html.twig', [
             'form' => $form->createView(),
         ]);
@@ -59,8 +63,10 @@ final class PlayerCrudController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->flush();
             $this->addFlash('success', 'Joueur mis à jour.');
+
             return $this->redirectToRoute('admin_player_index');
         }
+
         return $this->render('admin/player/edit.html.twig', [
             'form' => $form->createView(),
             'player' => $player,
@@ -74,6 +80,7 @@ final class PlayerCrudController extends AbstractController
         $this->em->remove($player);
         $this->em->flush();
         $this->addFlash('success', 'Joueur supprimé.');
+
         return $this->redirectToRoute('admin_player_index');
     }
 

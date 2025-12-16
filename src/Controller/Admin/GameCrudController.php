@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller\Admin;
 
 use App\Entity\Event;
@@ -17,12 +18,14 @@ final class GameCrudController extends AbstractController
     public function __construct(
         private readonly GameRepository $gameRepo,
         private readonly EntityManagerInterface $em,
-    ){}
+    ) {
+    }
 
     #[Route('', name: 'admin_game_index')]
     public function index(Event $event): Response
     {
         $games = $this->gameRepo->findBy(['event' => $event], ['position' => 'ASC']);
+
         return $this->render('admin/game/index.html.twig', [
             'event' => $event,
             'games' => $games,
@@ -39,8 +42,10 @@ final class GameCrudController extends AbstractController
             $this->em->persist($game);
             $this->em->flush();
             $this->addFlash('success', 'Partie créée');
+
             return $this->redirectToRoute('admin_game_index', ['id' => $event->getId()]);
         }
+
         return $this->render('admin/game/new.html.twig', [
             'event' => $event,
             'form' => $form,
@@ -59,8 +64,10 @@ final class GameCrudController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->flush();
             $this->addFlash('success', 'Partie mise à jour');
+
             return $this->redirectToRoute('admin_game_index', ['id' => $event->getId()]);
         }
+
         return $this->render('admin/game/edit.html.twig', [
             'event' => $event,
             'form' => $form,
@@ -83,6 +90,7 @@ final class GameCrudController extends AbstractController
         } else {
             $this->addFlash('error', 'Jeton CSRF invalide');
         }
+
         return $this->redirectToRoute('admin_game_index', ['id' => $event->getId()]);
     }
 }

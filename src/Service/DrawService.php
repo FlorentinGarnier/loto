@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Service;
 
 use App\Entity\Draw;
@@ -11,7 +12,8 @@ final class DrawService
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly DrawRepository $drawRepository,
-    ) {}
+    ) {
+    }
 
     /**
      * Remove all draws for a game and flush.
@@ -43,7 +45,10 @@ final class DrawService
         // Find if exists
         $existing = null;
         foreach ($game->getDraws() as $d) {
-            if ($d->getNumber() === $number) { $existing = $d; break; }
+            if ($d->getNumber() === $number) {
+                $existing = $d;
+                break;
+            }
         }
 
         if ($existing) {
@@ -52,7 +57,9 @@ final class DrawService
             $this->repackOrder($game);
         } else {
             $order = 0;
-            foreach ($game->getDraws() as $d) { $order = max($order, $d->getOrderIndex()); }
+            foreach ($game->getDraws() as $d) {
+                $order = max($order, $d->getOrderIndex());
+            }
             $draw = (new Draw())
                 ->setGame($game)
                 ->setNumber($number)
@@ -65,15 +72,18 @@ final class DrawService
         $this->em->flush();
 
         $ordered = [];
-        foreach ($game->getDraws() as $d) { $ordered[$d->getOrderIndex()] = $d->getNumber(); }
+        foreach ($game->getDraws() as $d) {
+            $ordered[$d->getOrderIndex()] = $d->getNumber();
+        }
         ksort($ordered);
+
         return array_values($ordered);
     }
 
     private function repackOrder(Game $game): void
     {
         $draws = $game->getDraws()->toArray();
-        usort($draws, fn(Draw $a, Draw $b) => $a->getOrderIndex() <=> $b->getOrderIndex());
+        usort($draws, fn (Draw $a, Draw $b) => $a->getOrderIndex() <=> $b->getOrderIndex());
         $i = 1;
         foreach ($draws as $d) {
             $d->setOrderIndex($i++);
