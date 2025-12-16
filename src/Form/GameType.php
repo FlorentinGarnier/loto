@@ -10,9 +10,16 @@ use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class GameType extends AbstractType
 {
+    public function __construct(
+        private TranslatorInterface $translator
+    ){
+
+    }
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -22,8 +29,8 @@ final class GameType extends AbstractType
             ->add('rule', ChoiceType::class, [
                 'label' => 'Règle',
                 'choices' => $this->choicesFromEnum(RuleType::cases()),
-                'choice_value' => fn(?RuleType $r) => $r?->value,
-                'choice_label' => fn(RuleType $r) => $r->value,
+                'choice_value' => fn(?RuleType $r) => $r?->trans($this->translator),
+                'choice_label' => fn(RuleType $r) => $r->trans($this->translator),
             ])
             ->add('prize', TextType::class, [
                 'label' => 'Lot',
@@ -31,8 +38,8 @@ final class GameType extends AbstractType
             ->add('status', ChoiceType::class, [
                 'label' => 'Statut',
                 'choices' => $this->choicesFromEnum(GameStatus::cases()),
-                'choice_value' => fn(?GameStatus $s) => $s?->value,
-                'choice_label' => fn(GameStatus $s) => $s->value,
+                'choice_value' => fn(?GameStatus $s) => $s?->trans($this->translator),
+                'choice_label' => fn(GameStatus $s) => $s->trans($this->translator),
             ])
         ;
     }

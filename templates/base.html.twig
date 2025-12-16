@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ app.request.locale }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}Loto Quine Admin{% endblock %}</title>
+    <title>{% block title %}{{ 'app.admin.loto.title'|trans }}{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     {% block head %}{% endblock %}
 </head>

@@ -129,6 +129,14 @@ final class AdminController extends AbstractController
         if ($next) {
             $game->setStatus(GameStatus::FINISHED);
             $next->setStatus(GameStatus::RUNNING);
+            if (!$next->getDraws()->isEmpty()){
+                $draws = $next->getDraws();
+                $draws->clear();
+            }
+            $gameDraws = $game->getDraws();
+            foreach ($gameDraws as $draw) {
+                $next->addDraw($draw);
+            }
             $this->em->flush();
             $this->publishGameUpdate($next);
         }

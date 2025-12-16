@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+  {% set route = app.request.attributes.get('_route') %}
+  <nav class="mb-6 bg-white shadow rounded">
+    <div class="px-4 py-3 flex items-center justify-between">
+      <div class="font-bold text-lg">
+        <a href="{{ path('admin_dashboard') }}">Admin Loto</a>
+      </div>
+      <ul class="flex items-center gap-2 text-sm">
+        <li>
+          <a href="{{ path('admin_dashboard') }}"
+             class="px-3 py-2 rounded {{ route starts with 'admin_dashboard' ? 'bg-blue-600 text-white' : 'hover:bg-gray-100' }}">Tableau de bord</a>
+        </li>
+        <li>
+          <a href="{{ path('admin_event_index') }}"
+             class="px-3 py-2 rounded {{ route starts with 'admin_event_' ? 'bg-blue-600 text-white' : 'hover:bg-gray-100' }}">Événements</a>
+        </li>
+        <li>
+          {# Lien Parties: nécessite un événement. On utilise event si dispo, sinon current.event si dispo, sinon fallback Événements #}
+          {% set gamesHref = null %}
+          {% if event is defined and event %}
+            {% set gamesHref = path('admin_game_index', {id: event.id}) %}
+          {% elseif current is defined and current and current.event %}
+            {% set gamesHref = path('admin_game_index', {id: current.event.id}) %}
+          {% endif %}
+          <a href="{{ gamesHref ?? path('admin_event_index') }}"
+             class="px-3 py-2 rounded {{ route starts with 'admin_game_' ? 'bg-blue-600 text-white' : 'hover:bg-gray-100' }}">Parties</a>
+        </li>
+        <li>
+          <a href="{{ path('admin_card_index') }}"
+             class="px-3 py-2 rounded {{ route starts with 'admin_card_' ? 'bg-blue-600 text-white' : 'hover:bg-gray-100' }}">Cartons</a>
+        </li>
+        <li>
+          <a href="{{ path('admin_player_index') }}"
+             class="px-3 py-2 rounded {{ route starts with 'admin_player_' ? 'bg-blue-600 text-white' : 'hover:bg-gray-100' }}">Joueurs</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  {% block admin_body %}{% endblock %}
+{% endblock %}

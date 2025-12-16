@@ -1,8 +1,8 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/_layout.html.twig' %}
 
 {% block title %}Administration - {{ event ? event.name : 'Aucun événement' }}{% endblock %}
 
-{% block body %}
+{% block admin_body %}
 <div class="grid md:grid-cols-3 gap-6">
     <div class="md:col-span-2 bg-white rounded shadow p-6">
         <div class="flex items-center justify-between mb-2">
@@ -129,8 +129,8 @@
             {% for g in games %}
                 <li class="flex items-center justify-between p-2 border rounded {{ (current and g.id == current.id) ? 'bg-amber-50' : '' }}">
                     <div>
-                        #{{ g.position }} – {{ g.rule.value }} – {{ g.prize }}
-                        <span class="ml-2 text-xs px-2 py-0.5 rounded {{ g.status.value == 'RUNNING' ? 'bg-green-600 text-white' : (g.status.value == 'FINISHED' ? 'bg-gray-600 text-white' : 'bg-amber-600 text-white') }}">{{ g.status.value }}</span>
+                        #{{ g.position }} – {{ ('app.rules.' ~ g.rule.value)|trans }} – {{ g.prize }}
+                        <span class="ml-2 text-xs px-2 py-0.5 rounded {{ g.status.value == 'RUNNING' ? 'bg-green-600 text-white' : (g.status.value == 'FINISHED' ? 'bg-gray-600 text-white' : 'bg-amber-600 text-white') }}">{{ g.status.value|trans }}</span>
                     </div>
                     <form method="post" action="{{ path('admin_game_start', {id: g.id}) }}"><button class="px-2 py-1 text-sm bg-blue-600 text-white rounded">Basculer</button></form>
                 </li>

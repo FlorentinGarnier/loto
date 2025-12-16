@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file source-language="fr" target-language="fr" datatype="plaintext" original="file.ext">
+    <header>
+      <tool tool-id="symfony" tool-name="Symfony"/>
+    </header>
+    <body>
+      <trans-unit id="e9Dh45C" resname="app.admin.loto.title">
+        <source>app.admin.loto.title</source>
+        <target>Loto Quine Admin</target>
+      </trans-unit>
+        <trans-unit id="1">
+            <source>app.rules.LINE</source>
+            <target>1 ligne</target>
+        </trans-unit>
+        <trans-unit id="2">
+            <source>app.rules.DOUBLE_LINE</source>
+            <target>2 lignes</target>
+        </trans-unit>
+        <trans-unit id="3">
+            <source>app.rules.FULL_CARD</source>
+            <target>Carton plein</target>
+        </trans-unit>
+        <trans-unit id="4">
+            <source>app.state.FINISHED</source>
+            <target>Terminée</target>
+        </trans-unit>
+        <trans-unit id="5">
+            <source>app.state.PENDING</source>
+            <target>En attente</target>
+        </trans-unit>
+        <trans-unit id="6">
+            <source>app.state.RUNNING</source>
+            <target>En cours</target>
+        </trans-unit>
+    </body>
+  </file>
+</xliff>
