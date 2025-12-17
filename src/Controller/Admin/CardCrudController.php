@@ -23,8 +23,35 @@ final class CardCrudController extends AbstractController
     #[Route('', name: 'admin_card_index')]
     public function index(): Response
     {
+        $cards = $this->cards->findBy([], ['id' => 'ASC']);
+
+        $matrix = [];
+        foreach ($cards as $card) {
+            $lines = [];
+            $numbers = [];
+            foreach ($card->getGrid() as $k => $row) {
+                foreach ($row as $n) {
+                    for ($i = 0; $i < 9; ++$i) {
+                        if ((int) floor(num: ($n / 10)) === $i) {
+                            $numbers[$k][$i] =  $n;
+                        }
+                    }
+                }
+                $lines[] = $numbers[$k];
+            }
+            $matrix[] = [
+                'id' => $card->getId(),
+                'reference' => $card->getReference(),
+                'player' => $card->getPlayer() ? $card->getPlayer()->getName() : null,
+                'event' => $card->getEvent(),
+                'grid' => $lines
+            ];
+        }
+dump($matrix);
+
+
         return $this->render('admin/card/index.html.twig', [
-            'cards' => $this->cards->findBy([], ['id' => 'ASC']),
+            'matrix' => $matrix,
         ]);
     }
 

@@ -1,10 +1,11 @@
-{% form_theme form 'bootstrap_5_layout.html.twig' %}
+{% form_theme form 'tailwind_2_layout.html.twig' %}
+
 {{ form_start(form) }}
   <div class="space-y-4">
-    {{ form_row(form.event) }}
-    {{ form_row(form.reference) }}
-    {{ form_row(form.player) }}
-    {{ form_row(form.gridText) }}
+    {{ form_row(form.event, {attr: {class: 'mt-1 block w-full border rounded p-2'}}) }}
+    {{ form_row(form.reference, {attr: {class: 'mt-1 block w-full border rounded p-2'}}) }}
+    {{ form_row(form.player, {attr: {class: 'mt-1 block w-full border rounded p-2'}}) }}
+    {{ form_row(form.gridText, {attr: {class: 'mt-1 block w-full border rounded p-2'}}) }}
   </div>
   <div class="mt-4">
     <button class="px-4 py-2 bg-blue-600 text-white rounded">Enregistrer</button>

@@ -28,13 +28,28 @@
         </tr>
       </thead>
       <tbody>
-        {% for c in cards %}
+        {% for c in matrix %}
           <tr>
-            <td class="p-2 border">{{ c.id }}</td>
-            <td class="p-2 border">{{ c.event ? c.event.name : '—' }}</td>
-            <td class="p-2 border">{{ c.reference }}</td>
-            <td class="p-2 border">{{ c.player ? c.player.name : '—' }}</td>
-            <td class="p-2 border text-xs whitespace-pre">{% for row in c.grid %}{{ row|join(' ') }}{% if not loop.last %}\n{% endif %}{% endfor %}</td>
+            <td class="p-2 border ">{{ c.id }}</td>
+            <td class="p-2 border ">{{ c.event ? c.event.name : '—' }}</td>
+            <td class="p-2 border ">{{ c.reference }}</td>
+            <td class="p-2 border ">{{ c.player ? c.player.name : '—' }}</td>
+            <td class="p-2 border text-center">
+                <table class="border-collapse border-2 border-green-700 bg-green-50 text-xs inline-block">
+                    <tbody>
+                    {% for line in c.grid %}
+                        <tr>
+                            {% for col in 0..8 %}
+                                <td class="border border-green-600 text-center font-semibold {{ line[col] is defined ? 'bg-white text-green-900' : 'bg-green-200 text-transparent' }}" style="width: 24px; height: 20px; padding: 2px;">
+                                    {{ line[col] ?? '.' }}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+            </td>
             <td class="p-2 border">
               <a href="{{ path('admin_card_edit', {id: c.id}) }}" class="px-2 py-1 text-sm bg-blue-600 text-white rounded">Éditer</a>
               <form method="post" action="{{ path('admin_card_delete', {id: c.id}) }}" class="inline" onsubmit="return confirm('Supprimer ce carton ?');">
