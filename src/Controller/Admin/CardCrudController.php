@@ -42,7 +42,7 @@ final class CardCrudController extends AbstractController
             $matrix[] = [
                 'id' => $card->getId(),
                 'reference' => $card->getReference(),
-                'player' => $card->getPlayer() ? $card->getPlayer()->getName() : null,
+                'player' => $card->getPlayer() ,
                 'event' => $card->getEvent(),
                 'grid' => $lines
             ];

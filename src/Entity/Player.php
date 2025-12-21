@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\PlayerRepository;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -26,6 +27,10 @@ class Player
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $notes = null;
+
+    /** @var Collection<int, Card> */
+    #[ORM\OneToMany(targetEntity: Card::class, mappedBy: 'player')]
+    private Collection $cards;
 
     public function getId(): ?int
     {
@@ -79,4 +84,28 @@ class Player
 
         return $this;
     }
+
+    public function getCards(): ?Collection
+    {
+        return $this->cards;
+    }
+
+    public function addCard(Card $card): self
+    {
+        if (!$this->cards->contains($card)) {
+            $this->cards[] = $card;
+            $card->setPlayer($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCard(Card $card): self
+    {
+        $this->cards->removeElement($card);
+
+        return $this;
+    }
+
+
 }

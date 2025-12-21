@@ -43,6 +43,7 @@ final class PlayerType extends AbstractType
                 'label' => 'Remarques',
                 'required' => false,
             ])
+            ->add('cards', CardAutocompleteField::class)
         ;
     }
 

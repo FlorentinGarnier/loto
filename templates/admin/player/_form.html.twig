@@ -1,10 +1,14 @@
 {% form_theme form 'tailwind_2_layout.html.twig' %}
 {{ form_start(form) }}
   <div class="space-y-4">
-    {{ form_row(form.name) }}
-    {{ form_row(form.email) }}
-    {{ form_row(form.phone) }}
-    {{ form_row(form.notes) }}
+    {{ form_row(form.name, {attr: {class: 'mt-1 block w-full border rounded p-2'}}) }}
+    {{ form_row(form.email, {attr: {class: 'mt-1 block w-full border rounded p-2'}}) }}
+    {{ form_row(form.phone, {attr: {class: 'mt-1 block w-full border rounded p-2'}}) }}
+      {{ form_row(form.cards) }}
+      <p>
+          <a href="{{ path('admin_card_new') }}" target="_blank" class="text-sm">+ Créer un carton</a>
+      </p>
+    {{ form_row(form.notes, {attr: {class: 'mt-1 block w-full border rounded p-2'}}) }}
   </div>
   <div class="mt-4">
     <button class="px-4 py-2 bg-blue-600 text-white rounded">Enregistrer</button>

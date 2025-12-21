@@ -41,3 +41,9 @@
 
   {% block admin_body %}{% endblock %}
 {% endblock %}
+
+{% block scripts %}
+    {{ parent() }}
+    {% block importmap %}{{ importmap('app') }}{% endblock %}
+
+{% endblock %}
