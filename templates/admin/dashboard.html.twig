@@ -50,7 +50,7 @@
                 </div>
                 <div class="p-3 rounded border bg-gray-50">
                     <div class="text-xs text-gray-500">Potentiels</div>
-                    <div class="text-2xl font-bold">{{ potentials_count }}</div>
+                    <div id="kpi-potentials" class="text-2xl font-bold">{{ potentials_count }}</div>
                 </div>
             </div>
 
@@ -71,25 +71,9 @@
             </div>
 
             <h2 class="text-xl font-semibold mb-2">Gagnants potentiels</h2>
-            {% if potentials is empty %}
-                <p class="text-gray-500">Aucun gagnant potentiel pour le moment.</p>
-            {% else %}
-                <ul class="space-y-2">
-                {% for item in potentials %}
-                    <li class="flex items-center justify-between p-2 border rounded">
-                        <div>
-                            Carton {{ item.card.reference }} – Lignes complètes: {{ item.matchedLines }}
-                            {% if item.card.player %} ({{ item.card.player.name }}){% endif %}
-                        </div>
-                        <form method="post" action="{{ path('admin_winner_validate', {id: current.id}) }}">
-                            <input type="hidden" name="card_id" value="{{ item.card.id }}" />
-                            <input type="hidden" name="_token" value="{{ csrf_token('validate_winner_' ~ current.id ~ '_' ~ item.card.id) }}" />
-                            <button class="px-2 py-1 text-sm bg-green-700 text-white rounded">Valider</button>
-                        </form>
-                    </li>
-                {% endfor %}
-                </ul>
-            {% endif %}
+            <div id="potentials-container">
+                {% include 'admin/_potentials_list.html.twig' %}
+            </div>
 
             <div class="mt-6 border-t pt-4">
                 <h2 class="text-xl font-semibold mb-2">Gagnants déclarés</h2>
@@ -186,14 +170,70 @@ if (demarqueForm) {
   };
   setStatus(false);
   const eventId = {{ event ? event.id : 'null' }};
+  const currentGameId = {{ current ? current.id : 'null' }};
   if (!eventId) return;
+
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+
   try {
-    const topic = encodeURIComponent(`/events/${eventId}/public`);
+    const topic = encodeURIComponent(`/events/${eventId}/games/${currentGameId}/state`);
     const hub = "{{ app.request.server.get('MERCURE_PUBLIC_URL') ? (app.request.server.get('MERCURE_PUBLIC_URL')) : 'null' }}";
     const url = hub && hub !== 'null' ? `${hub}?topic=${topic}` : null;
     const es = new EventSource(url);
     es.onopen = function(){ setStatus(true); };
-    es.onmessage = function(){ /* receiving data is not required here */ };
+    es.onmessage = async function(e){
+        const data = JSON.parse(e.data);
+        if (data.potentialsCount !== undefined) {
+            const kpiPotentials = document.getElementById('kpi-potentials');
+            const currentPotentials = parseInt(kpiPotentials.textContent);
+            if (data.potentialsCount > currentPotentials) {
+                // Notification
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('Nouveau gagnant potentiel !');
+                } else {
+                    alert('Nouveau gagnant potentiel !');
+                }
+            }
+            kpiPotentials.textContent = data.potentialsCount;
+
+            // Refresh fragment
+            const res = await fetch('{{ path('admin_game_potentials_fragment', {id: current ? current.id : 0}) }}');
+            if (res.ok) {
+                document.getElementById('potentials-container').innerHTML = await res.text();
+            }
+
+            // Update grid
+            if (data.draws) {
+                const cells = document.querySelectorAll('#grid .cell');
+                cells.forEach(cell => {
+                    const num = parseInt(cell.dataset.number);
+                    if (data.draws.includes(num)) {
+                        cell.classList.remove('bg-white');
+                        cell.classList.add('bg-green-600', 'text-white');
+                    } else {
+                        cell.classList.add('bg-white');
+                        cell.classList.remove('bg-green-600', 'text-white');
+                    }
+                });
+
+                // Update last number
+                const lastNum = data.draws.length > 0 ? data.draws[data.draws.length - 1] : '—';
+                const lastBadge = document.querySelector('.text-sm.text-gray-600 span.inline-block');
+                if (lastBadge) {
+                    lastBadge.textContent = lastNum;
+                    if (lastNum !== '—') {
+                        lastBadge.classList.add('bg-amber-600', 'text-white');
+                        lastBadge.classList.remove('bg-gray-200');
+                    } else {
+                        lastBadge.classList.remove('bg-amber-600', 'text-white');
+                        lastBadge.classList.add('bg-gray-200');
+                    }
+                }
+            }
+        }
+    };
     es.onerror = function(){ setStatus(false); };
     document.addEventListener('visibilitychange', function(){
       if (document.visibilityState === 'visible') {

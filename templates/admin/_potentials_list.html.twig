@@ -1,0 +1,19 @@
+{% if potentials is empty %}
+    <p class="text-gray-500">Aucun gagnant potentiel pour le moment.</p>
+{% else %}
+    <ul class="space-y-2">
+    {% for item in potentials %}
+        <li class="flex items-center justify-between p-2 border rounded">
+            <div>
+                Carton {{ item.card.reference }} – Lignes complètes: {{ item.matchedLines }}
+                {% if item.card.player %} ({{ item.card.player.name }}){% endif %}
+            </div>
+            <form method="post" action="{{ path('admin_winner_validate', {id: current.id}) }}">
+                <input type="hidden" name="card_id" value="{{ item.card.id }}" />
+                <input type="hidden" name="_token" value="{{ csrf_token('validate_winner_' ~ current.id ~ '_' ~ item.card.id) }}" />
+                <button class="px-2 py-1 text-sm bg-green-700 text-white rounded">Valider</button>
+            </form>
+        </li>
+    {% endfor %}
+    </ul>
+{% endif %}

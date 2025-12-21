@@ -103,6 +103,7 @@ final class AdminController extends AbstractController
     {
         $event = $game->getEvent();
         // set running only this one
+        $previousRunningGame = $this->gameRepo->findRunningByEvent($event);
         foreach ($this->gameRepo->findByEventOrdered($event) as $g) {
             $g->setStatus($g === $game ? GameStatus::RUNNING : (GameStatus::RUNNING === $g->getStatus() ? GameStatus::PENDING : $g->getStatus()));
         }
@@ -167,15 +168,32 @@ final class AdminController extends AbstractController
         return $this->redirectToRoute('admin_dashboard');
     }
 
+    #[Route('/game/{id}/potentials/fragment', name: 'admin_game_potentials_fragment', methods: ['GET'])]
+    public function potentialsFragment(Game $game): Response
+    {
+        $cards = $this->cardRepo->findByEvent($game->getEvent());
+        $potentials = $this->winnerService->findPotentialWinners($game, $cards);
+
+        return $this->render('admin/_potentials_list.html.twig', [
+            'current' => $game,
+            'potentials' => $potentials,
+        ]);
+    }
+
     private function publishGameUpdate(Game $game): void
     {
         $eventId = $game->getEvent()->getId();
         $gameId = $game->getId();
         $topic = "/events/{$eventId}/games/{$gameId}/state";
+
+        $cards = $this->cardRepo->findByEvent($game->getEvent());
+        $potentials = $this->winnerService->findPotentialWinners($game, $cards);
+
         $payload = [
             'gameId' => $gameId,
             'status' => $game->getStatus()->value,
             'draws' => array_map(fn ($d) => $d->getNumber(), $game->getDraws()->toArray()),
+            'potentialsCount' => \count($potentials),
         ];
         $update = new Update($topic, json_encode($payload));
         $this->hub->publish($update);
