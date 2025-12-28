@@ -295,8 +295,8 @@ final class AdminController extends AbstractController
             return $this->redirectToRoute('admin_dashboard');
         }
         $card = $this->cardRepo->find($cardId);
-        if (!$card || $card->getEvent()?->getId() !== $game->getEvent()?->getId()) {
-            $this->addFlash('error', 'La carte ne correspond pas à l’événement.');
+        if (!$card || $card->getPlayer()?->getEvent()?->getId() !== $game->getEvent()?->getId()) {
+            $this->addFlash('error', 'La carte ne correspond pas a l\'evenement.');
 
             return $this->redirectToRoute('admin_dashboard');
         }

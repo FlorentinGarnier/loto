@@ -19,6 +19,7 @@ class CardAutocompleteField extends AbstractType
             'label' => 'Cartons',
             'placeholder' => 'Rechercher un carton...',
             'choice_label' => 'reference',
+            'by_reference' => false,
             'multiple' => true,
         ]);
     }

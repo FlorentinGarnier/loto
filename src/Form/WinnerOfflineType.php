@@ -32,9 +32,10 @@ final class WinnerOfflineType extends AbstractType
                     return sprintf('#%d · %s%s', $c->getId(), $c->getReference(), $c->getPlayer() ? ' · '.$c->getPlayer()->getName() : '');
                 },
                 'query_builder' => function (EntityRepository $er) use ($event) {
-                    $qb = $er->createQueryBuilder('c');
+                    $qb = $er->createQueryBuilder('c')
+                        ->leftJoin('c.player', 'p');
                     if ($event) {
-                        $qb->andWhere('c.event = :event')->setParameter('event', $event);
+                        $qb->andWhere('p.event = :event')->setParameter('event', $event);
                     }
 
                     return $qb->orderBy('c.id', 'ASC');

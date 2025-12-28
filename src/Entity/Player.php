@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\PlayerRepository;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -28,9 +29,18 @@ class Player
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $notes = null;
 
+    #[ORM\ManyToOne(targetEntity: Event::class, inversedBy: 'players')]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Event $event = null;
+
     /** @var Collection<int, Card> */
-    #[ORM\OneToMany(targetEntity: Card::class, mappedBy: 'player')]
+    #[ORM\OneToMany(targetEntity: Card::class, mappedBy: 'player', cascade: ['persist'])]
     private Collection $cards;
+
+    public function __construct()
+    {
+        $this->cards = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -102,10 +112,24 @@ class Player
 
     public function removeCard(Card $card): self
     {
-        $this->cards->removeElement($card);
+        if ($this->cards->removeElement($card)) {
+            if ($card->getPlayer() === $this) {
+                $card->setPlayer(null);
+            }
+        }
 
         return $this;
     }
 
+    public function getEvent(): ?Event
+    {
+        return $this->event;
+    }
 
+    public function setEvent(?Event $event): self
+    {
+        $this->event = $event;
+
+        return $this;
+    }
 }

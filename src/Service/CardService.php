@@ -15,15 +15,13 @@ final class CardService
     }
 
     /**
-     * Unassign all players from all cards of an event.
+     * Unassign all players from an event (removes players from event).
      */
     public function unassignAllPlayersForEvent(Event $event): void
     {
-        $cards = $this->cardRepository->findByEvent($event);
-
-        foreach ($cards as $card) {
-            $card->setPlayer(null);
-            $this->em->persist($card);
+        foreach ($event->getPlayers() as $player) {
+            $player->setEvent(null);
+            $this->em->persist($player);
         }
 
         $this->em->flush();

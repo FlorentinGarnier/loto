@@ -15,10 +15,6 @@ class Card
     #[ORM\Column(type: Types::INTEGER)]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Event::class)]
-    #[ORM\JoinColumn(nullable: true)]
-    private ?Event $event = null;
-
     #[ORM\Column(type: Types::STRING, length: 50)]
     private string $reference = '';
 
@@ -26,24 +22,13 @@ class Card
     #[ORM\Column(type: Types::JSON)]
     private array $grid = [];
 
-    #[ORM\ManyToOne(targetEntity: Player::class)]
+    #[ORM\ManyToOne(targetEntity: Player::class, inversedBy: 'cards')]
+    #[ORM\JoinColumn(nullable: true)]
     private ?Player $player = null;
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getEvent(): ?Event
-    {
-        return $this->event;
-    }
-
-    public function setEvent(?Event $event): self
-    {
-        $this->event = $event;
-
-        return $this;
     }
 
     public function getReference(): string
@@ -80,5 +65,10 @@ class Card
         $this->player = $player;
 
         return $this;
+    }
+
+    public function getEvent(): ?Event
+    {
+        return $this->player->getEvent();
     }
 }

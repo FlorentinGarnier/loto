@@ -2,7 +2,9 @@
 
 namespace App\Form;
 
+use App\Entity\Event;
 use App\Entity\Player;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\TelType;
@@ -42,6 +44,13 @@ final class PlayerType extends AbstractType
             ->add('notes', TextareaType::class, [
                 'label' => 'Remarques',
                 'required' => false,
+            ])
+            ->add('event', EntityType::class, [
+                'class' => Event::class,
+                'choice_label' => 'name',
+                'label' => 'Événement (optionnel)',
+                'required' => false,
+                'placeholder' => '— Aucun —',
             ])
             ->add('cards', CardAutocompleteField::class)
         ;

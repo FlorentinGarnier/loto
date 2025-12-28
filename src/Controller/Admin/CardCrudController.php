@@ -30,7 +30,7 @@ final class CardCrudController extends AbstractController
 
         $qb = $this->cards->createQueryBuilder('c')
             ->leftJoin('c.player', 'p')
-            ->leftJoin('c.event', 'e');
+            ->leftJoin('p.event', 'e');
 
         if ($search) {
             $qb->where('c.reference LIKE :search')
@@ -64,8 +64,8 @@ final class CardCrudController extends AbstractController
             $matrix[] = [
                 'id' => $card->getId(),
                 'reference' => $card->getReference(),
-                'player' => $card->getPlayer() ,
-                'event' => $card->getEvent(),
+                'player' => $card->getPlayer(),
+                'event' => $card->getPlayer()?->getEvent(),
                 'grid' => $lines
             ];
         }
@@ -91,15 +91,11 @@ final class CardCrudController extends AbstractController
                 $this->addFlash('error', 'La grille doit contenir 3 lignes de 5 nombres entre 1 et 90, sans doublons.');
             } else {
                 $card->setGrid($grid);
-                if ($this->existsReference($card)) {
-                    $this->addFlash('error', 'Référence déjà utilisée pour cet événement.');
-                } else {
-                    $this->em->persist($card);
-                    $this->em->flush();
-                    $this->addFlash('success', 'Carton créé.');
+                $this->em->persist($card);
+                $this->em->flush();
+                $this->addFlash('success', 'Carton créé.');
 
-                    return $this->redirectToRoute('admin_card_index');
-                }
+                return $this->redirectToRoute('admin_card_index');
             }
         }
 
@@ -121,14 +117,10 @@ final class CardCrudController extends AbstractController
                 $this->addFlash('error', 'La grille doit contenir 3 lignes de 5 nombres entre 1 et 90, sans doublons.');
             } else {
                 $card->setGrid($grid);
-                if ($this->existsReference($card)) {
-                    $this->addFlash('error', 'Référence déjà utilisée pour cet événement.');
-                } else {
-                    $this->em->flush();
-                    $this->addFlash('success', 'Carton mis à jour.');
+                $this->em->flush();
+                $this->addFlash('success', 'Carton mis à jour.');
 
-                    return $this->redirectToRoute('admin_card_index');
-                }
+                return $this->redirectToRoute('admin_card_index');
             }
         }
 
@@ -200,16 +192,4 @@ final class CardCrudController extends AbstractController
         return implode("\n", $lines);
     }
 
-    private function existsReference(Card $card): bool
-    {
-        $qb = $this->cards->createQueryBuilder('c')
-            ->andWhere('c.event = :e AND c.reference = :r')
-            ->setParameter('e', $card->getEvent())
-            ->setParameter('r', $card->getReference());
-        if ($card->getId()) {
-            $qb->andWhere('c.id != :id')->setParameter('id', $card->getId());
-        }
-
-        return (bool) $qb->getQuery()->getOneOrNullResult();
-    }
 }

@@ -17,11 +17,15 @@ class CardRepository extends ServiceEntityRepository
         parent::__construct($registry, Card::class);
     }
 
-    /** @return Card[] */
+    /**
+     * Find all cards belonging to players assigned to an event.
+     * @return Card[]
+     */
     public function findByEvent(Event $event): array
     {
         return $this->createQueryBuilder('c')
-            ->andWhere('c.event = :e')
+            ->innerJoin('c.player', 'p')
+            ->andWhere('p.event = :e')
             ->setParameter('e', $event)
             ->orderBy('c.id', 'ASC')
             ->getQuery()->getResult();

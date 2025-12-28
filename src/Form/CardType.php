@@ -19,22 +19,9 @@ final class CardType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('event', EntityType::class, [
-                'class' => Event::class,
-                'choice_label' => 'name',
-                'label' => 'Événement',
-                'placeholder' => '— Choisir —',
-            ])
             ->add('reference', TextType::class, [
                 'label' => 'Référence du carton',
                 'constraints' => [new NotBlank(message: 'La référence est requise.'), new Length(max: 50)],
-            ])
-            ->add('player', EntityType::class, [
-                'class' => Player::class,
-                'choice_label' => 'name',
-                'label' => 'Joueur (optionnel)',
-                'required' => false,
-                'placeholder' => '— Aucun —',
             ])
             ->add('gridText', TextareaType::class, [
                 'label' => 'Grille (3 lignes de 5 nombres 1–90)',
