@@ -25,9 +25,11 @@
           <th class="p-2 text-left border">Actions</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody
+        data-controller="sortable"
+        data-sortable-url-value="{{ path('admin_game_reorder', {id: event.id}) }}">
         {% for g in games %}
-          <tr class="border-b">
+          <tr class="border-b cursor-move" data-id="{{ g.id }}">
             <td class="p-2 border">#{{ g.position }}</td>
             <td class="p-2 border">{{ g.rule.value }}</td>
             <td class="p-2 border">{{ g.prize }}</td>

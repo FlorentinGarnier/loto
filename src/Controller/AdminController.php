@@ -163,9 +163,29 @@ final class AdminController extends AbstractController
         }
         $this->drawService->clearAll($game);
         $this->publishGameUpdate($game);
-        $this->addFlash('success', 'Tirages réinitialisés pour la partie courante.');
 
         return $this->redirectToRoute('admin_dashboard');
+    }
+
+    #[Route('/game/reorder', name: 'admin_game_reorder', methods: ['POST'])]
+    public function reorderGames(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        if (!$data || !isset($data['order'])) {
+            return new JsonResponse(['error' => 'Invalid data'], 400);
+        }
+
+        $order = $data['order']; // Array of game IDs in the new order
+        foreach ($order as $index => $gameId) {
+            $game = $this->gameRepo->find($gameId);
+            if ($game) {
+                $game->setPosition($index + 1);
+            }
+        }
+
+        $this->em->flush();
+
+        return new JsonResponse(['status' => 'ok']);
     }
 
     #[Route('/game/{id}/potentials/fragment', name: 'admin_game_potentials_fragment', methods: ['GET'])]

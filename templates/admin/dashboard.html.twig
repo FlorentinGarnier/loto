@@ -109,10 +109,11 @@
 
     <div class="bg-white rounded shadow p-6">
         <h2 class="text-xl font-semibold mb-2">Parties</h2>
-        <ul class="space-y-2">
+        <ul class="space-y-2" {{ stimulus_controller('sortable', { url: path('admin_game_reorder') }) }}>
             {% for g in games %}
-                <li class="flex items-center justify-between p-2 border rounded {{ (current and g.id == current.id) ? 'bg-amber-50' : '' }}">
+                <li data-id="{{ g.id }}" class="flex items-center justify-between p-2 border rounded cursor-move {{ (current and g.id == current.id) ? 'bg-amber-50' : 'bg-white' }}">
                     <div>
+                        <span class="text-gray-400 mr-2">☰</span>
                         #{{ g.position }} – {{ ('app.rules.' ~ g.rule.value)|trans }} – {{ g.prize }}
                         <span class="ml-2 text-xs px-2 py-0.5 rounded {{ g.status.value == 'RUNNING' ? 'bg-green-600 text-white' : (g.status.value == 'FINISHED' ? 'bg-gray-600 text-white' : 'bg-amber-600 text-white') }}">{{ g.status.value|trans }}</span>
                     </div>
