@@ -29,6 +29,21 @@ final class DrawService
     }
 
     /**
+     * Remove all draws for all games of an event.
+     */
+    public function clearAllForEvent(\App\Entity\Event $event): void
+    {
+        foreach ($event->getGames() as $game) {
+            foreach ($game->getDraws()->toArray() as $d) {
+                $game->removeDraw($d);
+                $this->em->remove($d);
+            }
+            $this->em->persist($game);
+        }
+        $this->em->flush();
+    }
+
+    /**
      * Toggle a number for a game.
      * - If not drawn: append as next orderIndex
      * - If already drawn: remove it and re-pack order indexes

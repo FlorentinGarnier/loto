@@ -20,8 +20,17 @@
     </div>
   </dl>
 
-  <div class="mt-6">
+  <div class="mt-6 flex gap-3 flex-wrap">
     <a class="px-3 py-2 bg-purple-600 text-white rounded" href="{{ path('admin_game_index', {id: event.id}) }}">Gérer les parties</a>
+    <form method="post" action="{{ path('admin_event_reset_all_draws', {id: event.id}) }}" onsubmit="return confirm('Confirmer la remise à zéro de tous les tirages de cet événement ?');">
+      <button type="submit" class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700">Réinitialiser tous les tirages</button>
+    </form>
+    <form method="post" action="{{ path('admin_event_reset_all_winners', {id: event.id}) }}" onsubmit="return confirm('Confirmer la suppression de tous les gagnants de cet événement ?');">
+      <button type="submit" class="px-3 py-2 bg-orange-600 text-white rounded hover:bg-orange-700">Supprimer tous les gagnants</button>
+    </form>
+    <form method="post" action="{{ path('admin_event_unassign_all_players', {id: event.id}) }}" onsubmit="return confirm('Confirmer la désassociation de tous les joueurs des cartons ?');">
+      <button type="submit" class="px-3 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700">Désassocier tous les joueurs</button>
+    </form>
   </div>
 </div>
 {% endblock %}

@@ -11,8 +11,10 @@ use App\Enum\WinnerSource;
 use App\Repository\CardRepository;
 use App\Repository\EventRepository;
 use App\Repository\GameRepository;
+use App\Service\CardService;
 use App\Service\DrawService;
 use App\Service\WinnerDetectionService;
+use App\Service\WinnerService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -33,6 +35,8 @@ final class AdminController extends AbstractController
         private readonly CardRepository $cardRepo,
         private readonly DrawService $drawService,
         private readonly WinnerDetectionService $winnerService,
+        private readonly WinnerService $winnerManagementService,
+        private readonly CardService $cardService,
         private readonly HubInterface $hub,
         private readonly UrlGeneratorInterface $urlGenerator,
         private readonly EntityManagerInterface $em,
@@ -163,6 +167,33 @@ final class AdminController extends AbstractController
         }
         $this->drawService->clearAll($game);
         $this->publishGameUpdate($game);
+
+        return $this->redirectToRoute('admin_dashboard');
+    }
+
+    #[Route('/event/{id}/reset-all-draws', name: 'admin_event_reset_all_draws', methods: ['POST'])]
+    public function resetAllDraws(Event $event): RedirectResponse
+    {
+        $this->drawService->clearAllForEvent($event);
+        $this->addFlash('success', 'Tous les tirages de l\'événement ont été remis à zéro.');
+
+        return $this->redirectToRoute('admin_dashboard');
+    }
+
+    #[Route('/event/{id}/reset-all-winners', name: 'admin_event_reset_all_winners', methods: ['POST'])]
+    public function resetAllWinners(Event $event): RedirectResponse
+    {
+        $this->winnerManagementService->clearAllForEvent($event);
+        $this->addFlash('success', 'Tous les gagnants de l\'événement ont été supprimés.');
+
+        return $this->redirectToRoute('admin_dashboard');
+    }
+
+    #[Route('/event/{id}/unassign-all-players', name: 'admin_event_unassign_all_players', methods: ['POST'])]
+    public function unassignAllPlayers(Event $event): RedirectResponse
+    {
+        $this->cardService->unassignAllPlayersForEvent($event);
+        $this->addFlash('success', 'Tous les joueurs ont été désassociés des cartons.');
 
         return $this->redirectToRoute('admin_dashboard');
     }
