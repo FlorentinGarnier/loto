@@ -6,6 +6,7 @@ use App\Entity\Card;
 use App\Form\CardType;
 use App\Repository\CardRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,12 +22,33 @@ final class CardCrudController extends AbstractController
     }
 
     #[Route('', name: 'admin_card_index')]
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $cards = $this->cards->findBy([], ['id' => 'ASC']);
+        $search = $request->query->get('search', '');
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = 10;
+
+        $qb = $this->cards->createQueryBuilder('c')
+            ->leftJoin('c.player', 'p')
+            ->leftJoin('c.event', 'e');
+
+        if ($search) {
+            $qb->where('c.reference LIKE :search')
+                ->orWhere('p.name LIKE :search')
+                ->orWhere('e.name LIKE :search')
+                ->setParameter('search', '%' . $search . '%');
+        }
+
+        $qb->orderBy('c.id', 'ASC')
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+
+        $paginator = new Paginator($qb->getQuery());
+        $totalItems = count($paginator);
+        $totalPages = (int) ceil($totalItems / $limit);
 
         $matrix = [];
-        foreach ($cards as $card) {
+        foreach ($paginator as $card) {
             $lines = [];
             $numbers = [];
             foreach ($card->getGrid() as $k => $row) {
@@ -47,11 +69,13 @@ final class CardCrudController extends AbstractController
                 'grid' => $lines
             ];
         }
-dump($matrix);
-
 
         return $this->render('admin/card/index.html.twig', [
             'matrix' => $matrix,
+            'search' => $search,
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'totalItems' => $totalItems,
         ]);
     }
 

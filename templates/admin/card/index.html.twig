@@ -15,6 +15,16 @@
     {% endfor %}
   {% endfor %}
 
+  <form method="get" class="mb-4">
+    <div class="flex gap-2">
+      <input type="text" name="search" value="{{ search }}" placeholder="Rechercher par référence, joueur ou événement..." class="flex-1 px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Rechercher</button>
+      {% if search %}
+        <a href="{{ path('admin_card_index') }}" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Réinitialiser</a>
+      {% endif %}
+    </div>
+  </form>
+
   <div class="overflow-x-auto">
     <table class="min-w-full border">
       <thead>
@@ -64,5 +74,32 @@
       </tbody>
     </table>
   </div>
+
+  {% if totalPages > 1 %}
+    <div class="mt-4 flex items-center justify-between">
+      <div class="text-sm text-gray-600">
+        Total: {{ totalItems }} carton{{ totalItems > 1 ? 's' : '' }}
+      </div>
+      <div class="flex gap-1">
+        {% if currentPage > 1 %}
+          <a href="{{ path('admin_card_index', {page: currentPage - 1, search: search}) }}" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">&laquo; Précédent</a>
+        {% endif %}
+
+        {% for p in 1..totalPages %}
+          {% if p == currentPage %}
+            <span class="px-3 py-1 bg-blue-600 text-white rounded">{{ p }}</span>
+          {% elseif (p >= currentPage - 2 and p <= currentPage + 2) or p == 1 or p == totalPages %}
+            <a href="{{ path('admin_card_index', {page: p, search: search}) }}" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">{{ p }}</a>
+          {% elseif p == currentPage - 3 or p == currentPage + 3 %}
+            <span class="px-3 py-1 text-gray-400">...</span>
+          {% endif %}
+        {% endfor %}
+
+        {% if currentPage < totalPages %}
+          <a href="{{ path('admin_card_index', {page: currentPage + 1, search: search}) }}" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Suivant &raquo;</a>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
 </div>
 {% endblock %}
