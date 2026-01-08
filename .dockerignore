@@ -1,0 +1,46 @@
+# Git
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Tests
+tests/
+features/
+behat.yml.dist
+phpunit.dist.xml
+.phpunit.cache/
+
+# Development
+.env.dev
+.env.test
+.php-cs-fixer.cache
+.php-cs-fixer.dist.php
+.php-cs-fixer.php
+compose.yaml
+compose.override.yaml
+docker-compose*.yml
+
+# Documentation
+doc/
+README.md
+
+# Vendor (sera réinstallé dans le build)
+vendor/
+
+# Cache et logs (seront régénérés)
+var/cache/*
+var/log/*
+var/sessions/*
+
+# Assets publics (seront régénérés)
+public/bundles/
+public/assets/
+
+# Autres
+.editorconfig
+.junie/
