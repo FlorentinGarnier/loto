@@ -27,13 +27,19 @@ class Game
     private int $position = 0;
 
     #[ORM\Column(type: Types::STRING, enumType: RuleType::class, length: 20)]
-    private RuleType $rule = RuleType::LINE;
+    private RuleType $rule = RuleType::QUINE;
 
     #[ORM\Column(type: Types::STRING, length: 255)]
     private string $prize = '';
 
     #[ORM\Column(type: Types::STRING, enumType: GameStatus::class, length: 20)]
     private GameStatus $status = GameStatus::PENDING;
+
+    #[ORM\Column(type: Types::BOOLEAN, options: ['default' => false])]
+    private bool $isFrozen = false;
+
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    private ?int $freezeOrderIndex = null;
 
     /** @var Collection<int, Draw> */
     #[ORM\OneToMany(mappedBy: 'game', targetEntity: Draw::class, cascade: ['persist'], orphanRemoval: true)]
@@ -165,6 +171,46 @@ class Game
                 $winner->setGame(null);
             }
         }
+
+        return $this;
+    }
+
+    public function isFrozen(): bool
+    {
+        return $this->isFrozen;
+    }
+
+    public function setIsFrozen(bool $isFrozen): self
+    {
+        $this->isFrozen = $isFrozen;
+
+        return $this;
+    }
+
+    public function getFreezeOrderIndex(): ?int
+    {
+        return $this->freezeOrderIndex;
+    }
+
+    public function setFreezeOrderIndex(?int $freezeOrderIndex): self
+    {
+        $this->freezeOrderIndex = $freezeOrderIndex;
+
+        return $this;
+    }
+
+    public function freeze(int $orderIndex): self
+    {
+        $this->isFrozen = true;
+        $this->freezeOrderIndex = $orderIndex;
+
+        return $this;
+    }
+
+    public function unfreeze(): self
+    {
+        $this->isFrozen = false;
+        $this->freezeOrderIndex = null;
 
         return $this;
     }

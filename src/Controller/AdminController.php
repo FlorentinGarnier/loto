@@ -93,10 +93,27 @@ final class AdminController extends AbstractController
 
             return $this->redirectToRoute('admin_dashboard');
         }
-        $numbers = $this->drawService->toggleNumber($game, $number);
+
+        // Vérifier si la partie est gelée
+        if ($game->isFrozen()) {
+            if ($this->isXmlHttpRequest()) {
+                return new JsonResponse(['error' => 'Game is frozen'], 400);
+            }
+            $this->addFlash('error', 'Impossible de cocher: la partie est gelée (gagnant détecté).');
+
+            return $this->redirectToRoute('admin_dashboard');
+        }
+
+        $cards = $this->cardRepo->findByEvent($game->getEvent());
+        $result = $this->drawService->toggleNumber($game, $number, $cards);
         $this->publishGameUpdate($game);
+
         if ($this->isXmlHttpRequest()) {
-            return new JsonResponse(['numbers' => $numbers]);
+            return new JsonResponse($result);
+        }
+
+        if ($result['frozen']) {
+            $this->addFlash('success', 'Gagnant détecté ! La partie est gelée.');
         }
 
         return $this->redirectToRoute('admin_dashboard');
@@ -245,6 +262,8 @@ final class AdminController extends AbstractController
             'status' => $game->getStatus()->value,
             'draws' => array_map(fn ($d) => $d->getNumber(), $game->getDraws()->toArray()),
             'potentialsCount' => \count($potentials),
+            'isFrozen' => $game->isFrozen(),
+            'freezeOrderIndex' => $game->getFreezeOrderIndex(),
         ];
         $update = new Update($topic, json_encode($payload));
         $this->hub->publish($update);
@@ -264,16 +283,17 @@ final class AdminController extends AbstractController
             return $this->redirectToRoute('admin_dashboard');
         }
         $data = $form->getData();
-        $winner = (new Winner())
-            ->setGame($game)
-            ->setSource(WinnerSource::OFFLINE)
-            ->setReference($data['reference'] ?? null);
-        if (($data['card'] ?? null) instanceof Card) {
-            $winner->setCard($data['card']);
+        $reference = $data['reference'] ?? null;
+        $card = ($data['card'] ?? null) instanceof Card ? $data['card'] : null;
+
+        try {
+            $this->winnerManagementService->validateOfflineWinner($game, $reference, $card);
+            $this->addFlash('success', 'Gagnant OFFLINE enregistré et partie gelée.');
+        } catch (\RuntimeException $e) {
+            $this->addFlash('error', $e->getMessage());
         }
-        $this->em->persist($winner);
-        $this->em->flush();
-        $this->addFlash('success', 'Gagnant OFFLINE enregistré.');
+
+        $this->publishGameUpdate($game);
 
         return $this->redirectToRoute('admin_dashboard');
     }
@@ -300,14 +320,7 @@ final class AdminController extends AbstractController
 
             return $this->redirectToRoute('admin_dashboard');
         }
-        // Prevent duplicates
-        foreach ($game->getWinners() as $w) {
-            if ($w->getCard() && $w->getCard()->getId() === $cardId) {
-                $this->addFlash('warning', 'Ce gagnant est déjà validé.');
 
-                return $this->redirectToRoute('admin_dashboard');
-            }
-        }
         // Ensure the card is still a potential winner for the current rule
         $cards = $this->cardRepo->findByEvent($game->getEvent());
         $potentials = $this->winnerService->findPotentialWinners($game, $cards);
@@ -323,14 +336,15 @@ final class AdminController extends AbstractController
 
             return $this->redirectToRoute('admin_dashboard');
         }
-        $winner = (new Winner())
-            ->setGame($game)
-            ->setSource(WinnerSource::SYSTEM)
-            ->setCard($card)
-            ->setReference($card->getReference());
-        $this->em->persist($winner);
-        $this->em->flush();
-        $this->addFlash('success', 'Gagnant validé.');
+
+        try {
+            $this->winnerManagementService->validateSystemWinner($game, $card);
+            $this->addFlash('success', 'Gagnant validé et carton bloqué.');
+        } catch (\RuntimeException $e) {
+            $this->addFlash('error', $e->getMessage());
+        }
+
+        $this->publishGameUpdate($game);
 
         return $this->redirectToRoute('admin_dashboard');
     }

@@ -29,6 +29,9 @@ class Winner
     #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
     private ?string $reference = null;
 
+    #[ORM\Column(type: Types::INTEGER)]
+    private int $winningOrderIndex = 0;
+
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
@@ -93,5 +96,17 @@ class Winner
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function getWinningOrderIndex(): int
+    {
+        return $this->winningOrderIndex;
+    }
+
+    public function setWinningOrderIndex(int $winningOrderIndex): self
+    {
+        $this->winningOrderIndex = $winningOrderIndex;
+
+        return $this;
     }
 }

@@ -12,11 +12,13 @@ final class DrawService
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly DrawRepository $drawRepository,
+        private readonly WinnerDetectionService $winnerDetectionService,
     ) {
     }
 
     /**
-     * Remove all draws for a game and flush.
+     * Remove all draws for a game, unfreeze it, and flush.
+     * Also unblocks all cards that were blocked as winners.
      */
     public function clearAll(Game $game): void
     {
@@ -24,6 +26,20 @@ final class DrawService
             $game->removeDraw($d);
             $this->em->remove($d);
         }
+
+        // Dégeler la partie
+        $game->unfreeze();
+
+        // Débloquer tous les cartons gagnants de cette partie
+        foreach ($game->getWinners() as $winner) {
+            if ($winner->getCard() && $winner->getCard()->isBlocked()) {
+                $winner->getCard()->unblock();
+                $this->em->persist($winner->getCard());
+            }
+            $game->removeWinner($winner);
+            $this->em->remove($winner);
+        }
+
         $this->em->persist($game);
         $this->em->flush();
     }
@@ -45,16 +61,22 @@ final class DrawService
 
     /**
      * Toggle a number for a game.
-     * - If not drawn: append as next orderIndex
+     * - If not drawn: append as next orderIndex and check for winners (auto-freeze)
      * - If already drawn: remove it and re-pack order indexes
      * Returns the updated list of draw numbers ordered.
      *
-     * @return int[]
+     * @param array $cards Les cartons à vérifier pour la détection des gagnants
+     * @return array{numbers: int[], frozen: bool, freezeOrderIndex: int|null}
      */
-    public function toggleNumber(Game $game, int $number): array
+    public function toggleNumber(Game $game, int $number, array $cards = []): array
     {
         if ($number < 1 || $number > 90) {
             throw new \InvalidArgumentException('Number must be between 1 and 90');
+        }
+
+        // Vérifier si la partie est gelée
+        if ($game->isFrozen()) {
+            throw new \RuntimeException('Cannot toggle numbers on a frozen game');
         }
 
         // Find if exists
@@ -81,6 +103,14 @@ final class DrawService
                 ->setOrderIndex($order + 1);
             $game->addDraw($draw);
             $this->em->persist($draw);
+
+            // Détection automatique des gagnants si on a des cartons
+            if (count($cards) > 0) {
+                $freezeOrderIndex = $this->winnerDetectionService->checkForWinners($game, $cards);
+                if ($freezeOrderIndex !== null) {
+                    $game->freeze($freezeOrderIndex);
+                }
+            }
         }
 
         $this->em->persist($game);
@@ -92,7 +122,11 @@ final class DrawService
         }
         ksort($ordered);
 
-        return array_values($ordered);
+        return [
+            'numbers' => array_values($ordered),
+            'frozen' => $game->isFrozen(),
+            'freezeOrderIndex' => $game->getFreezeOrderIndex(),
+        ];
     }
 
     private function repackOrder(Game $game): void

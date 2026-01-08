@@ -69,40 +69,170 @@ Behat
 - Session par défaut: kernel Symfony via BrowserKit (pas de serveur externe).
 - Pour la DB en scénarios: utilisez `APP_ENV=test`, base dédiée, purge entre scénarios, fixtures côté Contexts. Ne dépendez pas du hub Mercure; validez l’état via HTTP/DOM.
 
-6) Structure (aperçu)
-assets/               JS/CSS (AssetMapper)
-bin/
-config/
+6) Structure du projet
+```
+assets/               JS/CSS (AssetMapper + Stimulus)
+bin/                  Commandes console (console, phpunit)
+config/               Configuration Symfony (services, routes, packages)
 doc/                  Spécifications (voir spec.md)
-features/             Scénarios Behat
-public/
-src/                  Code applicatif (Entities, Repositories, Services, Controllers)
-templates/            Twig (admin/public)
+features/             Scénarios Behat (tests fonctionnels)
+migrations/           Migrations Doctrine
+public/               Point d'entrée web (index.php)
+src/
+  ├── Command/        Commandes CLI (ImportCardsCommand, SeedDemoCommand)
+  ├── Controller/     Contrôleurs HTTP
+  │   ├── Admin/      Zone d'administration
+  │   ├── AdminController.php
+  │   ├── PublicController.php
+  │   └── SecurityController.php
+  ├── Entity/         Entités Doctrine
+  │   ├── Card.php    Cartons de loto (référence + grille 3x5)
+  │   ├── Draw.php    Numéros tirés (1-90)
+  │   ├── Event.php   Événements (soirées loto)
+  │   ├── Game.php    Parties d'un événement (règle + dotation)
+  │   ├── Player.php  Joueurs (nom, email, téléphone)
+  │   └── Winner.php  Gagnants (lien vers Card et Game)
+  ├── Enum/           Énumérations PHP 8.1+
+  │   ├── BlockedReason.php   (WINNER)
+  │   ├── GameStatus.php      (PENDING, RUNNING, FINISHED)
+  │   ├── RuleType.php        (QUINE, DOUBLE_QUINE, FULL_CARD)
+  │   └── WinnerSource.php    (SYSTEM, OFFLINE)
+  ├── Form/           Formulaires Symfony
+  ├── Repository/     Repositories Doctrine
+  └── Service/        Logique métier
+      ├── CardService.php              Gestion des cartons
+      ├── DrawService.php              Tirages de numéros
+      ├── WinnerDetectionService.php   Détection automatique
+      └── WinnerService.php            Validation des gagnants
+templates/            Vues Twig (admin/public)
 tests/                PHPUnit & Behat Contexts
+translations/         Fichiers de traduction
+```
 
-7) Conventions & règles métier (résumé)
-- PSR-12 et bonnes pratiques Symfony. Contrôleurs fins, logique métier dans des services testables.
-- Doctrine: entités/repos sous `src/Entity` et `src/Repository`, schéma via migrations.
-- Mercure: topics stables (ex: /events/{id}/draws, /events/{id}/public), CORS aligné sur l’URL de l’app, tolérance aux replays/décoche; ne pas supprimer l’historique.
-- Messenger: transport Doctrine (`auto_setup=0`). Si async, créer les tables et lancer un worker `php bin/console messenger:consume -vv`.
-- Base de données: transactions explicites autour des tirages/validation gagnants, pas de hard-delete (audit par timestamps).
-- Règles gagnants: LINE (≥ 1 ligne), DOUBLE_LINE (≥ 2 lignes), FULL_CARD (3 lignes). Gagnants « potentiels » jusqu’à validation admin. Support OFFLINE avec référence libre.
-- Séquence: passer au jeu suivant bascule les statuts (courant -> FINISHED, suivant -> RUNNING); démarque = reset manuel des tirages du jeu.
+7) Modèle de données
+Entités principales et relations:
 
-8) Commandes utiles
-php bin/console doctrine:migrations:diff
-php bin/console doctrine:migrations:migrate -n
-php bin/console cache:clear
-php bin/console debug:container
-php bin/console debug:router
+**Event** (Événement/Soirée)
+- `id`, `name`, `date`
+- Relations: `games` (OneToMany Game), `players` (OneToMany Player)
 
-9) Dépannage rapide
-- Mercure ne reçoit pas d’événements: vérifier que `MERCURE_JWT_SECRET` = clés hub et la config CORS/URL publique.
-- Erreurs DB en tests: base de test dédiée migrée ou SQLite.
-- Actifs/front: AssetMapper actif; `assets:install` est géré par Flex lors de l’installation.
+**Game** (Partie)
+- `id`, `position`, `rule` (RuleType), `prize`, `status` (GameStatus)
+- `isFrozen` (bool), `freezeOrderIndex` (int|null) - Gel automatique au gain
+- Relations: `event` (ManyToOne Event), `draws` (OneToMany Draw), `winners` (OneToMany Winner)
 
-10) Liens
-- Spécification: doc/spec.md
-- Symfony: https://symfony.com/
-- Mercure: https://mercure.rocks/
-- Mailpit: https://github.com/axllent/mailpit
+**Player** (Joueur)
+- `id`, `name`, `email`, `phone`, `notes`
+- Relations: `event` (ManyToOne Event), `cards` (OneToMany Card)
+
+**Card** (Carton)
+- `id`, `reference`, `grid` (JSON: 3 lignes x 5 numéros)
+- `isBlocked` (bool), `blockedAt` (DateTimeImmutable|null), `blockedReason` (BlockedReason|null)
+- Relations: `player` (ManyToOne Player)
+- Note: La relation avec Event se fait via Player
+- Note: Un carton bloqué ne peut plus gagner jusqu'à la démarque
+
+**Draw** (Tirage)
+- `id`, `number` (1-90), `orderIndex`, `createdAt`
+- Relations: `game` (ManyToOne Game)
+- Contrainte unique: (game_id, number)
+
+**Winner** (Gagnant)
+- `id`, `source` (WinnerSource), `reference`, `createdAt`
+- `winningOrderIndex` (int) - Index du tirage déclencheur
+- Relations: `game` (ManyToOne Game), `card` (ManyToOne Card)
+
+8) Conventions & règles métier
+- **Code**: PSR-12, bonnes pratiques Symfony. Contrôleurs fins, logique métier dans des services testables.
+- **Doctrine**: Entités/repos sous `src/Entity` et `src/Repository`, schéma via migrations.
+- **Mercure**: Topics stables (`/events/{id}/draws`, `/events/{id}/public`), CORS aligné sur l'URL de l'app, tolérance aux replays/déconnexions.
+- **Messenger**: Transport Doctrine (`auto_setup=0`). Pour async: créer les tables et lancer un worker `php bin/console messenger:consume -vv`.
+- **Base de données**: Transactions explicites autour des tirages/validation gagnants, pas de hard-delete (audit par timestamps).
+- **Règles gagnants**:
+  - `QUINE`: ≥ 1 ligne complète (5 numéros)
+  - `DOUBLE_QUINE`: ≥ 2 lignes complètes (10 numéros)
+  - `FULL_CARD`: 3 lignes complètes (15 numéros - carton plein)
+  - Gagnants « potentiels » (détection automatique) jusqu'à validation admin
+  - Support `OFFLINE` avec référence libre (saisie manuelle)
+- **Gel automatique**:
+  - Dès qu'un gagnant est détecté, la partie est gelée automatiquement
+  - Le gel enregistre l'orderIndex exact du tirage gagnant
+  - Aucun nouveau tirage n'est autorisé tant que la partie est gelée
+  - Seuls les cartons gagnants au même numéro peuvent être validés
+- **Blocage des cartons**:
+  - Un carton gagnant validé est automatiquement bloqué
+  - Un carton bloqué n'apparaît plus dans les gagnants potentiels
+  - Le déblocage se fait uniquement par démarque (reset) de la partie
+- **Workflow**:
+  - Statuts de partie: `PENDING` → `RUNNING` → `FINISHED`
+  - Passer au jeu suivant bascule les statuts automatiquement
+  - Démarrage d'un nouveau tirage possible uniquement en statut `RUNNING` et si la partie n'est pas gelée
+  - Démarque (reset) disponible pour recommencer une partie : supprime les tirages, dégèle la partie, débloque les cartons et supprime les gagnants
+
+9) Commandes utiles
+
+**Base de données**
+```bash
+php bin/console doctrine:database:create           # Créer la base
+php bin/console doctrine:migrations:diff           # Générer une migration
+php bin/console doctrine:migrations:migrate -n     # Appliquer les migrations
+php bin/console messenger:setup-transports         # Créer les tables Messenger
+```
+
+**Développement**
+```bash
+php bin/console cache:clear                        # Vider le cache
+php bin/console debug:container                    # Lister les services
+php bin/console debug:router                       # Lister les routes
+php bin/console app:seed-demo                      # Créer données de démo
+php bin/console app:import-cards <fichier>         # Importer des cartons
+```
+
+**Tests & qualité**
+```bash
+./vendor/bin/phpunit                               # Tests unitaires
+./vendor/bin/behat                                 # Tests fonctionnels
+composer behat                                     # Alias Behat avec progress
+composer cs:check                                  # Vérifier le style de code
+composer cs:fix                                    # Corriger le style de code
+```
+
+10) Dépannage rapide
+- **Mercure ne reçoit pas d'événements**: Vérifier que `MERCURE_JWT_SECRET` correspond aux clés du hub et que la config CORS/URL publique est correcte.
+- **Erreurs DB en tests**: S'assurer que la base de test est créée et migrée, ou utiliser SQLite en mémoire.
+- **Actifs/front**: AssetMapper actif; `assets:install` est géré par Flex lors de l'installation.
+- **Erreurs de permissions**: Vérifier les permissions sur `var/cache` et `var/log`.
+- **Doctrine proxy/cache**: Supprimer `var/cache/dev/doctrine` en cas d'incohérence.
+
+11) Fonctionnalités principales
+
+**Administration** (`/admin`)
+- Gestion des événements (CRUD)
+- Gestion des parties d'un événement (ordre, règle, dotation)
+- Gestion des joueurs et attribution de cartons
+- Interface de tirage en temps réel avec gel automatique
+- Détection automatique des gagnants potentiels (excluant les cartons bloqués)
+- Validation des gagnants système avec blocage automatique du carton
+- Saisie manuelle de gagnants offline avec gel de la partie
+- Navigation entre parties (précédent/suivant) avec conservation des tirages
+- Démarque d'une partie : reset complet (tirages, gel, blocages, gagnants)
+- Recherche et pagination des cartons
+
+**Affichage public** (`/events/{id}/public`)
+- Vue en temps réel des tirages via Mercure
+- Affichage de la partie en cours
+- Historique des numéros tirés
+- Liste des gagnants validés
+- Mise à jour automatique sans rechargement
+
+**Authentification**
+- Connexion sécurisée avec CSRF
+- Gestion de session
+- Protection de la zone admin
+
+12) Liens
+- **Spécification**: `doc/spec.md`
+- **Symfony**: https://symfony.com/
+- **Mercure**: https://mercure.rocks/
+- **Mailpit**: https://github.com/axllent/mailpit
+- **Doctrine**: https://www.doctrine-project.org/

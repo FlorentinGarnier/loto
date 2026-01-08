@@ -10,11 +10,11 @@
         <target>Loto Quine Admin</target>
       </trans-unit>
         <trans-unit id="1">
-            <source>app.rules.LINE</source>
+            <source>app.rules.QUINE</source>
             <target>1 ligne</target>
         </trans-unit>
         <trans-unit id="2">
-            <source>app.rules.DOUBLE_LINE</source>
+            <source>app.rules.DOUBLE_QUINE</source>
             <target>2 lignes</target>
         </trans-unit>
         <trans-unit id="3">

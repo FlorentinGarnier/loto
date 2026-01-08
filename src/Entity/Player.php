@@ -34,7 +34,7 @@ class Player
     private ?Event $event = null;
 
     /** @var Collection<int, Card> */
-    #[ORM\OneToMany(targetEntity: Card::class, mappedBy: 'player', cascade: ['persist'])]
+    #[ORM\OneToMany(targetEntity: Card::class, mappedBy: 'player')]
     private Collection $cards;
 
     public function __construct()
