@@ -34,19 +34,13 @@ FROM base AS build
 # Copie des fichiers de dépendances
 COPY composer.json composer.lock symfony.lock ./
 
-# Installation des dépendances Composer (AVEC les dev pour le build)
-RUN composer install --no-scripts --no-progress --optimize-autoloader
+ENV APP_ENV=prod APP_DEBUG=0
+
+# Installation des dépendances Composer (sans les dev)
+RUN composer install --no-dev --no-scripts --no-progress --optimize-autoloader
 
 # Copie du reste de l'application
 COPY . .
-
-# Génération des assets et cache
-RUN composer dump-autoload --optimize --classmap-authoritative \
-    && APP_ENV=prod APP_DEBUG=0 php bin/console importmap:install \
-    && APP_ENV=prod APP_DEBUG=0 php bin/console asset-map:compile
-
-# Suppression des dépendances dev après le build
-RUN composer install --no-dev --no-scripts --no-progress --optimize-autoloader --classmap-authoritative
 
 # Nettoyage
 RUN rm -rf .env.dev .env.test tests/ features/ .git/
