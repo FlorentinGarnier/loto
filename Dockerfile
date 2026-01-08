@@ -55,8 +55,9 @@ ENV APP_ENV=prod \
 # Copie des fichiers depuis le stage de build
 COPY --from=build /app /app
 
-# Configuration des permissions
-RUN chown -R www-data:www-data /app/var
+# Création et configuration des permissions pour les répertoires var
+RUN mkdir -p /app/var/cache /app/var/log /app/var/sessions \
+    && chown -R www-data:www-data /app/var
 
 # Port exposé (PHP-FPM)
 EXPOSE 9000
