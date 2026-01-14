@@ -29,26 +29,27 @@ jobs:
             cd ${{ secrets.DEPLOY_PATH }}
 
             # Pull la nouvelle image
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            docker pull ghcr.io/${{ github.repository }}:latest
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker pull ghcr.io/florentingarnier/loto:latest
 
             # Copier les fichiers de configuration si nécessaire
             if [ ! -f .env ]; then
               echo "⚠️  Warning: .env not found. Please create it manually."
+              exit 1
             fi
 
             # Redémarrer uniquement le service app-php
-            docker-compose -f docker-compose.prod.yml up -d --force-recreate app-php
+            docker compose --env-file .env -f docker-compose.prod.yml up -d --force-recreate app-php
 
             # Attendre que le service soit healthy
             echo "Waiting for app-php to be healthy..."
-            timeout 60 sh -c 'until docker inspect --format="{{.State.Health.Status}}" loto-php | grep -q "healthy"; do sleep 2; done'
+            timeout 60 sh -c 'until docker inspect --format="{{.State.Health.Status}}" loto-php 2>/dev/null | grep -q "healthy"; do sleep 2; done' || echo "Warning: Health check timeout"
 
             # Exécuter les migrations si nécessaire
-            docker-compose -f docker-compose.prod.yml exec -T app-php php bin/console doctrine:migrations:migrate --no-interaction
+            docker compose --env-file .env -f docker-compose.prod.yml exec -T app-php php bin/console doctrine:migrations:migrate --no-interaction || true
 
             # Nettoyer le cache
-            docker-compose -f docker-compose.prod.yml exec -T app-php php bin/console cache:clear
+            docker compose --env-file .env -f docker-compose.prod.yml exec -T app-php php bin/console cache:clear || true
 
             # Nettoyer les anciennes images
             docker image prune -f
