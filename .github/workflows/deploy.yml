@@ -33,8 +33,8 @@ jobs:
             docker pull ghcr.io/${{ github.repository }}:latest
 
             # Copier les fichiers de configuration si nécessaire
-            if [ ! -f .env.prod ]; then
-              echo "⚠️  Warning: .env.prod not found. Please create it manually."
+            if [ ! -f .env ]; then
+              echo "⚠️  Warning: .env not found. Please create it manually."
             fi
 
             # Redémarrer uniquement le service app-php
