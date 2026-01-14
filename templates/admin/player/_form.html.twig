@@ -4,6 +4,7 @@
     {{ form_row(form.name, {attr: {class: 'mt-1 block w-full border rounded p-2'}}) }}
     {{ form_row(form.email, {attr: {class: 'mt-1 block w-full border rounded p-2'}}) }}
     {{ form_row(form.phone, {attr: {class: 'mt-1 block w-full border rounded p-2'}}) }}
+      {{ form_row(form.event, {attr: {class: 'mt-1 block w-full border rounded p-2'}} ) }}
       {{ form_row(form.cards) }}
       <p>
           <a href="{{ path('admin_card_new') }}" target="_blank" class="text-sm">+ Créer un carton</a>
