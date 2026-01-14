@@ -7,7 +7,7 @@
   <h1 class="text-3xl font-bold mb-4 text-center">Affichage public</h1>
   {% if current %}
     <div class="text-center mb-6">
-      <div class="text-xl">Partie #{{ current.position }} – {{ current.rule.value }} – Lot: {{ current.prize }}</div>
+      <div id="game-info" class="text-xl">Partie #<span id="game-position">{{ current.position }}</span> – <span id="game-rule">{{ current.rule.value }}</span> – Lot: <span id="game-prize">{{ current.prize }}</span></div>
       <div class="mt-2">Statut: <span id="status" class="px-2 py-1 rounded {{ current.status.value == 'RUNNING' ? 'bg-green-700' : (current.status.value == 'FINISHED' ? 'bg-gray-700' : 'bg-amber-700') }}">{{ current.status.value }}</span></div>
     </div>
 
@@ -21,6 +21,18 @@
         <div data-number="{{ n }}" class="cell px-2 py-2 rounded border border-green-900 text-center bg-green-950 text-green-200">{{ n }}</div>
       {% endfor %}
     </div>
+
+    <div id="winner-card-container" class="mt-8 hidden">
+      <div class="text-center mb-4">
+        <h2 class="text-4xl font-bold text-yellow-300 animate-pulse">🎉 GAGNANT ! 🎉</h2>
+        <p id="winner-info" class="text-2xl mt-2"></p>
+      </div>
+      <div class="flex justify-center">
+        <table id="winner-card" class="border-collapse border-4 border-yellow-400 bg-white text-lg shadow-2xl">
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
   {% else %}
     <p class="text-center">Aucune partie en cours.</p>
   {% endif %}
@@ -28,12 +40,54 @@
 {% endblock %}
 
 {% block scripts %}
+<style>
+.confetti {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  background: #f0f;
+  position: absolute;
+  animation: confetti-fall 3s linear forwards;
+  z-index: 9999;
+}
+
+@keyframes confetti-fall {
+  to {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.firework {
+  position: fixed;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  position: absolute;
+  z-index: 9999;
+  animation: firework-explode 1s ease-out forwards;
+}
+
+@keyframes firework-explode {
+  0% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+</style>
+
 <script>
 (function(){
   const grid = document.getElementById('grid');
   const lastSpan = document.getElementById('last-number');
   const lastFiveSpan = document.getElementById('last-five');
   const statusEl = document.getElementById('status');
+  const gamePositionEl = document.getElementById('game-position');
+  const gameRuleEl = document.getElementById('game-rule');
+  const gamePrizeEl = document.getElementById('game-prize');
   if (!grid) return;
 
   const highlight = (num, on) => {
@@ -51,9 +105,154 @@
     }
   };
 
+  // Animation de paillettes/confettis
+  function createConfetti() {
+    const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#ff1493'];
+    const confettiCount = 150;
+
+    for (let i = 0; i < confettiCount; i++) {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.left = Math.random() * 100 + 'vw';
+      confetti.style.top = -10 + 'px';
+      confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.animationDelay = Math.random() * 0.5 + 's';
+      confetti.style.animationDuration = (2 + Math.random() * 2) + 's';
+      document.body.appendChild(confetti);
+
+      setTimeout(() => confetti.remove(), 5000);
+    }
+  }
+
+  // Animation de feu d'artifice
+  function createFirework(x, y) {
+    const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#ff1493'];
+    const particles = 40;
+
+    for (let i = 0; i < particles; i++) {
+      const firework = document.createElement('div');
+      firework.className = 'firework';
+      firework.style.left = x + 'px';
+      firework.style.top = y + 'px';
+      firework.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+
+      const angle = (Math.PI * 2 * i) / particles;
+      const velocity = 50 + Math.random() * 100;
+      const tx = Math.cos(angle) * velocity;
+      const ty = Math.sin(angle) * velocity;
+
+      firework.style.setProperty('--tx', tx + 'px');
+      firework.style.setProperty('--ty', ty + 'px');
+      firework.style.transform = `translate(${tx}px, ${ty}px)`;
+
+      document.body.appendChild(firework);
+
+      setTimeout(() => firework.remove(), 1000);
+    }
+  }
+
+  function triggerCelebration() {
+    // Créer plusieurs feux d'artifice
+    const positions = [
+      { x: window.innerWidth * 0.2, y: window.innerHeight * 0.3 },
+      { x: window.innerWidth * 0.5, y: window.innerHeight * 0.2 },
+      { x: window.innerWidth * 0.8, y: window.innerHeight * 0.3 },
+    ];
+
+    positions.forEach((pos, index) => {
+      setTimeout(() => createFirework(pos.x, pos.y), index * 200);
+    });
+
+    // Ajouter des paillettes
+    createConfetti();
+
+    // Répéter l'effet 2 fois
+    setTimeout(() => {
+      positions.forEach((pos, index) => {
+        setTimeout(() => createFirework(pos.x, pos.y), index * 200);
+      });
+    }, 1000);
+  }
+
+  function displayWinnerCard(winnerCard, draws) {
+    const container = document.getElementById('winner-card-container');
+    const cardTable = document.getElementById('winner-card');
+    const winnerInfo = document.getElementById('winner-info');
+
+    if (!winnerCard || !winnerCard.grid) {
+      container.classList.add('hidden');
+      return;
+    }
+
+    // Afficher les infos du gagnant
+    let infoText = `Carton: ${winnerCard.reference}`;
+    if (winnerCard.player) {
+      infoText += ` - Joueur: ${winnerCard.player}`;
+    }
+    winnerInfo.textContent = infoText;
+
+    // Créer la grille du carton
+    const tbody = cardTable.querySelector('tbody');
+    tbody.innerHTML = '';
+
+    const drawnSet = new Set(draws || []);
+    const lastNumber = draws && draws.length > 0 ? draws[draws.length - 1] : null;
+
+    // La grille est stockée comme un tableau de 3 lignes
+    // Chaque ligne est un objet/tableau associatif avec des clés numériques (0-8) pour les colonnes
+    winnerCard.grid.forEach((line) => {
+      const tr = document.createElement('tr');
+
+      // Itérer sur les 9 colonnes (0 à 8) comme dans un carton de loto traditionnel
+      for (let col = 0; col < 9; col++) {
+        const td = document.createElement('td');
+        td.className = 'border-2 border-green-700 text-center font-bold';
+        td.style.width = '50px';
+        td.style.height = '40px';
+        td.style.padding = '4px';
+
+        // Vérifier si cette colonne contient un numéro
+        const num = line[col];
+
+        if (num !== undefined && num !== null) {
+          // Case avec un numéro
+          td.textContent = num;
+
+          if (drawnSet.has(num)) {
+            if (num === lastNumber) {
+              // Dernier numéro tiré en jaune
+              td.className += ' bg-yellow-400 text-black';
+            } else {
+              // Numéros tirés en vert
+              td.className += ' bg-green-500 text-white';
+            }
+          } else {
+            // Numéros non tirés
+            td.className += ' bg-white text-green-900';
+          }
+        } else {
+          // Case vide (disposition traditionnelle du loto)
+          td.textContent = '.';
+          td.className += ' bg-green-200 text-transparent';
+        }
+
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    });
+
+    container.classList.remove('hidden');
+  }
+
+  let previousState = null;
   let previousLast = null;
   function applyState(state){
-    // state: { gameId, status, draws: [numbers] }
+    // state: { gameId, position, rule, prize, status, draws: [numbers], hasSystemWinner, detectedCard, isFrozen }
+    // Mettre à jour les informations de la partie
+    if (gamePositionEl && state.position !== undefined) gamePositionEl.textContent = state.position;
+    if (gameRuleEl && state.rule) gameRuleEl.textContent = state.rule;
+    if (gamePrizeEl && state.prize) gamePrizeEl.textContent = state.prize;
+
     // reset
     grid.querySelectorAll('.cell').forEach(c => {
       c.classList.remove('bg-green-600','text-white','bg-yellow-500','text-black');
@@ -72,6 +271,20 @@
       if (lastFiveSpan) lastFiveSpan.textContent = '—';
     }
     if (statusEl) statusEl.textContent = state.status || '';
+
+    // Afficher le carton détecté dès qu'un gagnant potentiel est trouvé (partie gelée)
+    if (state.isFrozen && state.detectedCard) {
+      displayWinnerCard(state.detectedCard, state.draws);
+
+      // Déclencher l'animation seulement au moment de la détection (transition vers gelé)
+      if (!previousState || !previousState.isFrozen) {
+        setTimeout(() => triggerCelebration(), 500);
+      }
+    } else {
+      document.getElementById('winner-card-container').classList.add('hidden');
+    }
+
+    previousState = state;
   }
 
   // Initial state could be rendered server-side later; for now rely on stream

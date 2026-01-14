@@ -49,24 +49,12 @@ final class CardCrudController extends AbstractController
 
         $matrix = [];
         foreach ($paginator as $card) {
-            $lines = [];
-            $numbers = [];
-            foreach ($card->getGrid() as $k => $row) {
-                foreach ($row as $n) {
-                    for ($i = 0; $i < 9; ++$i) {
-                        if ((int) floor(num: ($n / 10)) === $i) {
-                            $numbers[$k][$i] =  $n;
-                        }
-                    }
-                }
-                $lines[] = $numbers[$k];
-            }
             $matrix[] = [
                 'id' => $card->getId(),
                 'reference' => $card->getReference(),
                 'player' => $card->getPlayer(),
                 'event' => $card->getPlayer()?->getEvent(),
-                'grid' => $lines
+                'grid' => $card->getFormattedGrid(),
             ];
         }
 

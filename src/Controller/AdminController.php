@@ -257,13 +257,40 @@ final class AdminController extends AbstractController
         $cards = $this->cardRepo->findByEvent($game->getEvent());
         $potentials = $this->winnerService->findPotentialWinners($game, $cards);
 
+        // Déterminer si on a un gagnant déclaré (SYSTEM)
+        $hasSystemWinner = false;
+        foreach ($game->getWinners() as $winner) {
+            if ($winner->getSource() === WinnerSource::SYSTEM) {
+                $hasSystemWinner = true;
+                break;
+            }
+        }
+
+        // Afficher le carton quand un gagnant potentiel est détecté (partie gelée)
+        $detectedCard = null;
+        if ($game->isFrozen() && \count($potentials) > 0) {
+            // Prendre le premier carton potentiel détecté
+            $firstPotential = $potentials[0];
+            $card = $firstPotential['card'];
+            $detectedCard = [
+                'reference' => $card->getReference(),
+                'grid' => $card->getFormattedGrid(),
+                'player' => $card->getPlayer() ? $card->getPlayer()->getName() : null,
+            ];
+        }
+
         $payload = [
             'gameId' => $gameId,
+            'position' => $game->getPosition(),
+            'rule' => $game->getRule()->value,
+            'prize' => $game->getPrize(),
             'status' => $game->getStatus()->value,
             'draws' => array_map(fn ($d) => $d->getNumber(), $game->getDraws()->toArray()),
             'potentialsCount' => \count($potentials),
             'isFrozen' => $game->isFrozen(),
             'freezeOrderIndex' => $game->getFreezeOrderIndex(),
+            'hasSystemWinner' => $hasSystemWinner,
+            'detectedCard' => $detectedCard,
         ];
         $update = new Update($topic, json_encode($payload));
         $this->hub->publish($update);
