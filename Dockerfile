@@ -42,6 +42,11 @@ RUN composer install --no-dev --no-scripts --no-progress --optimize-autoloader
 # Copie du reste de l'application
 COPY . .
 
+# Génération des assets et cache
+RUN composer dump-autoload --optimize --classmap-authoritative \
+    && php bin/console importmap:install \
+    && php bin/console asset-map:compile
+
 # Nettoyage
 RUN rm -rf .env.dev .env.test tests/ features/ .git/
 
