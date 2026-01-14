@@ -36,11 +36,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels)
-        id: meta
+      - name: Extract metadata for PHP (tags, labels)
+        id: meta-php
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/florentingarnier/loto
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -50,13 +50,40 @@ jobs:
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build and push Docker image
+      - name: Extract metadata for Nginx (tags, labels)
+        id: meta-nginx
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/florentingarnier/loto-nginx
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push PHP Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
+          target: production
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: ${{ steps.meta-php.outputs.tags }}
+          labels: ${{ steps.meta-php.outputs.labels }}
+          cache-from: type=gha,scope=php
+          cache-to: type=gha,mode=max,scope=php
+          platforms: linux/amd64,linux/arm64
+
+      - name: Build and push Nginx Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: nginx
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-nginx.outputs.tags }}
+          labels: ${{ steps.meta-nginx.outputs.labels }}
+          cache-from: type=gha,scope=nginx
+          cache-to: type=gha,mode=max,scope=nginx
           platforms: linux/amd64,linux/arm64

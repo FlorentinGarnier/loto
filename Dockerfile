@@ -72,3 +72,15 @@ USER www-data
 
 # Commande de démarrage
 CMD ["php-fpm"]
+
+# ===== Stage nginx =====
+FROM nginx:alpine AS nginx
+
+# Copier les fichiers publics depuis le stage de build
+COPY --from=build /app/public /app/public
+
+# Copier la config nginx
+COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+
+# Port exposé
+EXPOSE 80

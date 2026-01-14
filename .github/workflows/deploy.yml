@@ -28,9 +28,10 @@ jobs:
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
 
-            # Pull la nouvelle image
+            # Pull les nouvelles images
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker pull ghcr.io/florentingarnier/loto:latest
+            docker pull ghcr.io/florentingarnier/loto-nginx:latest
 
             # Copier les fichiers de configuration si nécessaire
             if [ ! -f .env ]; then
