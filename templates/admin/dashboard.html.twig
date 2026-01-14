@@ -208,17 +208,6 @@ if (demarqueForm) {
 
             // Update grid
             if (data.draws) {
-                const cells = document.querySelectorAll('#grid .cell');
-                cells.forEach(cell => {
-                    const num = parseInt(cell.dataset.number);
-                    if (data.draws.includes(num)) {
-                        cell.classList.remove('bg-white');
-                        cell.classList.add('bg-green-600', 'text-white');
-                    } else {
-                        cell.classList.add('bg-white');
-                        cell.classList.remove('bg-green-600', 'text-white');
-                    }
-                });
 
                 // Update last number
                 const lastNum = data.draws.length > 0 ? data.draws[data.draws.length - 1] : '—';
