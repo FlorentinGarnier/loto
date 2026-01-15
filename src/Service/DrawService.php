@@ -66,6 +66,7 @@ final class DrawService
      * Returns the updated list of draw numbers ordered.
      *
      * @param array $cards Les cartons à vérifier pour la détection des gagnants
+     *
      * @return array{numbers: int[], frozen: bool, freezeOrderIndex: int|null}
      */
     public function toggleNumber(Game $game, int $number, array $cards = []): array
@@ -107,7 +108,7 @@ final class DrawService
             // Détection automatique des gagnants si on a des cartons
             if (count($cards) > 0) {
                 $freezeOrderIndex = $this->winnerDetectionService->checkForWinners($game, $cards);
-                if ($freezeOrderIndex !== null) {
+                if (null !== $freezeOrderIndex) {
                     $game->freeze($freezeOrderIndex);
                 }
             }

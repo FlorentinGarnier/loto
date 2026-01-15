@@ -24,7 +24,7 @@ final class PlayerCardController extends AbstractController
     public function lookup(Request $request): JsonResponse
     {
         $ref = trim((string) $request->query->get('ref'));
-        if ($ref === '') {
+        if ('' === $ref) {
             return $this->json(['message' => 'Référence manquante'], 422);
         }
 
@@ -34,6 +34,7 @@ final class PlayerCardController extends AbstractController
         }
 
         $assignedTo = $card->getPlayer();
+
         return $this->json([
             'exists' => true,
             'assignedTo' => $assignedTo ? [
@@ -49,7 +50,7 @@ final class PlayerCardController extends AbstractController
         $data = json_decode($request->getContent() ?: '{}', true) ?: [];
         $ref = trim((string) ($data['ref'] ?? ''));
         $createIfMissing = (bool) ($data['createIfMissing'] ?? false);
-        if ($ref === '') {
+        if ('' === $ref) {
             return $this->json(['message' => 'Référence manquante'], 422);
         }
 
@@ -65,12 +66,13 @@ final class PlayerCardController extends AbstractController
             $card->setPlayer($player);
             $this->em->persist($card);
             $this->em->flush();
+
             return $this->json(['ref' => $ref, 'created' => true], 201);
         }
 
         $owner = $card->getPlayer();
         if ($owner && $owner->getId() !== $player->getId()) {
-            return $this->json(['message' => 'Déjà attribué à ' . $owner->getName()], 409);
+            return $this->json(['message' => 'Déjà attribué à '.$owner->getName()], 409);
         }
 
         if ($owner && $owner->getId() === $player->getId()) {
@@ -79,6 +81,7 @@ final class PlayerCardController extends AbstractController
 
         $card->setPlayer($player);
         $this->em->flush();
+
         return $this->json(['ref' => $ref, 'created' => false], 200);
     }
 
@@ -91,6 +94,7 @@ final class PlayerCardController extends AbstractController
         }
         $card->setPlayer(null);
         $this->em->flush();
+
         return new JsonResponse(null, 204);
     }
 }

@@ -19,6 +19,7 @@ class CardRepository extends ServiceEntityRepository
 
     /**
      * Find all cards belonging to players assigned to an event.
+     *
      * @return Card[]
      */
     public function findByEvent(Event $event): array

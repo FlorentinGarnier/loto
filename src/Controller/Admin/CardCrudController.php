@@ -36,7 +36,7 @@ final class CardCrudController extends AbstractController
             $qb->where('c.reference LIKE :search')
                 ->orWhere('p.name LIKE :search')
                 ->orWhere('e.name LIKE :search')
-                ->setParameter('search', '%' . $search . '%');
+                ->setParameter('search', '%'.$search.'%');
         }
 
         $qb->orderBy('c.id', 'ASC')
@@ -179,5 +179,4 @@ final class CardCrudController extends AbstractController
 
         return implode("\n", $lines);
     }
-
 }

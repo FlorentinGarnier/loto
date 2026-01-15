@@ -20,7 +20,7 @@ final class WinnerDetectionService
     public function findPotentialWinners(Game $game, array $cards): array
     {
         // Si la partie est gelée, on ne considère que les tirages jusqu'au gel
-        $maxOrderIndex = $game->isFrozen() && $game->getFreezeOrderIndex() !== null
+        $maxOrderIndex = $game->isFrozen() && null !== $game->getFreezeOrderIndex()
             ? $game->getFreezeOrderIndex()
             : PHP_INT_MAX;
 
@@ -66,7 +66,7 @@ final class WinnerDetectionService
     }
 
     /**
-     * Vérifie si des gagnants existent et retourne le orderIndex du gel si nécessaire
+     * Vérifie si des gagnants existent et retourne le orderIndex du gel si nécessaire.
      *
      * @return int|null L'orderIndex auquel geler, ou null si pas de gagnant
      */
@@ -80,6 +80,7 @@ final class WinnerDetectionService
             foreach ($game->getDraws() as $draw) {
                 $maxOrderIndex = max($maxOrderIndex, $draw->getOrderIndex());
             }
+
             return $maxOrderIndex;
         }
 

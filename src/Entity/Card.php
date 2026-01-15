@@ -62,7 +62,7 @@ class Card
      * Returns the grid formatted for display in a traditional loto card layout.
      * Converts the stored grid (3 lines of 5 numbers) into a display grid
      * (3 lines of 9 columns) where each number is positioned in the column
-     * corresponding to its tens digit (0-9 for column 0, 10-19 for column 1, etc.)
+     * corresponding to its tens digit (0-9 for column 0, 10-19 for column 1, etc.).
      *
      * @return array<int, array<int, int|null>> 3 lines of 9 columns each
      */

@@ -18,7 +18,7 @@ enum RuleType: string implements TranslatableInterface
 
     public function getRequiredLines(): int
     {
-        return match($this) {
+        return match ($this) {
             self::QUINE => 1,
             self::DOUBLE_QUINE => 2,
             self::FULL_CARD => 3,

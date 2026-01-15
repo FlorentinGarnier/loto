@@ -260,7 +260,7 @@ final class AdminController extends AbstractController
         // Déterminer si on a un gagnant déclaré (SYSTEM)
         $hasSystemWinner = false;
         foreach ($game->getWinners() as $winner) {
-            if ($winner->getSource() === WinnerSource::SYSTEM) {
+            if (WinnerSource::SYSTEM === $winner->getSource()) {
                 $hasSystemWinner = true;
                 break;
             }

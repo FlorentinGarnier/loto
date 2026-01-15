@@ -7,7 +7,6 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\UX\Autocomplete\Form\AsEntityAutocompleteField;
 use Symfony\UX\Autocomplete\Form\BaseEntityAutocompleteType;
-use Symfony\UX\Autocomplete\Form\ParentAutocompleteField;
 
 #[AsEntityAutocompleteField]
 class CardAutocompleteField extends AbstractType

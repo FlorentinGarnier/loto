@@ -18,7 +18,7 @@ final class WinnerService
     }
 
     /**
-     * Valide un gagnant système (depuis la détection automatique)
+     * Valide un gagnant système (depuis la détection automatique).
      *
      * @throws \RuntimeException Si la partie n'est pas gelée ou si le carton est bloqué
      */
@@ -60,7 +60,7 @@ final class WinnerService
 
     /**
      * Valide un gagnant salle (saisie manuelle offline)
-     * Gèle automatiquement la partie si ce n'est pas déjà fait
+     * Gèle automatiquement la partie si ce n'est pas déjà fait.
      */
     public function validateOfflineWinner(Game $game, string $reference, ?Card $card = null): Winner
     {

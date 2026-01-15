@@ -4,11 +4,20 @@ default:
       paths:
         - '%paths.base%/features'
       contexts:
-        - App\\Tests\\Behat\\FeatureContext
+        - App\Tests\Behat\FeatureContext
+        - App\Tests\Behat\EventContext
+        - App\Tests\Behat\PlayerContext
+        - App\Tests\Behat\CardContext
+        - App\Tests\Behat\GamePlayContext
+        - App\Tests\Behat\WinnerContext
   extensions:
-    FriendsOfBehat\\SymfonyExtension: ~
-    Behat\\MinkExtension:
-      default_session: symfony
+    FriendsOfBehat\SymfonyExtension\ServiceContainer\SymfonyExtension:
+      kernel:
+        class: App\Kernel
+        environment: test
+        debug: true
+    Behat\MinkExtension:
+      base_url: 'http://localhost'
       sessions:
         symfony:
           symfony: ~
