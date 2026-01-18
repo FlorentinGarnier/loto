@@ -46,8 +46,8 @@ final class WinnerService
         $winner->setReference($card->getReference());
         $winner->setWinningOrderIndex($game->getFreezeOrderIndex() ?? 0);
 
-        // Bloquer le carton
-        $card->block(BlockedReason::WINNER);
+        // Bloquer le carton avec la raison appropriée
+        $card->block(BlockedReason::WINNER_VALIDATED);
 
         $this->em->persist($winner);
         $this->em->persist($card);
@@ -84,9 +84,9 @@ final class WinnerService
         $winner->setReference($reference);
         $winner->setWinningOrderIndex($game->getFreezeOrderIndex() ?? 0);
 
-        // Bloquer le carton si présent
+        // Bloquer le carton si présent avec la raison appropriée
         if ($card) {
-            $card->block(BlockedReason::WINNER);
+            $card->block(BlockedReason::WINNER_OFFLINE);
             $this->em->persist($card);
         }
 

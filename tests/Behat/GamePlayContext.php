@@ -5,32 +5,28 @@ declare(strict_types=1);
 namespace App\Tests\Behat;
 
 use App\Entity\Draw;
-use App\Entity\Game;
+use App\Repository\CardRepository;
 use App\Repository\EventRepository;
 use App\Repository\GameRepository;
+use App\Repository\PlayerRepository;
 use App\Service\DrawService;
-use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\TableNode;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Assert;
 
-final class GamePlayContext implements Context
+final class GamePlayContext extends BaseContext
 {
-    private EntityManagerInterface $entityManager;
-    private EventRepository $eventRepo;
-    private GameRepository $gameRepo;
     private DrawService $drawService;
-    private ?string $lastError = null;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         EventRepository $eventRepo,
         GameRepository $gameRepo,
+        CardRepository $cardRepo,
+        PlayerRepository $playerRepo,
         DrawService $drawService,
     ) {
-        $this->entityManager = $entityManager;
-        $this->eventRepo = $eventRepo;
-        $this->gameRepo = $gameRepo;
+        parent::__construct($entityManager, $eventRepo, $gameRepo, $cardRepo, $playerRepo);
         $this->drawService = $drawService;
     }
 
@@ -40,7 +36,8 @@ final class GamePlayContext implements Context
      */
     public function jeTireLeNumeroPourLaPartieDOrdre(int $number, int $position): void
     {
-        $this->lastError = null;
+        self::$lastException = null;
+        self::$lastError = null;
 
         try {
             if ($number < 1 || $number > 90) {
@@ -76,7 +73,8 @@ final class GamePlayContext implements Context
             $this->entityManager->persist($draw);
             $this->entityManager->flush();
         } catch (\Throwable $e) {
-            $this->lastError = $e->getMessage();
+            self::$lastException = $e;
+            self::$lastError = $e->getMessage();
         }
     }
 
@@ -159,7 +157,9 @@ final class GamePlayContext implements Context
     }
 
     /**
-     * @Given /^que les numéros "([^"]*)" ont été tirés pour la partie d'ordre (\d+)$/
+     * @Given /^les numéros "([^"]*)" ont été tirés pour la partie d'ordre (\d+)$/
+     *
+     * @When /^je tire les numéros "([^"]*)" pour la partie d'ordre (\d+)$/
      */
     public function queLesNumerosOntEtesTiresPourLaPartieDOrdre(string $numbers, int $position): void
     {
@@ -234,6 +234,7 @@ final class GamePlayContext implements Context
 
     /**
      * @Then /^la partie d'ordre (\d+) ne doit plus avoir de numéros tirés$/
+     * @Then /^la partie d'ordre (\d+) ne doit pas avoir de numéros tirés$/
      */
     public function laPartieDOrdreNeDroitPlusAvoirDeNumerosTires(int $position): void
     {
@@ -307,7 +308,7 @@ final class GamePlayContext implements Context
     }
 
     /**
-     * @Given /^que la partie d'ordre (\d+) est gelée \(gagnant détecté\)$/
+     * @Given /^la partie d'ordre (\d+) est gelée \(gagnant détecté\)$/
      */
     public function queLaPartieDOrdreEstGeleeGagnantDetecte(int $position): void
     {
@@ -323,7 +324,7 @@ final class GamePlayContext implements Context
      */
     public function leTirageDoitEtreRefuse(): void
     {
-        Assert::assertNotNull($this->lastError, "Aucune erreur n'a été enregistrée");
+        Assert::assertNotNull(self::$lastError, "Aucune erreur n'a été enregistrée");
     }
 
     /**
@@ -331,22 +332,7 @@ final class GamePlayContext implements Context
      */
     public function unMessageDErreurDoitIndiquerQueLaPartieEstGelee(): void
     {
-        Assert::assertNotNull($this->lastError, "Aucune erreur n'a été enregistrée");
-        Assert::assertStringContainsString('frozen', strtolower($this->lastError), "Le message d'erreur ne mentionne pas que la partie est gelée");
-    }
-
-    private function findGameByPosition(int $position): ?Game
-    {
-        $events = $this->eventRepo->findAll();
-
-        foreach ($events as $event) {
-            foreach ($event->getGames() as $game) {
-                if ($game->getPosition() === $position) {
-                    return $game;
-                }
-            }
-        }
-
-        return null;
+        Assert::assertNotNull(self::$lastError, "Aucune erreur n'a été enregistrée");
+        Assert::assertStringContainsString('frozen', strtolower(self::$lastError), "Le message d'erreur ne mentionne pas que la partie est gelée");
     }
 }

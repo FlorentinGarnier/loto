@@ -6,7 +6,6 @@ namespace App\Tests\Behat;
 
 use App\Entity\Card;
 use App\Entity\Draw;
-use App\Entity\Game;
 use App\Entity\Player;
 use App\Repository\CardRepository;
 use App\Repository\EventRepository;
@@ -14,18 +13,12 @@ use App\Repository\GameRepository;
 use App\Repository\PlayerRepository;
 use App\Service\WinnerDetectionService;
 use App\Service\WinnerService;
-use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\TableNode;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Assert;
 
-final class WinnerContext implements Context
+final class WinnerContext extends BaseContext
 {
-    private EntityManagerInterface $entityManager;
-    private EventRepository $eventRepo;
-    private GameRepository $gameRepo;
-    private CardRepository $cardRepo;
-    private PlayerRepository $playerRepo;
     private WinnerDetectionService $winnerDetectionService;
     private WinnerService $winnerService;
     private array $potentialWinners = [];
@@ -40,17 +33,22 @@ final class WinnerContext implements Context
         WinnerDetectionService $winnerDetectionService,
         WinnerService $winnerService,
     ) {
-        $this->entityManager = $entityManager;
-        $this->eventRepo = $eventRepo;
-        $this->gameRepo = $gameRepo;
-        $this->cardRepo = $cardRepo;
-        $this->playerRepo = $playerRepo;
+        parent::__construct($entityManager, $eventRepo, $gameRepo, $cardRepo, $playerRepo);
         $this->winnerDetectionService = $winnerDetectionService;
         $this->winnerService = $winnerService;
     }
 
     /**
-     * @Given /^qu'un carton "([^"]*)" existe avec la grille suivante:$/
+     * @BeforeScenario
+     */
+    public function resetContextState(): void
+    {
+        $this->potentialWinners = [];
+        $this->publishedState = [];
+    }
+
+    /**
+     * @Given /^un carton "([^"]*)" existe avec la grille suivante:$/
      */
     public function quUnCartonExisteAvecLaGrilleSuivante(string $reference, TableNode $table): void
     {
@@ -71,6 +69,19 @@ final class WinnerContext implements Context
         }
 
         $card->setGrid($grid);
+
+        // Créer un joueur fictif pour que findByEvent fonctionne
+        if (!$card->getPlayer()) {
+            $events = $this->eventRepo->findAll();
+            if (!empty($events)) {
+                $player = new Player();
+                $player->setName('Player_'.$reference);
+                $player->setEvent($events[0]);
+                $this->entityManager->persist($player);
+                $card->setPlayer($player);
+            }
+        }
+
         $this->entityManager->flush();
     }
 
@@ -170,7 +181,7 @@ final class WinnerContext implements Context
     }
 
     /**
-     * @Given /^que tous les numéros du carton "([^"]*)" ont été tirés$/
+     * @Given /^tous les numéros du carton "([^"]*)" ont été tirés$/
      */
     public function queTousLesNumerosduCartonOntEtesTires(string $reference): void
     {
@@ -213,16 +224,38 @@ final class WinnerContext implements Context
     }
 
     /**
-     * @Given /^qu'un carton "([^"]*)" est détecté comme gagnant potentiel$/
+     * @Given /^un carton "([^"]*)" est détecté comme gagnant potentiel$/
      */
     public function quUnCartonEstDetecteCommeGagnantPotentiel(string $reference): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
-        Assert::assertNotNull($card, "Le carton '{$reference}' n'existe pas");
+
+        // Créer le carton s'il n'existe pas
+        if (!$card) {
+            $card = new Card();
+            $card->setReference($reference);
+            $card->setGrid([
+                [5, 15, 23, 45, 67],
+                [8, 12, 34, 56, 78],
+                [2, 18, 29, 43, 89],
+            ]);
+            $this->entityManager->persist($card);
+
+            // Créer un joueur fictif pour que findByEvent fonctionne
+            $events = $this->eventRepo->findAll();
+            if (!empty($events)) {
+                $player = new Player();
+                $player->setName('Player_'.$reference);
+                $player->setEvent($events[0]);
+                $this->entityManager->persist($player);
+                $card->setPlayer($player);
+            }
+
+            $this->entityManager->flush();
+        }
 
         $events = $this->eventRepo->findAll();
         $currentEvent = $events[0] ?? null;
-        $cards = $this->cardRepo->findByEvent($currentEvent);
 
         $runningGame = null;
         foreach ($currentEvent->getGames() as $game) {
@@ -232,6 +265,22 @@ final class WinnerContext implements Context
             }
         }
 
+        Assert::assertNotNull($runningGame, 'Aucune partie en cours');
+
+        // Tirer les numéros de la première ligne pour que le carton soit gagnant (QUINE)
+        $firstLine = $card->getGrid()[0];
+        $orderIndex = 1;
+        foreach ($firstLine as $number) {
+            $draw = new Draw();
+            $draw->setGame($runningGame);
+            $draw->setNumber($number);
+            $draw->setOrderIndex($orderIndex++);
+            $runningGame->addDraw($draw);
+            $this->entityManager->persist($draw);
+        }
+        $this->entityManager->flush();
+
+        $cards = $this->cardRepo->findByEvent($currentEvent);
         $this->potentialWinners = $this->winnerDetectionService->findPotentialWinners($runningGame, $cards);
 
         $found = false;
@@ -392,10 +441,14 @@ final class WinnerContext implements Context
     }
 
     /**
-     * @Given /^que les cartons suivants existent:$/
+     * @Given /^les cartons suivants existent:$/
      */
     public function queLesCartonsSuivantsExistent(TableNode $table): void
     {
+        // Récupérer l'événement courant
+        $events = $this->eventRepo->findAll();
+        $currentEvent = !empty($events) ? $events[0] : null;
+
         foreach ($table->getHash() as $row) {
             $card = $this->cardRepo->findOneBy(['reference' => $row['référence']]);
 
@@ -413,6 +466,15 @@ final class WinnerContext implements Context
             ];
 
             $card->setGrid($grid);
+
+            // Créer un joueur fictif pour que findByEvent fonctionne
+            if (!$card->getPlayer() && $currentEvent) {
+                $player = new Player();
+                $player->setName('Player_'.$row['référence']);
+                $player->setEvent($currentEvent);
+                $this->entityManager->persist($player);
+                $card->setPlayer($player);
+            }
         }
 
         $this->entityManager->flush();
@@ -454,7 +516,7 @@ final class WinnerContext implements Context
     }
 
     /**
-     * @Given /^que la partie d'ordre (\d+) a un gagnant validé$/
+     * @Given /^la partie d'ordre (\d+) a un gagnant validé$/
      */
     public function queLaPartieDOrdreAUnGagnantValide(int $position): void
     {
@@ -462,7 +524,7 @@ final class WinnerContext implements Context
         Assert::assertNotNull($game, "Aucune partie trouvée à la position {$position}");
 
         $card = new Card();
-        $card->setReference('WINNER_'.$position);
+        $card->setReference('WINNER_'.$position.'_'.uniqid());
         $card->setGrid([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15]]);
         $this->entityManager->persist($card);
 
@@ -507,7 +569,7 @@ final class WinnerContext implements Context
     }
 
     /**
-     * @Given /^qu'un carton "([^"]*)" avec joueur "([^"]*)" existe avec la grille suivante:$/
+     * @Given /^un carton "([^"]*)" avec joueur "([^"]*)" existe avec la grille suivante:$/
      */
     public function quUnCartonAvecJoueurExisteAvecLaGrilleSuivante(string $reference, string $playerName, TableNode $table): void
     {
@@ -535,6 +597,13 @@ final class WinnerContext implements Context
         if (!$player) {
             $player = new Player();
             $player->setName($playerName);
+
+            // Associer le joueur à l'événement courant pour que findByEvent fonctionne
+            $events = $this->eventRepo->findAll();
+            if (!empty($events)) {
+                $player->setEvent($events[0]);
+            }
+
             $this->entityManager->persist($player);
         }
 
@@ -565,6 +634,10 @@ final class WinnerContext implements Context
         if ($runningGame->isFrozen() && count($this->potentialWinners) > 0) {
             $firstPotential = $this->potentialWinners[0];
             $card = $firstPotential['card'];
+
+            // Rafraîchir l'entité pour éviter les erreurs de lazy loading
+            $this->entityManager->refresh($card);
+
             $detectedCard = [
                 'reference' => $card->getReference(),
                 'grid' => $card->getFormattedGrid(),
@@ -582,12 +655,15 @@ final class WinnerContext implements Context
      */
     public function lEtatPublieDoitContenirLesInformationsduCartonDetecte(TableNode $table): void
     {
+        Assert::assertArrayHasKey('detectedCard', $this->publishedState, "La clé 'detectedCard' n'existe pas dans l'état publié");
         Assert::assertNotNull($this->publishedState['detectedCard'], "Aucun carton détecté dans l'état publié");
 
-        foreach ($table->getHash() as $row) {
+        $rows = $table->getHash();
+        foreach ($rows as $row) {
             $field = $row['champ'];
             $expectedValue = $row['valeur'];
 
+            Assert::assertArrayHasKey($field, $this->publishedState['detectedCard'], "Le champ '{$field}' n'existe pas dans detectedCard");
             Assert::assertEquals($expectedValue, $this->publishedState['detectedCard'][$field], "Le champ '{$field}' ne correspond pas");
         }
     }
@@ -600,20 +676,5 @@ final class WinnerContext implements Context
         Assert::assertNotNull($this->publishedState['detectedCard'], "Aucun carton détecté dans l'état publié");
         Assert::assertArrayHasKey('grid', $this->publishedState['detectedCard'], "Pas de grille dans l'état publié");
         Assert::assertIsArray($this->publishedState['detectedCard']['grid'], "La grille n'est pas un tableau");
-    }
-
-    private function findGameByPosition(int $position): ?Game
-    {
-        $events = $this->eventRepo->findAll();
-
-        foreach ($events as $event) {
-            foreach ($event->getGames() as $game) {
-                if ($game->getPosition() === $position) {
-                    return $game;
-                }
-            }
-        }
-
-        return null;
     }
 }

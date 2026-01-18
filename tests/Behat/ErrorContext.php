@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Tests\Behat;
 
 use App\Entity\Card;
-use App\Entity\Game;
 use App\Enum\BlockedReason;
 use App\Enum\GameStatus;
 use App\Enum\RuleType;
@@ -15,21 +14,13 @@ use App\Repository\GameRepository;
 use App\Repository\PlayerRepository;
 use App\Service\WinnerDetectionService;
 use App\Service\WinnerService;
-use Behat\Behat\Context\Context;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Assert;
 
-final class ErrorContext implements Context
+final class ErrorContext extends BaseContext
 {
-    private EntityManagerInterface $entityManager;
-    private EventRepository $eventRepo;
-    private GameRepository $gameRepo;
-    private CardRepository $cardRepo;
-    private PlayerRepository $playerRepo;
     private WinnerDetectionService $winnerDetectionService;
     private WinnerService $winnerService;
-    private ?\Throwable $lastException = null;
-    private ?string $lastError = null;
 
     public function __construct(
         EntityManagerInterface $entityManager,
@@ -40,11 +31,7 @@ final class ErrorContext implements Context
         WinnerDetectionService $winnerDetectionService,
         WinnerService $winnerService,
     ) {
-        $this->entityManager = $entityManager;
-        $this->eventRepo = $eventRepo;
-        $this->gameRepo = $gameRepo;
-        $this->cardRepo = $cardRepo;
-        $this->playerRepo = $playerRepo;
+        parent::__construct($entityManager, $eventRepo, $gameRepo, $cardRepo, $playerRepo);
         $this->winnerDetectionService = $winnerDetectionService;
         $this->winnerService = $winnerService;
     }
@@ -54,8 +41,8 @@ final class ErrorContext implements Context
      */
     public function jeTenteDeCreerUnEvenementAvecLaDateInvalide(string $invalidDate): void
     {
-        $this->lastException = null;
-        $this->lastError = null;
+        self::$lastException = null;
+        self::$lastError = null;
 
         try {
             $dateTime = \DateTimeImmutable::createFromFormat('Y-m-d', $invalidDate);
@@ -63,8 +50,8 @@ final class ErrorContext implements Context
                 throw new \RuntimeException("Invalid date format: {$invalidDate}");
             }
         } catch (\Throwable $e) {
-            $this->lastException = $e;
-            $this->lastError = $e->getMessage();
+            self::$lastException = $e;
+            self::$lastError = $e->getMessage();
         }
     }
 
@@ -74,7 +61,7 @@ final class ErrorContext implements Context
     public function uneErreurDoitEtrelevee(): void
     {
         Assert::assertTrue(
-            null !== $this->lastException || null !== $this->lastError,
+            null !== self::$lastException || null !== self::$lastError,
             "Aucune erreur n'a été levée"
         );
     }
@@ -84,12 +71,22 @@ final class ErrorContext implements Context
      */
     public function leMessageDoitContenir(string $expectedMessage): void
     {
-        $message = $this->lastError ?? $this->lastException?->getMessage() ?? '';
-        Assert::assertStringContainsString(
-            $expectedMessage,
-            $message,
-            "Le message d'erreur ne contient pas '{$expectedMessage}'"
-        );
+        // Copier les propriétés statiques dans des variables locales pour éviter les bugs
+        $lastError = self::$lastError;
+        $lastException = self::$lastException;
+
+        $message = '';
+        if (null !== $lastError) {
+            $message = $lastError;
+        } elseif (null !== $lastException) {
+            $message = $lastException->getMessage();
+        }
+
+        Assert::assertNotEmpty($message, "Aucun message d'erreur n'a été enregistré");
+
+        if (false === strpos($message, $expectedMessage)) {
+            Assert::fail("Le message d'erreur '{$message}' ne contient pas '{$expectedMessage}'");
+        }
     }
 
     /**
@@ -97,8 +94,8 @@ final class ErrorContext implements Context
      */
     public function jeTenteDeDemarrerLaPartieDOrdre(int $position): void
     {
-        $this->lastException = null;
-        $this->lastError = null;
+        self::$lastException = null;
+        self::$lastError = null;
 
         try {
             $game = $this->findGameByPosition($position);
@@ -113,8 +110,8 @@ final class ErrorContext implements Context
                 $this->entityManager->flush();
             }
         } catch (\Throwable $e) {
-            $this->lastException = $e;
-            $this->lastError = $e->getMessage();
+            self::$lastException = $e;
+            self::$lastError = $e->getMessage();
         }
     }
 
@@ -123,14 +120,14 @@ final class ErrorContext implements Context
      */
     public function jeTenteDeCreerUnePartieAvecLaRegleInvalide(string $invalidRule): void
     {
-        $this->lastException = null;
-        $this->lastError = null;
+        self::$lastException = null;
+        self::$lastError = null;
 
         try {
             RuleType::from($invalidRule);
         } catch (\Throwable $e) {
-            $this->lastException = $e;
-            $this->lastError = $e->getMessage();
+            self::$lastException = $e;
+            self::$lastError = $e->getMessage();
         }
     }
 
@@ -139,16 +136,16 @@ final class ErrorContext implements Context
      */
     public function jeTenteDeCreerUnJoueurAvecLEmailInvalide(string $invalidEmail): void
     {
-        $this->lastException = null;
-        $this->lastError = null;
+        self::$lastException = null;
+        self::$lastError = null;
 
         try {
             if (!filter_var($invalidEmail, FILTER_VALIDATE_EMAIL)) {
                 throw new \RuntimeException('Invalid email format');
             }
         } catch (\Throwable $e) {
-            $this->lastException = $e;
-            $this->lastError = $e->getMessage();
+            self::$lastException = $e;
+            self::$lastError = $e->getMessage();
         }
     }
 
@@ -157,8 +154,8 @@ final class ErrorContext implements Context
      */
     public function jeTenteDAssocierLeJoueurALEvenementInexistant(string $playerName, string $eventName): void
     {
-        $this->lastException = null;
-        $this->lastError = null;
+        self::$lastException = null;
+        self::$lastError = null;
 
         try {
             $event = $this->eventRepo->findOneBy(['name' => $eventName]);
@@ -166,8 +163,8 @@ final class ErrorContext implements Context
                 throw new \RuntimeException("L'événement '{$eventName}' n'existe pas");
             }
         } catch (\Throwable $e) {
-            $this->lastException = $e;
-            $this->lastError = $e->getMessage();
+            self::$lastException = $e;
+            self::$lastError = $e->getMessage();
         }
     }
 
@@ -176,16 +173,16 @@ final class ErrorContext implements Context
      */
     public function jeTenteDeCreerUnCartonAvecSeulementLignes(int $lineCount): void
     {
-        $this->lastException = null;
-        $this->lastError = null;
+        self::$lastException = null;
+        self::$lastError = null;
 
         try {
             if ($lineCount < 3) {
                 throw new \RuntimeException('A card must have exactly 3 lines');
             }
         } catch (\Throwable $e) {
-            $this->lastException = $e;
-            $this->lastError = $e->getMessage();
+            self::$lastException = $e;
+            self::$lastError = $e->getMessage();
         }
     }
 
@@ -194,16 +191,16 @@ final class ErrorContext implements Context
      */
     public function jeTenteDeCreerUnCartonAvecNumerosSurUneLigne(int $numberCount): void
     {
-        $this->lastException = null;
-        $this->lastError = null;
+        self::$lastException = null;
+        self::$lastError = null;
 
         try {
             if (5 !== $numberCount) {
                 throw new \RuntimeException('Each line must have exactly 5 numbers');
             }
         } catch (\Throwable $e) {
-            $this->lastException = $e;
-            $this->lastError = $e->getMessage();
+            self::$lastException = $e;
+            self::$lastError = $e->getMessage();
         }
     }
 
@@ -212,8 +209,8 @@ final class ErrorContext implements Context
      */
     public function jeTenteDeBloquerANouveauLeCarton(string $reference): void
     {
-        $this->lastException = null;
-        $this->lastError = null;
+        self::$lastException = null;
+        self::$lastError = null;
 
         try {
             $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -225,8 +222,8 @@ final class ErrorContext implements Context
                 $this->entityManager->flush();
             }
         } catch (\Throwable $e) {
-            $this->lastException = $e;
-            $this->lastError = $e->getMessage();
+            self::$lastException = $e;
+            self::$lastError = $e->getMessage();
         }
     }
 
@@ -249,8 +246,8 @@ final class ErrorContext implements Context
      */
     public function jeTenteDeCreerUnAutreCartonAvecLaReference(string $reference): void
     {
-        $this->lastException = null;
-        $this->lastError = null;
+        self::$lastException = null;
+        self::$lastError = null;
 
         try {
             $existingCard = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -265,8 +262,8 @@ final class ErrorContext implements Context
             $this->entityManager->persist($card);
             $this->entityManager->flush();
         } catch (\Throwable $e) {
-            $this->lastException = $e;
-            $this->lastError = $e->getMessage();
+            self::$lastException = $e;
+            self::$lastError = $e->getMessage();
         }
     }
 
@@ -275,8 +272,8 @@ final class ErrorContext implements Context
      */
     public function jeTenteDAssocierLeCartonAuJoueurInexistant(string $reference, string $playerName): void
     {
-        $this->lastException = null;
-        $this->lastError = null;
+        self::$lastException = null;
+        self::$lastError = null;
 
         try {
             $player = $this->playerRepo->findOneBy(['name' => $playerName]);
@@ -284,8 +281,8 @@ final class ErrorContext implements Context
                 throw new \RuntimeException("Le joueur '{$playerName}' n'existe pas");
             }
         } catch (\Throwable $e) {
-            $this->lastException = $e;
-            $this->lastError = $e->getMessage();
+            self::$lastException = $e;
+            self::$lastError = $e->getMessage();
         }
     }
 
@@ -305,7 +302,7 @@ final class ErrorContext implements Context
     }
 
     /**
-     * @Given /^que le numéro (\d+) a été tiré pour la partie d'ordre (\d+)$/
+     * @Given /^le numéro (\d+) a été tiré pour la partie d'ordre (\d+)$/
      */
     public function queLeNumeroAEteTirePourLaPartieDOrdre(int $number, int $position): void
     {
@@ -326,8 +323,8 @@ final class ErrorContext implements Context
      */
     public function jeTenteDeTirerANouveauLeNumeroPourLaPartieDOrdre(int $number, int $position): void
     {
-        $this->lastException = null;
-        $this->lastError = null;
+        self::$lastException = null;
+        self::$lastError = null;
 
         try {
             $game = $this->findGameByPosition($position);
@@ -353,8 +350,8 @@ final class ErrorContext implements Context
                 $this->entityManager->flush();
             }
         } catch (\Throwable $e) {
-            $this->lastException = $e;
-            $this->lastError = $e->getMessage();
+            self::$lastException = $e;
+            self::$lastError = $e->getMessage();
         }
     }
 
@@ -363,8 +360,8 @@ final class ErrorContext implements Context
      */
     public function jeTenteDannulerLeDernierNumeroTire(): void
     {
-        $this->lastException = null;
-        $this->lastError = null;
+        self::$lastException = null;
+        self::$lastError = null;
 
         try {
             $events = $this->eventRepo->findAll();
@@ -385,8 +382,8 @@ final class ErrorContext implements Context
                 throw new \RuntimeException('Aucun tirage à annuler');
             }
         } catch (\Throwable $e) {
-            $this->lastException = $e;
-            $this->lastError = $e->getMessage();
+            self::$lastException = $e;
+            self::$lastError = $e->getMessage();
         }
     }
 
@@ -395,8 +392,8 @@ final class ErrorContext implements Context
      */
     public function jeTenteDeValiderLeCartonCommeGagnantSysteme(string $reference): void
     {
-        $this->lastException = null;
-        $this->lastError = null;
+        self::$lastException = null;
+        self::$lastError = null;
 
         try {
             $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -417,13 +414,13 @@ final class ErrorContext implements Context
 
             $this->winnerService->validateSystemWinner($runningGame, $card);
         } catch (\Throwable $e) {
-            $this->lastException = $e;
-            $this->lastError = $e->getMessage();
+            self::$lastException = $e;
+            self::$lastError = $e->getMessage();
         }
     }
 
     /**
-     * @Given /^que le carton "([^"]*)" est validé comme gagnant$/
+     * @Given /^le carton "([^"]*)" est validé comme gagnant$/
      */
     public function queLeCartonEstValideCommeGagnant(string $reference): void
     {
@@ -463,8 +460,8 @@ final class ErrorContext implements Context
      */
     public function jeTenteDajouterLeCartonCommeGagnantOffline(string $reference): void
     {
-        $this->lastException = null;
-        $this->lastError = null;
+        self::$lastException = null;
+        self::$lastError = null;
 
         try {
             $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -485,8 +482,8 @@ final class ErrorContext implements Context
 
             $this->winnerService->validateOfflineWinner($runningGame, $reference, $card);
         } catch (\Throwable $e) {
-            $this->lastException = $e;
-            $this->lastError = $e->getMessage();
+            self::$lastException = $e;
+            self::$lastError = $e->getMessage();
         }
     }
 
@@ -495,8 +492,8 @@ final class ErrorContext implements Context
      */
     public function jeTenteDeDemarrerLaPremierePartieDeLEvenement(string $eventName): void
     {
-        $this->lastException = null;
-        $this->lastError = null;
+        self::$lastException = null;
+        self::$lastError = null;
 
         try {
             $event = $this->eventRepo->findOneBy(['name' => $eventName]);
@@ -514,8 +511,8 @@ final class ErrorContext implements Context
                 }
             }
         } catch (\Throwable $e) {
-            $this->lastException = $e;
-            $this->lastError = $e->getMessage();
+            self::$lastException = $e;
+            self::$lastError = $e->getMessage();
         }
     }
 
@@ -524,8 +521,8 @@ final class ErrorContext implements Context
      */
     public function jeTenteDePasserALaPartieSuivante(): void
     {
-        $this->lastException = null;
-        $this->lastError = null;
+        self::$lastException = null;
+        self::$lastError = null;
 
         try {
             $events = $this->eventRepo->findAll();
@@ -555,8 +552,8 @@ final class ErrorContext implements Context
                 throw new \RuntimeException('Aucune partie suivante');
             }
         } catch (\Throwable $e) {
-            $this->lastException = $e;
-            $this->lastError = $e->getMessage();
+            self::$lastException = $e;
+            self::$lastError = $e->getMessage();
         }
     }
 
@@ -565,8 +562,8 @@ final class ErrorContext implements Context
      */
     public function jeTenteDeCreerUnCartonAvecUneGrilleVide(): void
     {
-        $this->lastException = null;
-        $this->lastError = null;
+        self::$lastException = null;
+        self::$lastError = null;
 
         try {
             $grid = [];
@@ -574,8 +571,8 @@ final class ErrorContext implements Context
                 throw new \RuntimeException('Grid cannot be empty');
             }
         } catch (\Throwable $e) {
-            $this->lastException = $e;
-            $this->lastError = $e->getMessage();
+            self::$lastException = $e;
+            self::$lastError = $e->getMessage();
         }
     }
 
@@ -616,18 +613,49 @@ final class ErrorContext implements Context
         Assert::assertFalse($game->isFrozen(), "La partie est gelée alors qu'elle ne devrait pas l'être");
     }
 
-    private function findGameByPosition(int $position): ?Game
+    /**
+     * @Then /^la partie d'ordre (\d+) doit rester en statut "([^"]*)"$/
+     */
+    public function laPartieDOitResterEnStatut(int $position, string $expectedStatus): void
     {
-        $events = $this->eventRepo->findAll();
+        $game = $this->findGameByPosition($position);
+        Assert::assertNotNull($game, "Aucune partie trouvée à la position {$position}");
 
-        foreach ($events as $event) {
-            foreach ($event->getGames() as $game) {
-                if ($game->getPosition() === $position) {
-                    return $game;
-                }
-            }
-        }
+        $this->entityManager->refresh($game);
+        Assert::assertEquals(
+            $expectedStatus,
+            $game->getStatus()->value,
+            "Le statut de la partie d'ordre {$position} devrait rester {$expectedStatus}"
+        );
+    }
 
-        return null;
+    /**
+     * @Then /^le carton "([^"]*)" doit rester bloqué$/
+     */
+    public function leCartonDoitResterBloque(string $reference): void
+    {
+        $card = $this->cardRepo->findOneBy(['reference' => $reference]);
+        Assert::assertNotNull($card, "Le carton '{$reference}' n'existe pas");
+
+        $this->entityManager->refresh($card);
+        Assert::assertTrue($card->isBlocked(), "Le carton '{$reference}' devrait rester bloqué");
+    }
+
+    /**
+     * @Then /^la partie d'ordre (\d+) doit toujours avoir (\d+) numéros? tirés?$/
+     */
+    public function laPartieDOrdreDoitToujoursAvoirNumerosTires(int $position, int $expectedCount): void
+    {
+        $game = $this->findGameByPosition($position);
+        Assert::assertNotNull($game, "Aucune partie trouvée à la position {$position}");
+
+        $this->entityManager->refresh($game);
+        $actualCount = $game->getDraws()->count();
+
+        Assert::assertEquals(
+            $expectedCount,
+            $actualCount,
+            "La partie d'ordre {$position} devrait toujours avoir {$expectedCount} numéro(s) tiré(s), mais en a {$actualCount}"
+        );
     }
 }

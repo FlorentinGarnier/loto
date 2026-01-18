@@ -3,6 +3,9 @@ default:
     default:
       paths:
         - '%paths.base%/features'
+      gherkin:
+        filters:
+          tags: ~
       contexts:
         - App\Tests\Behat\FeatureContext
         - App\Tests\Behat\EventContext
@@ -11,6 +14,7 @@ default:
         - App\Tests\Behat\GamePlayContext
         - App\Tests\Behat\WinnerContext
         - App\Tests\Behat\ErrorContext
+        - App\Tests\Behat\TransfertContext
   extensions:
     FriendsOfBehat\SymfonyExtension\ServiceContainer\SymfonyExtension:
       kernel:

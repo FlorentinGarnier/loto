@@ -1,9 +1,10 @@
-Feature: Détection et validation des gagnants
+# language: fr
+Fonctionnalité: Détection et validation des gagnants
     Afin de désigner les gagnants d'une partie de loto
     En tant qu'administrateur
     Je veux détecter automatiquement les gagnants potentiels et les valider
 
-    Background:
+    Contexte:
         Étant donné que je suis connecté en tant qu'administrateur
         Et qu'un événement "Loto de la kermesse" existe
         Et que les parties suivantes sont définies pour l'événement "Loto de la kermesse":
@@ -12,7 +13,7 @@ Feature: Détection et validation des gagnants
             | 2     | DOUBLE_QUINE | Bon d'achat    |
             | 3     | FULL_CARD    | Voiture        |
 
-    Scenario: Détecter automatiquement un gagnant potentiel (QUINE)
+    Scénario: Détecter automatiquement un gagnant potentiel (QUINE)
         Étant donné que la partie d'ordre 1 est en statut "RUNNING"
         Et qu'un carton "A001" existe avec la grille suivante:
             | ligne | numéros           |
@@ -25,7 +26,7 @@ Feature: Détection et validation des gagnants
         Et la partie d'ordre 1 doit être gelée
         Et l'index de gel doit correspondre au numéro 67
 
-    Scenario: Détecter un gagnant potentiel (DOUBLE_QUINE)
+    Scénario: Détecter un gagnant potentiel (DOUBLE_QUINE)
         Étant donné que la partie d'ordre 2 est en statut "RUNNING"
         Et qu'un carton "B001" existe avec la grille suivante:
             | ligne | numéros           |
@@ -37,7 +38,7 @@ Feature: Détection et validation des gagnants
         Alors le carton "B001" doit être détecté comme gagnant potentiel
         Et la partie d'ordre 2 doit être gelée
 
-    Scenario: Détecter un gagnant potentiel (FULL_CARD - Carton plein)
+    Scénario: Détecter un gagnant potentiel (FULL_CARD - Carton plein)
         Étant donné que la partie d'ordre 3 est en statut "RUNNING"
         Et qu'un carton "C001" existe avec la grille suivante:
             | ligne | numéros           |
@@ -49,7 +50,7 @@ Feature: Détection et validation des gagnants
         Alors le carton "C001" doit être détecté comme gagnant potentiel
         Et la partie d'ordre 3 doit être gelée
 
-    Scenario: Valider un gagnant système
+    Scénario: Valider un gagnant système
         Étant donné que la partie d'ordre 1 est en statut "RUNNING"
         Et qu'un carton "A001" est détecté comme gagnant potentiel
         Et que la partie d'ordre 1 est gelée
@@ -58,7 +59,7 @@ Feature: Détection et validation des gagnants
         Et le gagnant doit référencer le carton "A001"
         Et le carton "A001" doit être bloqué avec la raison "WINNER_VALIDATED"
 
-    Scenario: Ajouter un gagnant offline (sans détection automatique)
+    Scénario: Ajouter un gagnant offline (sans détection automatique)
         Étant donné que la partie d'ordre 1 est en statut "RUNNING"
         Et qu'un carton "A001" existe
         Quand j'ajoute manuellement le carton "A001" comme gagnant offline
@@ -67,14 +68,14 @@ Feature: Détection et validation des gagnants
         Et la partie d'ordre 1 doit être gelée
         Et le carton "A001" doit être bloqué avec la raison "WINNER_OFFLINE"
 
-    Scenario: Ajouter un gagnant offline avec référence uniquement
+    Scénario: Ajouter un gagnant offline avec référence uniquement
         Étant donné que la partie d'ordre 1 est en statut "RUNNING"
         Quand j'ajoute manuellement la référence "Z999" comme gagnant offline sans carton
         Alors un gagnant de source "OFFLINE" doit être enregistré pour la partie d'ordre 1
         Et le gagnant doit avoir la référence "Z999"
         Et la partie d'ordre 1 doit être gelée
 
-    Scenario: Plusieurs cartons gagnants potentiels en même temps
+    Scénario: Plusieurs cartons gagnants potentiels en même temps
         Étant donné que la partie d'ordre 1 est en statut "RUNNING"
         Et que les cartons suivants existent:
             | référence | ligne_1_numéros   |
@@ -86,7 +87,7 @@ Feature: Détection et validation des gagnants
         Et le carton "A001" doit être dans la liste des gagnants potentiels
         Et le carton "A002" ne doit pas être dans la liste des gagnants potentiels
 
-    Scenario: Réinitialiser tous les gagnants d'un événement
+    Scénario: Réinitialiser tous les gagnants d'un événement
         Étant donné que la partie d'ordre 1 a un gagnant validé
         Et que la partie d'ordre 2 a un gagnant validé
         Quand je réinitialise tous les gagnants de l'événement "Loto de la kermesse"
@@ -94,7 +95,7 @@ Feature: Détection et validation des gagnants
         Et la partie d'ordre 2 ne doit plus avoir de gagnants
         Et tous les cartons bloqués doivent être débloqués
 
-    Scenario: Afficher automatiquement le carton du gagnant potentiel
+    Scénario: Afficher automatiquement le carton du gagnant potentiel
         Étant donné que la partie d'ordre 1 est en statut "RUNNING"
         Et qu'un carton "A001" avec joueur "Dupont" existe avec la grille suivante:
             | ligne | numéros           |

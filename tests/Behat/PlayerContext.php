@@ -8,31 +8,25 @@ use App\Entity\Card;
 use App\Entity\Player;
 use App\Repository\CardRepository;
 use App\Repository\EventRepository;
+use App\Repository\GameRepository;
 use App\Repository\PlayerRepository;
-use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\TableNode;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Assert;
 
-final class PlayerContext implements Context
+final class PlayerContext extends BaseContext
 {
-    private EntityManagerInterface $entityManager;
-    private PlayerRepository $playerRepo;
-    private EventRepository $eventRepo;
-    private CardRepository $cardRepo;
     private ?Player $currentPlayer = null;
     private array $players = [];
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        PlayerRepository $playerRepo,
         EventRepository $eventRepo,
+        GameRepository $gameRepo,
         CardRepository $cardRepo,
+        PlayerRepository $playerRepo,
     ) {
-        $this->entityManager = $entityManager;
-        $this->playerRepo = $playerRepo;
-        $this->eventRepo = $eventRepo;
-        $this->cardRepo = $cardRepo;
+        parent::__construct($entityManager, $eventRepo, $gameRepo, $cardRepo, $playerRepo);
     }
 
     /**
@@ -84,7 +78,7 @@ final class PlayerContext implements Context
     }
 
     /**
-     * @Given /^qu'un joueur "([^"]*)" existe$/
+     * @Given /^un joueur "([^"]*)" existe$/
      */
     public function quUnJoueurExiste(string $name): void
     {
@@ -101,6 +95,8 @@ final class PlayerContext implements Context
     }
 
     /**
+     * @Given /^le joueur "([^"]*)" est associé à l'événement "([^"]*)"$/
+     *
      * @When /^j'associe le joueur "([^"]*)" à l'événement "([^"]*)"$/
      */
     public function jAssocieLeJoueurALEvenement(string $playerName, string $eventName): void
@@ -130,7 +126,7 @@ final class PlayerContext implements Context
     }
 
     /**
-     * @Given /^que les joueurs suivants sont associés à l'événement "([^"]*)":$/
+     * @Given /^les joueurs suivants sont associés à l'événement "([^"]*)":$/
      */
     public function queLesJoueursSuivantsSontAssociesALEvenement(string $eventName, TableNode $table): void
     {
@@ -187,7 +183,7 @@ final class PlayerContext implements Context
     }
 
     /**
-     * @Given /^que les joueurs suivants ont des cartons pour l'événement "([^"]*)":$/
+     * @Given /^les joueurs suivants ont des cartons pour l'événement "([^"]*)":$/
      */
     public function queLesJoueursSuivantsOntDesCartonsPourLEvenement(string $eventName, TableNode $table): void
     {

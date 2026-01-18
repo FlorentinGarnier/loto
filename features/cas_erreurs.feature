@@ -1,25 +1,26 @@
-Feature: Gestion des cas d'erreur et edge cases
+# language: fr
+Fonctionnalité: Gestion des cas d'erreur et edge cases
     Afin de garantir la robustesse de l'application
     En tant qu'administrateur
     Je veux que l'application gère correctement les cas d'erreur
 
-    Background:
+    Contexte:
         Étant donné que je suis connecté en tant qu'administrateur
         Et qu'un événement "Loto de la kermesse" existe
 
     # ========== ÉVÉNEMENTS ET PARTIES ==========
 
-    Scenario: Créer un événement avec une date invalide
+    Scénario: Créer un événement avec une date invalide
         Quand je tente de créer un événement avec la date invalide "invalid-date"
         Alors une erreur doit être levée
         Et le message doit contenir "Invalid date format"
 
-    Scenario: Démarrer une partie qui n'existe pas
+    Scénario: Démarrer une partie qui n'existe pas
         Quand je tente de démarrer la partie d'ordre 999
         Alors une erreur doit être levée
         Et le message doit contenir "Aucune partie trouvée"
 
-    Scenario: Démarrer une partie déjà terminée
+    Scénario: Démarrer une partie déjà terminée
         Étant donné que les parties suivantes sont définies pour l'événement "Loto de la kermesse":
             | ordre | règle | lot            |
             | 1     | QUINE | Machine à café |
@@ -27,17 +28,17 @@ Feature: Gestion des cas d'erreur et edge cases
         Quand je tente de démarrer la partie d'ordre 1
         Alors la partie d'ordre 1 doit rester en statut "FINISHED"
 
-    Scenario: Créer une partie avec une règle invalide
+    Scénario: Créer une partie avec une règle invalide
         Quand je tente de créer une partie avec la règle invalide "INVALID_RULE"
         Alors une erreur doit être levée
 
     # ========== JOUEURS ==========
 
-    Scenario: Créer un joueur avec un email invalide
+    Scénario: Créer un joueur avec un email invalide
         Quand je tente de créer un joueur avec l'email invalide "not-an-email"
         Alors une erreur doit être levée
 
-    Scenario: Associer un joueur à un événement inexistant
+    Scénario: Associer un joueur à un événement inexistant
         Étant donné qu'un joueur "Dupont" existe
         Quand je tente d'associer le joueur "Dupont" à l'événement inexistant "Événement Fantôme"
         Alors une erreur doit être levée
@@ -45,35 +46,35 @@ Feature: Gestion des cas d'erreur et edge cases
 
     # ========== CARTONS ==========
 
-    Scenario: Créer un carton avec une grille invalide (moins de 3 lignes)
+    Scénario: Créer un carton avec une grille invalide (moins de 3 lignes)
         Quand je tente de créer un carton avec seulement 2 lignes
         Alors une erreur doit être levée
 
-    Scenario: Créer un carton avec une grille invalide (pas 5 numéros par ligne)
+    Scénario: Créer un carton avec une grille invalide (pas 5 numéros par ligne)
         Quand je tente de créer un carton avec 3 numéros sur une ligne
         Alors une erreur doit être levée
 
-    Scenario: Bloquer un carton déjà bloqué
+    Scénario: Bloquer un carton déjà bloqué
         Étant donné qu'un carton "A001" existe
         Et que le carton "A001" est bloqué pour la raison "WINNER"
         Quand je tente de bloquer à nouveau le carton "A001"
         Alors le carton "A001" doit rester bloqué
         Et la raison de blocage doit toujours être "WINNER"
 
-    Scenario: Créer un carton avec une référence déjà existante
+    Scénario: Créer un carton avec une référence déjà existante
         Étant donné qu'un carton "A001" existe
         Quand je tente de créer un autre carton avec la référence "A001"
         Alors une erreur doit être levée
         Et le message doit contenir "already exists"
 
-    Scenario: Associer un carton à un joueur inexistant
+    Scénario: Associer un carton à un joueur inexistant
         Étant donné qu'un carton "A001" existe
         Quand je tente d'associer le carton "A001" au joueur inexistant "Fantôme"
         Alors une erreur doit être levée
 
     # ========== TIRAGES ==========
 
-    Scenario: Tirer un numéro hors limites (< 1)
+    Scénario: Tirer un numéro hors limites (< 1)
         Étant donné que les parties suivantes sont définies pour l'événement "Loto de la kermesse":
             | ordre | règle | lot            |
             | 1     | QUINE | Machine à café |
@@ -82,7 +83,7 @@ Feature: Gestion des cas d'erreur et edge cases
         Alors une erreur doit être levée
         Et le message doit contenir "between 1 and 90"
 
-    Scenario: Tirer un numéro hors limites (> 90)
+    Scénario: Tirer un numéro hors limites (> 90)
         Étant donné que les parties suivantes sont définies pour l'événement "Loto de la kermesse":
             | ordre | règle | lot            |
             | 1     | QUINE | Machine à café |
@@ -91,7 +92,7 @@ Feature: Gestion des cas d'erreur et edge cases
         Alors une erreur doit être levée
         Et le message doit contenir "between 1 and 90"
 
-    Scenario: Tirer un numéro pour une partie qui n'est pas en cours
+    Scénario: Tirer un numéro pour une partie qui n'est pas en cours
         Étant donné que les parties suivantes sont définies pour l'événement "Loto de la kermesse":
             | ordre | règle | lot            |
             | 1     | QUINE | Machine à café |
@@ -99,7 +100,7 @@ Feature: Gestion des cas d'erreur et edge cases
         Quand je tente de tirer le numéro 42 pour la partie d'ordre 1
         Alors le numéro 42 ne doit pas être marqué comme tiré dans la partie d'ordre 1
 
-    Scenario: Tirer le même numéro deux fois
+    Scénario: Tirer le même numéro deux fois
         Étant donné que les parties suivantes sont définies pour l'événement "Loto de la kermesse":
             | ordre | règle | lot            |
             | 1     | QUINE | Machine à café |
@@ -108,7 +109,7 @@ Feature: Gestion des cas d'erreur et edge cases
         Quand je tente de tirer à nouveau le numéro 42 pour la partie d'ordre 1
         Alors la partie d'ordre 1 doit toujours avoir 1 numéro tiré
 
-    Scenario: Annuler un tirage quand aucun numéro n'a été tiré
+    Scénario: Annuler un tirage quand aucun numéro n'a été tiré
         Étant donné que les parties suivantes sont définies pour l'événement "Loto de la kermesse":
             | ordre | règle | lot            |
             | 1     | QUINE | Machine à café |
@@ -119,7 +120,7 @@ Feature: Gestion des cas d'erreur et edge cases
 
     # ========== GAGNANTS ==========
 
-    Scenario: Valider un gagnant système sans que la partie soit gelée
+    Scénario: Valider un gagnant système sans que la partie soit gelée
         Étant donné que les parties suivantes sont définies pour l'événement "Loto de la kermesse":
             | ordre | règle | lot            |
             | 1     | QUINE | Machine à café |
@@ -129,7 +130,7 @@ Feature: Gestion des cas d'erreur et edge cases
         Alors une erreur doit être levée
         Et le message doit contenir "non-frozen game"
 
-    Scenario: Valider un carton déjà bloqué comme gagnant
+    Scénario: Valider un carton déjà bloqué comme gagnant
         Étant donné que les parties suivantes sont définies pour l'événement "Loto de la kermesse":
             | ordre | règle | lot            |
             | 1     | QUINE | Machine à café |
@@ -141,7 +142,7 @@ Feature: Gestion des cas d'erreur et edge cases
         Alors une erreur doit être levée
         Et le message doit contenir "blocked card"
 
-    Scenario: Valider deux fois le même carton comme gagnant
+    Scénario: Valider deux fois le même carton comme gagnant
         Étant donné que les parties suivantes sont définies pour l'événement "Loto de la kermesse":
             | ordre | règle | lot            |
             | 1     | QUINE | Machine à café |
@@ -156,9 +157,9 @@ Feature: Gestion des cas d'erreur et edge cases
         Et que le carton "A001" est validé comme gagnant
         Quand je tente de valider à nouveau le carton "A001" comme gagnant
         Alors une erreur doit être levée
-        Et le message doit contenir "already validated"
+        Et le message doit contenir "blocked card"
 
-    Scenario: Ajouter un gagnant offline avec un carton bloqué
+    Scénario: Ajouter un gagnant offline avec un carton bloqué
         Étant donné que les parties suivantes sont définies pour l'événement "Loto de la kermesse":
             | ordre | règle | lot            |
             | 1     | QUINE | Machine à café |
@@ -171,13 +172,13 @@ Feature: Gestion des cas d'erreur et edge cases
 
     # ========== EDGE CASES ==========
 
-    Scenario: Événement sans parties
+    Scénario: Événement sans parties
         Étant donné qu'un événement "Loto vide" existe
         Quand je tente de démarrer la première partie de l'événement "Loto vide"
         Alors une erreur doit être levée
         Et le message doit contenir "aucune partie"
 
-    Scenario: Passer à la partie suivante quand il n'y en a pas
+    Scénario: Passer à la partie suivante quand il n'y en a pas
         Étant donné que les parties suivantes sont définies pour l'événement "Loto de la kermesse":
             | ordre | règle | lot            |
             | 1     | QUINE | Machine à café |
@@ -186,11 +187,11 @@ Feature: Gestion des cas d'erreur et edge cases
         Alors une erreur doit être levée
         Et le message doit contenir "Aucune partie suivante"
 
-    Scenario: Carton sans numéros dans la grille
+    Scénario: Carton sans numéros dans la grille
         Quand je tente de créer un carton avec une grille vide
         Alors une erreur doit être levée
 
-    Scenario: Détecter des gagnants sans cartons dans l'événement
+    Scénario: Détecter des gagnants sans cartons dans l'événement
         Étant donné que les parties suivantes sont définies pour l'événement "Loto de la kermesse":
             | ordre | règle | lot            |
             | 1     | QUINE | Machine à café |

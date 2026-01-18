@@ -1,17 +1,18 @@
-Feature: Gestion des événements et des parties
+# language: fr
+Fonctionnalité: Gestion des événements et des parties
     Afin d'organiser une soirée de loto
     En tant qu'administrateur
     Je veux créer un événement et définir les parties (règles + lots) à l'avance
 
-    Background:
+    Contexte:
         Étant donné que je suis connecté en tant qu'administrateur
 
-    Scenario: Créer un nouvel événement de loto
+    Scénario: Créer un nouvel événement de loto
         Quand je crée un événement de loto nommé "Loto de la kermesse" pour le "2025-06-21"
         Alors l'événement "Loto de la kermesse" doit exister
         Et la date de l'événement "Loto de la kermesse" doit être "2025-06-21"
 
-    Scenario: Définir une séquence de parties pour un événement
+    Scénario: Définir une séquence de parties pour un événement
         Étant donné qu'un événement "Loto de la kermesse" existe
         Quand je définis les parties suivantes pour l'événement "Loto de la kermesse":
             | ordre | règle        | lot             |
@@ -23,7 +24,7 @@ Feature: Gestion des événements et des parties
         Et la partie d'ordre 2 doit avoir la règle "DOUBLE_QUINE" et le lot "Bon d'achat"
         Et la partie d'ordre 3 doit avoir la règle "FULL_CARD" et le lot "Voiture"
 
-    Scenario: Lancer la première partie d'un événement
+    Scénario: Lancer la première partie d'un événement
         Étant donné qu'un événement "Loto de la kermesse" existe
         Et que les parties suivantes sont définies pour l'événement "Loto de la kermesse":
             | ordre | règle        | lot             |
@@ -35,7 +36,7 @@ Feature: Gestion des événements et des parties
         Et la partie d'ordre 2 doit être en statut "PENDING"
         Et la partie d'ordre 3 doit être en statut "PENDING"
 
-    Scenario: Passer à la partie suivante
+    Scénario: Passer à la partie suivante
         Étant donné qu'un événement "Loto de la kermesse" existe
         Et que les parties suivantes sont définies pour l'événement "Loto de la kermesse":
             | ordre | règle        | lot             |
@@ -46,7 +47,7 @@ Feature: Gestion des événements et des parties
         Alors la partie d'ordre 1 doit être en statut "FINISHED"
         Et la partie d'ordre 2 doit être en statut "RUNNING"
 
-    Scenario: Terminer une partie
+    Scénario: Terminer une partie
         Étant donné qu'un événement "Loto de la kermesse" existe
         Et que les parties suivantes sont définies pour l'événement "Loto de la kermesse":
             | ordre | règle    | lot            |

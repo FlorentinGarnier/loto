@@ -9,31 +9,34 @@ use App\Entity\Player;
 use App\Enum\BlockedReason;
 use App\Repository\CardRepository;
 use App\Repository\EventRepository;
+use App\Repository\GameRepository;
 use App\Repository\PlayerRepository;
-use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\TableNode;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Assert;
 
-final class CardContext implements Context
+final class CardContext extends BaseContext
 {
-    private EntityManagerInterface $entityManager;
-    private CardRepository $cardRepo;
-    private PlayerRepository $playerRepo;
-    private EventRepository $eventRepo;
     private ?Card $currentCard = null;
     private array $cards = [];
 
     public function __construct(
         EntityManagerInterface $entityManager,
+        EventRepository $eventRepo,
+        GameRepository $gameRepo,
         CardRepository $cardRepo,
         PlayerRepository $playerRepo,
-        EventRepository $eventRepo,
     ) {
-        $this->entityManager = $entityManager;
-        $this->cardRepo = $cardRepo;
-        $this->playerRepo = $playerRepo;
-        $this->eventRepo = $eventRepo;
+        parent::__construct($entityManager, $eventRepo, $gameRepo, $cardRepo, $playerRepo);
+    }
+
+    /**
+     * @BeforeScenario
+     */
+    public function resetCardsArray(): void
+    {
+        $this->cards = [];
+        $this->currentCard = null;
     }
 
     /**
@@ -84,7 +87,7 @@ final class CardContext implements Context
     }
 
     /**
-     * @Given /^qu'un carton "([^"]*)" existe$/
+     * @Given /^un carton "([^"]*)" existe$/
      */
     public function quUnCartonExiste(string $reference): void
     {
@@ -166,7 +169,7 @@ final class CardContext implements Context
     }
 
     /**
-     * @Given /^que le carton "([^"]*)" est bloqué pour la raison "([^"]*)"$/
+     * @Given /^le carton "([^"]*)" est bloqué pour la raison "([^"]*)"$/
      */
     public function queLeCartonEstBloquePourLaRaison(string $reference, string $reason): void
     {
@@ -202,7 +205,7 @@ final class CardContext implements Context
     }
 
     /**
-     * @Given /^que les cartons suivants existent pour l'événement "([^"]*)":$/
+     * @Given /^les cartons suivants existent pour l'événement "([^"]*)":$/
      */
     public function queLesCartonsSuivantsExistentPourLEvenement(string $eventName, TableNode $table): void
     {
@@ -246,7 +249,12 @@ final class CardContext implements Context
         $event = $this->eventRepo->findOneBy(['name' => $eventName]);
         Assert::assertNotNull($event, "L'événement '{$eventName}' n'existe pas");
 
-        $this->cards = $this->cardRepo->findByEvent($event);
+        // Si on a déjà créé des cartons dans ce contexte (via "les cartons suivants existent"),
+        // on les utilise car ils incluent les cartons sans joueur
+        if (empty($this->cards)) {
+            $this->cards = $this->cardRepo->findByEvent($event);
+        }
+        // Sinon, on garde les cartons déjà créés dans $this->cards
     }
 
     /**

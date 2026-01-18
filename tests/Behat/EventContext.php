@@ -24,7 +24,7 @@ final class EventContext implements Context
     }
 
     /**
-     * @Given /^que je suis connecté en tant qu'administrateur$/
+     * @Given /^je suis connecté en tant qu'administrateur$/
      */
     public function queJeSuisConnecteEnTantQuAdministrateur(): void
     {
@@ -70,7 +70,7 @@ final class EventContext implements Context
     }
 
     /**
-     * @Given /^qu'un événement "([^"]*)" existe$/
+     * @Given /^un événement "([^"]*)" existe$/
      */
     public function quUnEvenementExiste(string $name): void
     {
@@ -110,7 +110,7 @@ final class EventContext implements Context
     }
 
     /**
-     * @Given /^que les parties suivantes sont définies pour l'événement "([^"]*)":$/
+     * @Given /^les parties suivantes sont définies pour l'événement "([^"]*)":$/
      */
     public function queLesPartiesSuivantesSontDefiniesPourLEvenement(string $eventName, TableNode $table): void
     {
@@ -200,7 +200,7 @@ final class EventContext implements Context
     }
 
     /**
-     * @Given /^que la partie d'ordre (\d+) est en statut "([^"]*)"$/
+     * @Given /^la partie d'ordre (\d+) est en statut "([^"]*)"$/
      */
     public function queLaPartieDOrdreEstEnStatut(int $position, string $status): void
     {
