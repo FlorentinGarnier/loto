@@ -73,14 +73,23 @@ jobs:
           EOF
 
       - name: Create database
+        env:
+          DATABASE_URL: "mysql://root:root@127.0.0.1:3306/loto_test?serverVersion=8.0"
+          APP_ENV: test
         run: |
           php bin/console doctrine:database:create --env=test --if-not-exists
           php bin/console doctrine:schema:create --env=test
 
       - name: Run PHPUnit tests
+        env:
+          DATABASE_URL: "mysql://root:root@127.0.0.1:3306/loto_test?serverVersion=8.0"
+          APP_ENV: test
         run: vendor/bin/phpunit
 
       - name: Run Behat tests
+        env:
+          DATABASE_URL: "mysql://root:root@127.0.0.1:3306/loto_test?serverVersion=8.0"
+          APP_ENV: test
         run: vendor/bin/behat --format=progress --strict --no-interaction
 
       - name: Check code style
