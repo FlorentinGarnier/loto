@@ -62,6 +62,16 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress --no-interaction
 
+      - name: Setup test environment
+        run: |
+          cat > .env.test.local << EOF
+          APP_ENV=test
+          APP_SECRET=test_secret_key_for_ci
+          DATABASE_URL="mysql://root:root@127.0.0.1:3306/loto_test?serverVersion=8.0"
+          MERCURE_URL=http://localhost:3000/.well-known/mercure
+          MERCURE_PUBLIC_URL=http://localhost:3000/.well-known/mercure
+          MERCURE_JWT_SECRET=test_secret
+          EOF
 
       - name: Create database
         run: |
