@@ -78,6 +78,7 @@ jobs:
         env:
           DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:5432/loto_test?serverVersion=15&charset=utf8"
           APP_ENV: test
+          DEFAULT_URI: "http://localhost"
         run: |
           php bin/console doctrine:database:create --env=test --if-not-exists
           php bin/console doctrine:schema:create --env=test
@@ -86,12 +87,14 @@ jobs:
         env:
           DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:5432/loto_test?serverVersion=15&charset=utf8"
           APP_ENV: test
+          DEFAULT_URI: "http://localhost"
         run: vendor/bin/phpunit
 
       - name: Run Behat tests
         env:
           DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:5432/loto_test?serverVersion=15&charset=utf8"
           APP_ENV: test
+          DEFAULT_URI: "http://localhost"
         run: vendor/bin/behat --format=progress --strict --no-interaction
 
       - name: Check code style
