@@ -52,7 +52,7 @@ abstract class BaseContext implements Context
         $connection = $this->entityManager->getConnection();
         $platform = $connection->getDatabasePlatform();
 
-        // Désactiver temporairement les contraintes de clés étrangères
+        // Désactiver temporairement les contraintes de clés étrangères (PostgreSQL)
         $connection->executeStatement('SET CONSTRAINTS ALL DEFERRED');
 
         // Liste des tables à nettoyer (dans l'ordre inverse des dépendances)
@@ -62,7 +62,7 @@ abstract class BaseContext implements Context
             $connection->executeStatement($platform->getTruncateTableSQL($table, true));
         }
 
-        // Réactiver les contraintes
+        // Réactiver les contraintes (PostgreSQL)
         $connection->executeStatement('SET CONSTRAINTS ALL IMMEDIATE');
     }
 

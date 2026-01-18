@@ -21,18 +21,19 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      mysql:
-        image: mysql:8.0
+      postgres:
+        image: postgres:15
         env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: loto_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: loto_test
         ports:
-          - 3306:3306
+          - 5432:5432
         options: >-
-          --health-cmd="mysqladmin ping"
+          --health-cmd pg_isready
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=3
+          --health-retries=5
 
     steps:
       - name: Checkout code
@@ -42,7 +43,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_mysql, dom, filter, json
+          extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_pgsql, dom, filter, json
           coverage: none
           tools: composer:v2
 
@@ -66,7 +67,7 @@ jobs:
           cat > .env.test.local << EOF
           APP_ENV=test
           APP_SECRET=test_secret_key_for_ci
-          DATABASE_URL="mysql://root:root@127.0.0.1:3306/loto_test?serverVersion=8.0"
+          DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/loto_test?serverVersion=15&charset=utf8"
           MERCURE_URL=http://localhost:3000/.well-known/mercure
           MERCURE_PUBLIC_URL=http://localhost:3000/.well-known/mercure
           MERCURE_JWT_SECRET=test_secret
@@ -74,7 +75,7 @@ jobs:
 
       - name: Create database
         env:
-          DATABASE_URL: "mysql://root:root@127.0.0.1:3306/loto_test?serverVersion=8.0"
+          DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:5432/loto_test?serverVersion=15&charset=utf8"
           APP_ENV: test
         run: |
           php bin/console doctrine:database:create --env=test --if-not-exists
@@ -82,13 +83,13 @@ jobs:
 
       - name: Run PHPUnit tests
         env:
-          DATABASE_URL: "mysql://root:root@127.0.0.1:3306/loto_test?serverVersion=8.0"
+          DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:5432/loto_test?serverVersion=15&charset=utf8"
           APP_ENV: test
         run: vendor/bin/phpunit
 
       - name: Run Behat tests
         env:
-          DATABASE_URL: "mysql://root:root@127.0.0.1:3306/loto_test?serverVersion=8.0"
+          DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:5432/loto_test?serverVersion=15&charset=utf8"
           APP_ENV: test
         run: vendor/bin/behat --format=progress --strict --no-interaction
 
