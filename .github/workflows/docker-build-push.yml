@@ -78,7 +78,11 @@ jobs:
         env:
           DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:5432/loto_test?serverVersion=15&charset=utf8"
           APP_ENV: test
+          APP_SECRET: test_secret_key_for_ci
           DEFAULT_URI: "http://localhost"
+          MERCURE_URL: "http://localhost:3000/.well-known/mercure"
+          MERCURE_PUBLIC_URL: "http://localhost:3000/.well-known/mercure"
+          MERCURE_JWT_SECRET: test_secret
         run: |
           php bin/console doctrine:database:create --env=test --if-not-exists
           php bin/console doctrine:schema:create --env=test
@@ -87,14 +91,22 @@ jobs:
         env:
           DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:5432/loto_test?serverVersion=15&charset=utf8"
           APP_ENV: test
+          APP_SECRET: test_secret_key_for_ci
           DEFAULT_URI: "http://localhost"
+          MERCURE_URL: "http://localhost:3000/.well-known/mercure"
+          MERCURE_PUBLIC_URL: "http://localhost:3000/.well-known/mercure"
+          MERCURE_JWT_SECRET: test_secret
         run: vendor/bin/phpunit
 
       - name: Run Behat tests
         env:
           DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:5432/loto_test?serverVersion=15&charset=utf8"
           APP_ENV: test
+          APP_SECRET: test_secret_key_for_ci
           DEFAULT_URI: "http://localhost"
+          MERCURE_URL: "http://localhost:3000/.well-known/mercure"
+          MERCURE_PUBLIC_URL: "http://localhost:3000/.well-known/mercure"
+          MERCURE_JWT_SECRET: test_secret
         run: vendor/bin/behat --format=progress --strict --no-interaction
 
       - name: Check code style
