@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: CardRepository::class)]
 #[ORM\Table(name: 'card')]
+#[ORM\UniqueConstraint(name: 'uniq_card_reference', columns: ['reference'])]
 class Card
 {
     #[ORM\Id]
@@ -16,7 +17,7 @@ class Card
     #[ORM\Column(type: Types::INTEGER)]
     private ?int $id = null;
 
-    #[ORM\Column(type: Types::STRING, length: 50)]
+    #[ORM\Column(type: Types::STRING, length: 50, unique: true)]
     private string $reference = '';
 
     // Store as JSON: array of 3 arrays, each with 5 integers

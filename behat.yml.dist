@@ -10,6 +10,7 @@ default:
         - App\Tests\Behat\CardContext
         - App\Tests\Behat\GamePlayContext
         - App\Tests\Behat\WinnerContext
+        - App\Tests\Behat\ErrorContext
   extensions:
     FriendsOfBehat\SymfonyExtension\ServiceContainer\SymfonyExtension:
       kernel:

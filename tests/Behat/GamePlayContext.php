@@ -36,20 +36,48 @@ final class GamePlayContext implements Context
 
     /**
      * @When /^je tire le numéro (\d+) pour la partie d'ordre (\d+)$/
+     * @When /^je tente de tirer le numéro (\d+) pour la partie d'ordre (\d+)$/
      */
     public function jeTireLeNumeroPourLaPartieDOrdre(int $number, int $position): void
     {
-        $game = $this->findGameByPosition($position);
-        Assert::assertNotNull($game, "Aucune partie trouvée à la position {$position}");
+        $this->lastError = null;
 
-        $draw = new Draw();
-        $draw->setGame($game);
-        $draw->setNumber($number);
-        $draw->setOrderIndex($game->getDraws()->count() + 1);
+        try {
+            if ($number < 1 || $number > 90) {
+                throw new \InvalidArgumentException('Number must be between 1 and 90');
+            }
 
-        $game->addDraw($draw);
-        $this->entityManager->persist($draw);
-        $this->entityManager->flush();
+            $game = $this->findGameByPosition($position);
+            Assert::assertNotNull($game, "Aucune partie trouvée à la position {$position}");
+
+            // Vérifier si la partie est gelée
+            if ($game->isFrozen()) {
+                throw new \RuntimeException('Game is frozen');
+            }
+
+            // Vérifier si la partie est en cours
+            if (\App\Enum\GameStatus::RUNNING !== $game->getStatus()) {
+                return; // Ne pas tirer si la partie n'est pas en cours
+            }
+
+            // Vérifier si déjà tiré
+            foreach ($game->getDraws() as $existingDraw) {
+                if ($existingDraw->getNumber() === $number) {
+                    return; // Ne pas ajouter si déjà tiré
+                }
+            }
+
+            $draw = new Draw();
+            $draw->setGame($game);
+            $draw->setNumber($number);
+            $draw->setOrderIndex($game->getDraws()->count() + 1);
+
+            $game->addDraw($draw);
+            $this->entityManager->persist($draw);
+            $this->entityManager->flush();
+        } catch (\Throwable $e) {
+            $this->lastError = $e->getMessage();
+        }
     }
 
     /**
@@ -288,35 +316,6 @@ final class GamePlayContext implements Context
 
         $game->freeze($game->getDraws()->count());
         $this->entityManager->flush();
-    }
-
-    /**
-     * @When /^je tente de tirer le numéro (\d+) pour la partie d'ordre (\d+)$/
-     */
-    public function jeTenteDeTirerLeNumeroPourLaPartieDOrdre(int $number, int $position): void
-    {
-        $this->lastError = null;
-
-        try {
-            $game = $this->findGameByPosition($position);
-            Assert::assertNotNull($game, "Aucune partie trouvée à la position {$position}");
-
-            $draw = new Draw();
-            $draw->setGame($game);
-            $draw->setNumber($number);
-            $draw->setOrderIndex($game->getDraws()->count() + 1);
-
-            // Vérifier si la partie est gelée
-            if ($game->isFrozen()) {
-                throw new \RuntimeException('Game is frozen');
-            }
-
-            $game->addDraw($draw);
-            $this->entityManager->persist($draw);
-            $this->entityManager->flush();
-        } catch (\Exception $e) {
-            $this->lastError = $e->getMessage();
-        }
     }
 
     /**
