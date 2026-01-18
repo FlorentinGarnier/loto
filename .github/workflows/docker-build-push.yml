@@ -68,6 +68,7 @@ jobs:
           APP_ENV=test
           APP_SECRET=test_secret_key_for_ci
           DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/loto_test?serverVersion=15&charset=utf8"
+          DEFAULT_URI=http://localhost
           MERCURE_URL=http://localhost:3000/.well-known/mercure
           MERCURE_PUBLIC_URL=http://localhost:3000/.well-known/mercure
           MERCURE_JWT_SECRET=test_secret
