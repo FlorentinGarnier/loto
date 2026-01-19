@@ -3,7 +3,13 @@
 {% block title %}Administration - {{ event ? event.name : 'Aucun événement' }}{% endblock %}
 
 {% block admin_body %}
-<div class="grid md:grid-cols-3 gap-6">
+<div class="grid md:grid-cols-3 gap-6" {{ stimulus_controller('dashboard', {
+    eventId: event ? event.id : null,
+    gameId: current ? current.id : null,
+    mercureUrl: app.request.server.get('MERCURE_PUBLIC_URL'),
+    toggleUrl: current ? path('admin_toggle_number', {id: current.id, number: 0}) : null,
+    potentialsFragmentUrl: current ? path('admin_game_potentials_fragment', {id: current.id}) : null
+}) }}>
     <div class="md:col-span-2 bg-white rounded shadow p-6">
         <div class="flex items-center justify-between mb-2">
             <h1 class="text-2xl font-bold">{{ event ? (event.name ~ ' – ' ~ (event.date|date('d/m/Y'))) : 'Aucun événement' }}</h1>
@@ -25,6 +31,9 @@
 
             {# Alertes tableau de bord #}
             <div class="space-y-2 mb-4">
+                {% if current.isFrozen %}
+                    <div class="p-3 rounded bg-red-100 text-red-900 font-semibold">⚠️ Cette partie est gelée. Les tirages ne sont pas autorisés.</div>
+                {% endif %}
                 {% if current.status.value != 'RUNNING' %}
                     <div class="p-3 rounded bg-amber-100 text-amber-900">Aucune partie en cours. Démarrez une partie pour activer le tirage.</div>
                 {% endif %}
@@ -43,15 +52,15 @@
             <div class="grid grid-cols-3 gap-3 mb-4">
                 <div class="p-3 rounded border bg-gray-50">
                     <div class="text-xs text-gray-500">Tirages</div>
-                    <div class="text-2xl font-bold">{{ draws_count }}</div>
+                    <div {{ stimulus_target('dashboard', 'draws') }} class="text-2xl font-bold">{{ draws_count }}</div>
                 </div>
                 <div class="p-3 rounded border bg-gray-50">
                     <div class="text-xs text-gray-500">Progression</div>
-                    <div class="text-2xl font-bold">{{ draws_count }}/90</div>
+                    <div {{ stimulus_target('dashboard', 'progression') }} class="text-2xl font-bold">{{ draws_count }}/90</div>
                 </div>
                 <div class="p-3 rounded border bg-gray-50">
                     <div class="text-xs text-gray-500">Potentiels</div>
-                    <div id="kpi-potentials" class="text-2xl font-bold">{{ potentials_count }}</div>
+                    <div {{ stimulus_target('dashboard', 'potentials') }} class="text-2xl font-bold">{{ potentials_count }}</div>
                 </div>
             </div>
 
@@ -59,11 +68,11 @@
             <div class="flex items-center justify-between mb-2">
                 {% set last = current.draws|length > 0 ? (current.draws|last).number : null %}
                 <div class="text-sm text-gray-600">Dernier numéro:
-                    <span class="inline-block px-2 py-1 rounded {{ last ? 'bg-amber-600 text-white' : 'bg-gray-200' }}">{{ last ?? '—' }}</span>
+                    <span {{ stimulus_target('dashboard', 'lastNumber') }} class="inline-block px-2 py-1 rounded {{ last ? 'bg-amber-600 text-white' : 'bg-gray-200' }}">{{ last ?? '—' }}</span>
                 </div>
-                <div class="text-sm text-gray-600">Mercure: <span id="mercure-status" class="px-2 py-0.5 rounded bg-gray-300">…</span></div>
+                <div class="text-sm text-gray-600">Mercure: <span {{ stimulus_target('dashboard', 'mercureStatus') }} class="px-2 py-0.5 rounded bg-gray-300">…</span></div>
             </div>
-            <div id="grid" class="grid grid-cols-10 gap-2 mb-4">
+            <div {{ stimulus_target('dashboard', 'grid') }} class="grid grid-cols-10 gap-2 mb-4">
                 {% set drawn = current.draws|map(d => d.number)|default([]) %}
                 {% for n in 1..90 %}
                     {% set isDrawn = current.draws|filter(d => d.number == n)|length > 0 %}
@@ -72,7 +81,7 @@
             </div>
 
             <h2 class="text-xl font-semibold mb-2">Gagnants potentiels</h2>
-            <div id="potentials-container">
+            <div {{ stimulus_target('dashboard', 'potentialsContainer') }}>
                 {% include 'admin/_potentials_list.html.twig' %}
             </div>
 
@@ -129,25 +138,7 @@
 {% block scripts %}
 <script>
 {% if current %}
-const grid = document.getElementById('grid');
-if (grid) {
-  grid.addEventListener('click', async (e) => {
-    const btn = e.target.closest('button.cell');
-    if (!btn) return;
-    const num = btn.dataset.number;
-    try {
-      const res = await fetch('{{ path('admin_toggle_number', {id: current.id, number: 0}) }}'.replace('/0', '/' + num), { method: 'POST' });
-      if (res.ok) {
-          btn.classList.toggle('bg-white')
-        btn.classList.toggle('bg-green-600');
-        btn.classList.toggle('text-white');
-      }
-    } catch (err) { console.error(err); }
-  });
-}
-{% endif %}
 // Confirm demarque
-{% if current %}
 const demarqueForm = document.querySelector('form[action="{{ path('admin_game_demarque', {id: current.id}) }}"]');
 if (demarqueForm) {
   demarqueForm.addEventListener('submit', function(e){
@@ -157,82 +148,5 @@ if (demarqueForm) {
   });
 }
 {% endif %}
-// Mercure connection indicator
-(function(){
-  const badge = document.getElementById('mercure-status');
-  if (!badge) return;
-  const setStatus = (ok) => {
-    badge.textContent = ok ? 'OK' : 'Hors ligne';
-    badge.classList.remove('bg-gray-300','bg-red-200','bg-green-200','text-red-900','text-green-900');
-    if (ok) {
-      badge.classList.add('bg-green-200','text-green-900');
-    } else {
-      badge.classList.add('bg-red-200','text-red-900');
-    }
-  };
-  setStatus(false);
-  const eventId = {{ event ? event.id : 'null' }};
-  const currentGameId = {{ current ? current.id : 'null' }};
-  if (!eventId) return;
-
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
-
-  try {
-    const topic = encodeURIComponent(`/events/${eventId}/games/${currentGameId}/state`);
-    const hub = "{{ app.request.server.get('MERCURE_PUBLIC_URL') ? (app.request.server.get('MERCURE_PUBLIC_URL')) : 'null' }}";
-    const url = hub && hub !== 'null' ? `${hub}?topic=${topic}` : null;
-    const es = new EventSource(url);
-    es.onopen = function(){ setStatus(true); };
-    es.onmessage = async function(e){
-        const data = JSON.parse(e.data);
-        if (data.potentialsCount !== undefined) {
-            const kpiPotentials = document.getElementById('kpi-potentials');
-            const currentPotentials = parseInt(kpiPotentials.textContent);
-            if (data.potentialsCount > currentPotentials) {
-                // Notification
-                if ('Notification' in window && Notification.permission === 'granted') {
-                    new Notification('Nouveau gagnant potentiel !');
-                } else {
-                    alert('Nouveau gagnant potentiel !');
-                }
-            }
-            kpiPotentials.textContent = data.potentialsCount;
-
-            // Refresh fragment
-            const res = await fetch('{{ path('admin_game_potentials_fragment', {id: current ? current.id : 0}) }}');
-            if (res.ok) {
-                document.getElementById('potentials-container').innerHTML = await res.text();
-            }
-
-            // Update grid
-            if (data.draws) {
-
-                // Update last number
-                const lastNum = data.draws.length > 0 ? data.draws[data.draws.length - 1] : '—';
-                const lastBadge = document.querySelector('.text-sm.text-gray-600 span.inline-block');
-                if (lastBadge) {
-                    lastBadge.textContent = lastNum;
-                    if (lastNum !== '—') {
-                        lastBadge.classList.add('bg-amber-600', 'text-white');
-                        lastBadge.classList.remove('bg-gray-200');
-                    } else {
-                        lastBadge.classList.remove('bg-amber-600', 'text-white');
-                        lastBadge.classList.add('bg-gray-200');
-                    }
-                }
-            }
-        }
-    };
-    es.onerror = function(){ setStatus(false); };
-    document.addEventListener('visibilitychange', function(){
-      if (document.visibilityState === 'visible') {
-        // a tiny visual refresh on focus
-        setStatus(es.readyState === 1);
-      }
-    });
-  } catch (e) { setStatus(false); }
-})();
 </script>
 {% endblock %}
