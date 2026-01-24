@@ -13,6 +13,7 @@ use App\Service\DrawService;
 use Behat\Gherkin\Node\TableNode;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Assert;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
 final class GamePlayContext extends BaseContext
 {
@@ -25,8 +26,9 @@ final class GamePlayContext extends BaseContext
         CardRepository $cardRepo,
         PlayerRepository $playerRepo,
         DrawService $drawService,
+        KernelBrowser $client,
     ) {
-        parent::__construct($entityManager, $eventRepo, $gameRepo, $cardRepo, $playerRepo);
+        parent::__construct($entityManager, $eventRepo, $gameRepo, $cardRepo, $playerRepo, $client);
         $this->drawService = $drawService;
     }
 

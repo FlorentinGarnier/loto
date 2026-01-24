@@ -16,6 +16,7 @@ use App\Service\WinnerService;
 use Behat\Gherkin\Node\TableNode;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Assert;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
 final class WinnerContext extends BaseContext
 {
@@ -32,8 +33,9 @@ final class WinnerContext extends BaseContext
         PlayerRepository $playerRepo,
         WinnerDetectionService $winnerDetectionService,
         WinnerService $winnerService,
+        KernelBrowser $browser,
     ) {
-        parent::__construct($entityManager, $eventRepo, $gameRepo, $cardRepo, $playerRepo);
+        parent::__construct($entityManager, $eventRepo, $gameRepo, $cardRepo, $playerRepo, $browser);
         $this->winnerDetectionService = $winnerDetectionService;
         $this->winnerService = $winnerService;
     }

@@ -4,23 +4,33 @@ declare(strict_types=1);
 
 namespace App\Tests\Behat;
 
+use App\Controller\AdminController;
 use App\Entity\Event;
 use App\Entity\Game;
 use App\Enum\GameStatus;
 use App\Enum\RuleType;
-use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\TableNode;
+use Behat\Step\When;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Assert;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
-final class EventContext implements Context
+final class EventContext extends BaseContext
 {
-    private EntityManagerInterface $entityManager;
     private ?Event $currentEvent = null;
+    private AdminController $adminController;
 
-    public function __construct(EntityManagerInterface $entityManager)
-    {
-        $this->entityManager = $entityManager;
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        KernelBrowser $client,
+        \App\Repository\EventRepository $eventRepo,
+        \App\Repository\GameRepository $gameRepo,
+        \App\Repository\CardRepository $cardRepo,
+        \App\Repository\PlayerRepository $playerRepo,
+        AdminController $adminController,
+    ) {
+        parent::__construct($entityManager, $eventRepo, $gameRepo, $cardRepo, $playerRepo, $client);
+        $this->adminController = $adminController;
     }
 
     /**
@@ -28,8 +38,7 @@ final class EventContext implements Context
      */
     public function queJeSuisConnecteEnTantQuAdministrateur(): void
     {
-        // Pour l'instant, on simule juste la connexion
-        // Cette étape pourrait être étendue pour gérer une vraie authentification
+        $this->loginAsAdmin();
     }
 
     /**
@@ -242,18 +251,17 @@ final class EventContext implements Context
         $this->entityManager->flush();
     }
 
-    private function findGameByPosition(int $position): ?Game
+    #[When('je dégèle la partie')]
+    public function jeDégèleLaPartie(): void
     {
-        if (!$this->currentEvent) {
-            return null;
-        }
+        $game = $this->findGameByPosition(1);
+        Assert::assertNotNull($game, 'Aucune partie trouvée à la position 1');
 
-        foreach ($this->currentEvent->getGames() as $game) {
-            if ($game->getPosition() === $position) {
-                return $game;
-            }
-        }
+        // Dégeler directement sans passer par le contrôleur (logique métier simple)
+        $game->setIsFrozen(false);
+        $this->entityManager->flush();
 
-        return null;
+        // Rafraîchir l'entité pour voir les changements
+        $this->entityManager->refresh($game);
     }
 }

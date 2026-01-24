@@ -27,6 +27,9 @@
                 <form method="post" action="{{ path('admin_game_finish', {id: current.id}) }}"><button class="px-3 py-1 bg-gray-700 text-white rounded">Terminer</button></form>
                 <form method="post" action="{{ path('admin_game_next', {id: current.id}) }}"><button class="px-3 py-1 bg-purple-700 text-white rounded">Partie suivante</button></form>
                 <form method="post" action="{{ path('admin_game_demarque', {id: current.id}) }}"><button class="px-3 py-1 bg-amber-700 text-white rounded">Démarque (reset)</button></form>
+                {% if current.isFrozen %}
+                    <form method="post" action="{{ path('admin_game_unfreeze', {id: current.id}) }}" id="unfreeze-form"><button type="submit" class="px-3 py-1 bg-red-600 text-white rounded">🔓 Dégeler la partie</button></form>
+                {% endif %}
             </div>
 
             {# Alertes tableau de bord #}

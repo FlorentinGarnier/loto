@@ -16,6 +16,7 @@ use App\Service\WinnerDetectionService;
 use App\Service\WinnerService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Assert;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
 final class ErrorContext extends BaseContext
 {
@@ -30,8 +31,9 @@ final class ErrorContext extends BaseContext
         PlayerRepository $playerRepo,
         WinnerDetectionService $winnerDetectionService,
         WinnerService $winnerService,
+        KernelBrowser $browser,
     ) {
-        parent::__construct($entityManager, $eventRepo, $gameRepo, $cardRepo, $playerRepo);
+        parent::__construct($entityManager, $eventRepo, $gameRepo, $cardRepo, $playerRepo, $browser);
         $this->winnerDetectionService = $winnerDetectionService;
         $this->winnerService = $winnerService;
     }
@@ -610,7 +612,10 @@ final class ErrorContext extends BaseContext
         Assert::assertNotNull($game);
 
         $this->entityManager->refresh($game);
-        Assert::assertFalse($game->isFrozen(), "La partie est gelée alors qu'elle ne devrait pas l'être");
+
+        if ($game->isFrozen()) {
+            throw new \RuntimeException("La partie est gelée alors qu'elle ne devrait pas l'être");
+        }
     }
 
     /**

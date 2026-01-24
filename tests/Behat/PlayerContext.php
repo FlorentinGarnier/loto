@@ -13,6 +13,7 @@ use App\Repository\PlayerRepository;
 use Behat\Gherkin\Node\TableNode;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Assert;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
 final class PlayerContext extends BaseContext
 {
@@ -25,8 +26,9 @@ final class PlayerContext extends BaseContext
         GameRepository $gameRepo,
         CardRepository $cardRepo,
         PlayerRepository $playerRepo,
+        KernelBrowser $client,
     ) {
-        parent::__construct($entityManager, $eventRepo, $gameRepo, $cardRepo, $playerRepo);
+        parent::__construct($entityManager, $eventRepo, $gameRepo, $cardRepo, $playerRepo, $client);
     }
 
     /**

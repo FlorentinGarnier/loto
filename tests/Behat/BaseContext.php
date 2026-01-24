@@ -12,6 +12,9 @@ use App\Repository\GameRepository;
 use App\Repository\PlayerRepository;
 use Behat\Behat\Context\Context;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
+use Symfony\Component\Security\Core\User\InMemoryUser;
 
 abstract class BaseContext implements Context
 {
@@ -20,6 +23,7 @@ abstract class BaseContext implements Context
     protected GameRepository $gameRepo;
     protected CardRepository $cardRepo;
     protected PlayerRepository $playerRepo;
+    protected KernelBrowser $client;
 
     // Propriétés statiques partagées entre tous les contextes pour gérer les erreurs
     protected static ?\Throwable $lastException = null;
@@ -31,12 +35,14 @@ abstract class BaseContext implements Context
         GameRepository $gameRepo,
         CardRepository $cardRepo,
         PlayerRepository $playerRepo,
+        KernelBrowser $client,
     ) {
         $this->entityManager = $entityManager;
         $this->eventRepo = $eventRepo;
         $this->gameRepo = $gameRepo;
         $this->cardRepo = $cardRepo;
         $this->playerRepo = $playerRepo;
+        $this->client = $client;
     }
 
     /**
@@ -94,5 +100,20 @@ abstract class BaseContext implements Context
         $events = $this->eventRepo->findAll();
 
         return !empty($events) ? $events[0] : null;
+    }
+
+    /**
+     * Connecte un utilisateur administrateur in_memory.
+     */
+    protected function loginAsAdmin(): void
+    {
+        $user = new InMemoryUser('admin', 'password', ['ROLE_ADMIN']);
+        $token = new UsernamePasswordToken(
+            $user,
+            'main',
+            $user->getRoles(),
+        );
+
+        $this->client->getContainer()->get('security.token_storage')->setToken($token);
     }
 }

@@ -55,3 +55,13 @@ Fonctionnalité: Gestion des événements et des parties
         Et que la partie d'ordre 1 est en statut "RUNNING"
         Quand je termine la partie d'ordre 1
         Alors la partie d'ordre 1 doit être en statut "FINISHED"
+
+    Scénario:
+        Etant donné qu'un événement "Loto de la kermesse" existe
+        Et que les parties suivantes sont définies pour l'événement "Loto de la kermesse":
+            | ordre | règle | lot |
+            | 1     | QUINE | machine à café |
+        Et que la partie d'ordre 1 est en statut "RUNNING"
+        Et que la partie d'ordre 1 est gelée
+        Quand je dégèle la partie
+        Alors la partie d'ordre 1 ne doit pas être gelée
