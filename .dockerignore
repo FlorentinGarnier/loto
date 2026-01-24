@@ -37,9 +37,8 @@ var/cache/*
 var/log/*
 var/sessions/*
 
-# Assets publics (seront régénérés)
+# Assets publics (bundles seront régénérés, assets compilés dans le build)
 public/bundles/
-public/assets/
 
 # Autres
 .editorconfig
