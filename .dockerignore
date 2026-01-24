@@ -39,6 +39,7 @@ var/sessions/*
 
 # Assets publics (bundles seront régénérés, assets compilés dans le build)
 public/bundles/
+public/assets/
 
 # Autres
 .editorconfig

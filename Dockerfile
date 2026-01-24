@@ -42,10 +42,9 @@ RUN composer install --no-dev --no-scripts --no-progress --optimize-autoloader
 # Copie du reste de l'application
 COPY . .
 
-# Génération des assets et cache
+# Génération du cache (assets seront compilés au démarrage)
 RUN composer dump-autoload --optimize --classmap-authoritative \
-    && php bin/console importmap:install \
-    && APP_ENV=prod php bin/console asset-map:compile
+    && php bin/console importmap:install
 
 # Nettoyage
 RUN rm -rf .env.dev .env.test tests/ features/ .git/
@@ -60,9 +59,13 @@ ENV APP_ENV=prod \
 # Copie des fichiers depuis le stage de build
 COPY --from=build /app /app
 
-# Création et configuration des permissions pour les répertoires var
-RUN mkdir -p /app/var/cache /app/var/log /app/var/sessions \
-    && chown -R www-data:www-data /app/var
+# Copie de l'entrypoint
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Création et configuration des permissions pour les répertoires var et assets
+RUN mkdir -p /app/var/cache /app/var/log /app/var/sessions /app/public/assets \
+    && chown -R www-data:www-data /app/var /app/public/assets
 
 # Port exposé (PHP-FPM)
 EXPOSE 9000
@@ -71,7 +74,7 @@ EXPOSE 9000
 USER www-data
 
 # Commande de démarrage
-CMD ["php-fpm"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # ===== Stage nginx =====
 FROM nginx:alpine AS nginx
