@@ -45,7 +45,7 @@ COPY . .
 # Génération des assets et cache
 RUN composer dump-autoload --optimize --classmap-authoritative \
     && php bin/console importmap:install \
-    && php bin/console asset-map:compile
+    && APP_ENV=prod php bin/console asset-map:compile
 
 # Nettoyage
 RUN rm -rf .env.dev .env.test tests/ features/ .git/
