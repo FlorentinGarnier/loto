@@ -37,7 +37,7 @@ var/cache/*
 var/log/*
 var/sessions/*
 
-# Assets publics (bundles seront régénérés, assets compilés dans le build)
+# Assets publics (seront régénérés au déploiement)
 public/bundles/
 public/assets/
 
