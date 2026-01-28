@@ -50,6 +50,5 @@
 
 {% block scripts %}
     {{ parent() }}
-    {% block importmap %}{{ importmap('app') }}{% endblock %}
-
+    {{ importmap('app') }}
 {% endblock %}
