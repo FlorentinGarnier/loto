@@ -22,13 +22,13 @@
         </div>
         {% if current %}
             <div class="flex flex-wrap items-center gap-4 mb-4">
-                <div><span class="font-semibold">Partie courante:</span> #{{ current.position }} ({{ current.rule.value }}) – Lot: {{ current.prize }} – Statut: <span class="px-2 py-1 rounded text-white {{ current.status.value == 'RUNNING' ? 'bg-green-600' : (current.status.value == 'FINISHED' ? 'bg-gray-600' : 'bg-amber-600') }}">{{ current.status.value }}</span></div>
-                <form method="post" action="{{ path('admin_game_start', {id: current.id}) }}"><button class="px-3 py-1 bg-blue-600 text-white rounded">Démarrer</button></form>
+                <div><span class="font-semibold">Partie courante:</span> #{{ current.position }} ({{ current.rule|trans }}) – Lot: {{ current.prize }} – Statut: <span class="px-2 py-1 rounded text-white {{ current.status.value == 'RUNNING' ? 'bg-green-600' : (current.status.value == 'FINISHED' ? 'bg-gray-600' : 'bg-amber-600') }}">{{ current.status.value }}</span></div>
+                <form method="post" action="{{ path('admin_game_start', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Démarrer cette partie ? Les tirages en cours seront transférés.' }) }}><button class="px-3 py-1 bg-blue-600 text-white rounded">Démarrer</button></form>
                 <form method="post" action="{{ path('admin_game_finish', {id: current.id}) }}"><button class="px-3 py-1 bg-gray-700 text-white rounded">Terminer</button></form>
-                <form method="post" action="{{ path('admin_game_next', {id: current.id}) }}"><button class="px-3 py-1 bg-purple-700 text-white rounded">Partie suivante</button></form>
-                <form method="post" action="{{ path('admin_game_demarque', {id: current.id}) }}"><button class="px-3 py-1 bg-amber-700 text-white rounded">Démarque (reset)</button></form>
+                <form method="post" action="{{ path('admin_game_next', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Passer à la partie suivante ? Les tirages seront transférés.' }) }}><button class="px-3 py-1 bg-purple-700 text-white rounded">Partie suivante</button></form>
+                <form method="post" action="{{ path('admin_game_demarque', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Confirmer la démarque (réinitialiser tous les tirages) ?' }) }}><button class="px-3 py-1 bg-amber-700 text-white rounded">Démarque (reset)</button></form>
                 {% if current.isFrozen %}
-                    <form method="post" action="{{ path('admin_game_unfreeze', {id: current.id}) }}" id="unfreeze-form"><button type="submit" class="px-3 py-1 bg-red-600 text-white rounded">🔓 Dégeler la partie</button></form>
+                    <form method="post" action="{{ path('admin_game_unfreeze', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Dégeler la partie ? Les tirages seront à nouveau possibles.' }) }}><button type="submit" class="px-3 py-1 bg-red-600 text-white rounded">🔓 Dégeler la partie</button></form>
                 {% endif %}
             </div>
 
@@ -130,7 +130,7 @@
                         #{{ g.position }} – {{ ('app.rules.' ~ g.rule.value)|trans }} – {{ g.prize }}
                         <span class="ml-2 text-xs px-2 py-0.5 rounded {{ g.status.value == 'RUNNING' ? 'bg-green-600 text-white' : (g.status.value == 'FINISHED' ? 'bg-gray-600 text-white' : 'bg-amber-600 text-white') }}">{{ g.status.value|trans }}</span>
                     </div>
-                    <form method="post" action="{{ path('admin_game_start', {id: g.id}) }}"><button class="px-2 py-1 text-sm bg-blue-600 text-white rounded">Basculer</button></form>
+                    <form method="post" action="{{ path('admin_game_start', {id: g.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Basculer vers cette partie ? Les tirages en cours seront transférés.' }) }}><button class="px-2 py-1 text-sm bg-blue-600 text-white rounded">Basculer</button></form>
                 </li>
             {% endfor %}
         </ul>
@@ -140,17 +140,4 @@
 
 {% block scripts %}
 {{ parent() }}
-<script>
-{% if current %}
-// Confirm demarque
-const demarqueForm = document.querySelector('form[action="{{ path('admin_game_demarque', {id: current.id}) }}"]');
-if (demarqueForm) {
-  demarqueForm.addEventListener('submit', function(e){
-    if (!confirm('Confirmer la démarque (réinitialiser tous les tirages) ?')) {
-      e.preventDefault();
-    }
-  });
-}
-{% endif %}
-</script>
 {% endblock %}

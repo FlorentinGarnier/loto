@@ -337,4 +337,15 @@ final class GamePlayContext extends BaseContext
         Assert::assertNotNull(self::$lastError, "Aucune erreur n'a été enregistrée");
         Assert::assertStringContainsString('frozen', strtolower(self::$lastError), "Le message d'erreur ne mentionne pas que la partie est gelée");
     }
+
+    /**
+     * @When /^les tirages doivent encore exister pour la partie suivante$/
+     */
+    public function lesTiragesDoiventEncoreExisterPourLaPartieSuivante()
+    {
+        $game = $this->gameRepo->findOneBy(['position' => 1]);
+        $draws = $game->getDraws()->toArray();
+
+        Assert::assertCount(5, $draws);
+    }
 }

@@ -7,7 +7,7 @@
   <h1 class="text-3xl font-bold mb-4 text-center">Affichage public</h1>
   {% if current %}
     <div class="text-center mb-6">
-      <div id="game-info" class="text-xl">Partie #<span id="game-position">{{ current.position }}</span> – <span id="game-rule">{{ current.rule.value }}</span> – Lot: <span id="game-prize">{{ current.prize }}</span></div>
+      <div id="game-info" class="text-xl"><span id="game-rule">{{ current.rule|trans }}</span> – Lot: <span id="game-prize">{{ current.prize }}</span></div>
       <div class="mt-2">Statut: <span id="status" class="px-2 py-1 rounded {{ current.status.value == 'RUNNING' ? 'bg-green-700' : (current.status.value == 'FINISHED' ? 'bg-gray-700' : 'bg-amber-700') }}">{{ current.status.value }}</span></div>
     </div>
 

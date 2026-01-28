@@ -53,8 +53,16 @@ Fonctionnalité: Gestion des événements et des parties
             | ordre | règle    | lot            |
             | 1     | QUINE    | Machine à café |
         Et que la partie d'ordre 1 est en statut "RUNNING"
+        Et que je tire les numéros suivants pour la partie d'ordre 1:
+            |numéro|
+            |1      |
+            |2      |
+            |3      |
+            |4      |
+            |5      |
         Quand je termine la partie d'ordre 1
         Alors la partie d'ordre 1 doit être en statut "FINISHED"
+        Et les tirages doivent encore exister pour la partie suivante
 
     Scénario:
         Etant donné qu'un événement "Loto de la kermesse" existe
