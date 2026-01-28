@@ -105,8 +105,8 @@ final class DrawService
             $game->addDraw($draw);
             $this->em->persist($draw);
 
-            // Détection automatique des gagnants si on a des cartons
-            if (count($cards) > 0) {
+            // Détection automatique des gagnants si on a des cartons et que la partie n'est pas "salle uniquement"
+            if (!$game->hallOnly() && count($cards) > 0) {
                 $freezeOrderIndex = $this->winnerDetectionService->checkForWinners($game, $cards);
                 if (null !== $freezeOrderIndex) {
                     $game->freeze($freezeOrderIndex);

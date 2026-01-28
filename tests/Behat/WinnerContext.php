@@ -118,6 +118,34 @@ final class WinnerContext extends BaseContext
     }
 
     /**
+     * @Given /^la partie d'ordre (\d+) est marquée "salle uniquement"$/
+     */
+    public function laPartieDOrdreEstMarqueeSalleUniquement(int $position): void
+    {
+        $game = $this->findGameByPosition($position);
+        Assert::assertNotNull($game, "Aucune partie trouvée à la position {$position}");
+
+        $game->setHallOnly(true);
+        $this->entityManager->flush();
+    }
+
+    /**
+     * @Then /^le carton "([^"]*)" ne doit pas être détecté comme gagnant potentiel$/
+     */
+    public function leCartonNeDoitPasEtreDetecteCommeGagnantPotentiel(string $reference): void
+    {
+        $found = false;
+
+        foreach ($this->potentialWinners as $potential) {
+            if ($potential['card']->getReference() === $reference) {
+                $found = true;
+                break;
+            }
+        }
+
+        Assert::assertFalse($found, "Le carton '{$reference}' a été détecté comme gagnant potentiel (alors qu'il ne devrait pas)");
+    }
+    /**
      * @Then /^le carton "([^"]*)" doit être détecté comme gagnant potentiel$/
      */
     public function leCartonDoitEtreDetecteCommeGagnantPotentiel(string $reference): void

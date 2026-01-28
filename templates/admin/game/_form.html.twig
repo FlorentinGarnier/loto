@@ -23,6 +23,11 @@
             {{ form_widget(form.status, {attr: {class: 'mt-1 block w-full border rounded p-2'}}) }}
             {{ form_errors(form.status) }}
         </div>
+        <div class="flex items-center gap-2">
+            {{ form_widget(form.hallOnly, {attr: {class: 'h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500'}}) }}
+            {{ form_label(form.hallOnly, null, {label_attr: {class: 'text-sm font-medium text-gray-700'}}) }}
+            {{ form_errors(form.hallOnly) }}
+        </div>
         <div class="pt-2">
             <button class="px-4 py-2 bg-blue-600 text-white rounded">Enregistrer</button>
             <a href="{{ path('admin_game_index', {id: event.id}) }}" class="ml-2 px-4 py-2 bg-gray-200 rounded">Annuler</a>

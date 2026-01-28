@@ -50,10 +50,25 @@ class Game
     #[ORM\OneToMany(mappedBy: 'game', targetEntity: Winner::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $winners;
 
+    #[ORM\Column(options: ['default' => false])]
+    private bool $hallOnly = false;
+
     public function __construct()
     {
         $this->draws = new ArrayCollection();
         $this->winners = new ArrayCollection();
+    }
+
+    public function hallOnly(): bool
+    {
+        return $this->hallOnly;
+    }
+
+    public function setHallOnly(bool $hallOnly): self
+    {
+        $this->hallOnly = $hallOnly;
+
+        return $this;
     }
 
     public function getId(): ?int

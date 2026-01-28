@@ -6,6 +6,7 @@ use App\Entity\Game;
 use App\Enum\GameStatus;
 use App\Enum\RuleType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -40,6 +41,10 @@ final class GameType extends AbstractType
                 'choices' => $this->choicesFromEnum(GameStatus::cases()),
                 'choice_value' => fn (?GameStatus $s) => $s?->trans($this->translator),
                 'choice_label' => fn (GameStatus $s) => $s->trans($this->translator),
+            ])
+            ->add('hallOnly', CheckboxType::class, [
+                'label' => 'Salle uniquement (pas de détection automatique)',
+                'required' => false,
             ])
         ;
     }

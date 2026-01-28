@@ -109,3 +109,16 @@ Fonctionnalité: Détection et validation des gagnants
             | reference | A001   |
             | player    | Dupont |
         Et l'état publié doit contenir la grille formatée du carton
+
+    Scénario: Ne pas détecter de gagnant si la partie est en "salle uniquement"
+        Étant donné que la partie d'ordre 1 est en statut "RUNNING"
+        Et que la partie d'ordre 1 est marquée "salle uniquement"
+        Et qu'un carton "A001" existe avec la grille suivante:
+            | ligne | numéros           |
+            | 1     | 5,15,23,45,67     |
+            | 2     | 8,12,34,56,78     |
+            | 3     | 2,18,29,43,89     |
+        Et que les numéros "5,15,23,45,67" ont été tirés pour la partie d'ordre 1
+        Quand la détection automatique s'exécute
+        Alors le carton "A001" ne doit pas être détecté comme gagnant potentiel
+        Et la partie d'ordre 1 ne doit pas être gelée

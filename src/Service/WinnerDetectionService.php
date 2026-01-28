@@ -19,6 +19,10 @@ final class WinnerDetectionService
      */
     public function findPotentialWinners(Game $game, array $cards): array
     {
+        if ($game->hallOnly()) {
+            return [];
+        }
+
         // Si la partie est gelée, on ne considère que les tirages jusqu'au gel
         $maxOrderIndex = $game->isFrozen() && null !== $game->getFreezeOrderIndex()
             ? $game->getFreezeOrderIndex()
