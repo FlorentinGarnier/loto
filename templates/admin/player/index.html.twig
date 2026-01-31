@@ -25,6 +25,7 @@
           <th class="p-2 text-left border">Nom</th>
           <th class="p-2 text-left border">Email</th>
           <th class="p-2 text-left border">Téléphone</th>
+            <th class="p-2 text-left border">Événement</th>
           <th class="p-2 text-left border">Actions</th>
         </tr>
       </thead>
@@ -35,6 +36,7 @@
             <td class="p-2 border">{{ p.name }}</td>
             <td class="p-2 border">{{ p.email ?: '—' }}</td>
             <td class="p-2 border">{{ p.phone ?: '—' }}</td>
+            <td class="p-2 border">{{ p.event.name ?: '—' }}</td>
             <td class="p-2 border">
               <a href="{{ path('admin_player_show', {id: p.id}) }}" class="px-2 py-1 text-sm bg-gray-200 rounded">Voir</a>
               <a href="{{ path('admin_player_edit', {id: p.id}) }}" class="px-2 py-1 text-sm bg-blue-600 text-white rounded">Éditer</a>
