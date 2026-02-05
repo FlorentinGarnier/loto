@@ -145,6 +145,7 @@ final class WinnerContext extends BaseContext
 
         Assert::assertFalse($found, "Le carton '{$reference}' a été détecté comme gagnant potentiel (alors qu'il ne devrait pas)");
     }
+
     /**
      * @Then /^le carton "([^"]*)" doit être détecté comme gagnant potentiel$/
      */

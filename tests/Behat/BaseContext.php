@@ -13,7 +13,6 @@ use App\Repository\PlayerRepository;
 use Behat\Behat\Context\Context;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
-use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\User\InMemoryUser;
 
 abstract class BaseContext implements Context

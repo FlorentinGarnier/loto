@@ -284,7 +284,7 @@ final class EventContext extends BaseContext
         $response = $this->client->getResponse();
         $statusCode = $response->getStatusCode();
 
-        if ($statusCode !== 200) {
+        if (200 !== $statusCode) {
             // Debug: afficher l'URL de redirection si c'est une 302
             $redirectUrl = $response->headers->get('Location');
             throw new \RuntimeException("La requête n'a pas réussi. Status: {$statusCode}, Redirect: {$redirectUrl}");
@@ -299,7 +299,7 @@ final class EventContext extends BaseContext
         array_shift($lines);
 
         // Compter les lignes de données non vides
-        $dataLines = array_filter($lines, fn($line) => !empty(trim($line)));
+        $dataLines = array_filter($lines, fn ($line) => !empty(trim($line)));
         Assert::assertCount($expectedCount, $dataLines, 'Le nombre de lignes de données ne correspond pas');
     }
 
@@ -320,7 +320,7 @@ final class EventContext extends BaseContext
         }
 
         $firstLine = $lines[0];
-        if (strpos($firstLine, $expectedContent) === false) {
+        if (false === strpos($firstLine, $expectedContent)) {
             throw new \RuntimeException("La première ligne ne contient pas '{$expectedContent}'. Ligne trouvée: {$firstLine}");
         }
     }
@@ -338,11 +338,11 @@ final class EventContext extends BaseContext
         array_shift($lines);
 
         if (count($lines) < 2) {
-            throw new \RuntimeException('Pas assez de lignes de données (attendu: au moins 2, trouvé: ' . count($lines) . ')');
+            throw new \RuntimeException('Pas assez de lignes de données (attendu: au moins 2, trouvé: '.count($lines).')');
         }
 
         $secondLine = $lines[1];
-        if (strpos($secondLine, $expectedContent) === false) {
+        if (false === strpos($secondLine, $expectedContent)) {
             throw new \RuntimeException("La deuxième ligne ne contient pas '{$expectedContent}'. Ligne trouvée: {$secondLine}");
         }
     }
@@ -355,9 +355,9 @@ final class EventContext extends BaseContext
         $response = $this->client->getResponse();
         $statusCode = $response->getStatusCode();
 
-        if ($statusCode !== 200) {
+        if (200 !== $statusCode) {
             $content = $response->getContent();
-            throw new \RuntimeException("La requête n'a pas réussi. Status: {$statusCode}, Content: " . substr($content, 0, 500));
+            throw new \RuntimeException("La requête n'a pas réussi. Status: {$statusCode}, Content: ".substr($content, 0, 500));
         }
 
         $content = $response->getContent();
@@ -367,7 +367,7 @@ final class EventContext extends BaseContext
         array_shift($lines);
 
         // Vérifier qu'il n'y a aucune ligne de données non vide
-        $dataLines = array_filter($lines, fn($line) => !empty(trim($line)));
+        $dataLines = array_filter($lines, fn ($line) => !empty(trim($line)));
         Assert::assertEmpty($dataLines, 'Le fichier CSV contient des lignes de données alors qu\'il ne devrait pas');
     }
 }

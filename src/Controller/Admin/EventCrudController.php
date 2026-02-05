@@ -16,7 +16,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 final class EventCrudController extends AbstractController
 {
     public function __construct(
-        private readonly EventRepository        $eventRepo,
+        private readonly EventRepository $eventRepo,
         private readonly EntityManagerInterface $em, private readonly TranslatorInterface $translator,
     ) {
     }
@@ -97,7 +97,7 @@ final class EventCrudController extends AbstractController
     {
         $response = new Response();
         $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
-        $response->headers->set('Content-Disposition', 'attachment; filename="gagnants_' . $event->getId() . '_' . date('Y-m-d') . '.csv"');
+        $response->headers->set('Content-Disposition', 'attachment; filename="gagnants_'.$event->getId().'_'.date('Y-m-d').'.csv"');
 
         $handle = fopen('php://temp', 'r+');
 
@@ -112,7 +112,7 @@ final class EventCrudController extends AbstractController
             'Téléphone',
             'email',
             'Source',
-            'Date création'
+            'Date création',
         ], escape: '');
 
         // Récupérer tous les gagnants de l'événement
@@ -132,7 +132,7 @@ final class EventCrudController extends AbstractController
                 }
 
                 fputcsv($handle, [
-                    'Partie #' . $game->getPosition(),
+                    'Partie #'.$game->getPosition(),
                     $ruleLabel,
                     $game->getPrize() ?: '',
                     $winner->getWinningOrderIndex() + 1,
