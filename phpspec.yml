@@ -1,0 +1,6 @@
+formatter.name: pretty
+
+suites:
+    app_suite:
+        namespace: App
+        psr4_prefix: App

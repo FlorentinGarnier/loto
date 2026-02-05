@@ -5,19 +5,20 @@ namespace App\Controller\Admin;
 use App\Entity\Event;
 use App\Form\EventType;
 use App\Repository\EventRepository;
+use App\Service\WinnerExportService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route('/admin/events')]
 final class EventCrudController extends AbstractController
 {
     public function __construct(
         private readonly EventRepository $eventRepo,
-        private readonly EntityManagerInterface $em, private readonly TranslatorInterface $translator,
+        private readonly EntityManagerInterface $em,
+        private readonly WinnerExportService $winnerExportService,
     ) {
     }
 
@@ -95,60 +96,12 @@ final class EventCrudController extends AbstractController
     #[Route('/{id}/winners/export', name: 'admin_event_export_winners', requirements: ['id' => '\\d+'])]
     public function exportWinners(Event $event): Response
     {
-        $response = new Response();
+        $csvContent = $this->winnerExportService->generateCsvContent($event);
+        $filename = $this->winnerExportService->generateFilename($event);
+
+        $response = new Response($csvContent);
         $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
-        $response->headers->set('Content-Disposition', 'attachment; filename="gagnants_'.$event->getId().'_'.date('Y-m-d').'.csv"');
-
-        $handle = fopen('php://temp', 'r+');
-
-        // En-têtes CSV
-        fputcsv($handle, [
-            'Partie',
-            'Règle',
-            'Prix',
-            'Ordre de victoire',
-            'Référence carton',
-            'Joueur',
-            'Téléphone',
-            'email',
-            'Source',
-            'Date création',
-        ], escape: '');
-
-        // Récupérer tous les gagnants de l'événement
-        foreach ($event->getGames() as $game) {
-            foreach ($game->getWinners() as $winner) {
-                $card = $winner->getCard();
-
-                // Utiliser la traduction si possible, sinon la valeur brute
-                $ruleLabel = $game->getRule()->value;
-                $sourceLabel = $winner->getSource()->value;
-
-                try {
-                    $ruleLabel = $game->getRule()->trans($this->translator);
-                    $sourceLabel = $winner->getSource()->trans($this->translator);
-                } catch (\Throwable $e) {
-                    // En cas d'erreur (notamment en test), utiliser les valeurs brutes
-                }
-
-                fputcsv($handle, [
-                    'Partie #'.$game->getPosition(),
-                    $ruleLabel,
-                    $game->getPrize() ?: '',
-                    $winner->getWinningOrderIndex() + 1,
-                    $winner->getReference() ?: ($card ? $card->getReference() : ''),
-                    $card && $card->getPlayer() ? $card->getPlayer()->getName() : '',
-                    $card && $card->getPlayer() ? $card->getPlayer()->getPhone() : '',
-                    $card && $card->getPlayer() ? $card->getPlayer()->getEmail() : '',
-                    $sourceLabel,
-                    $winner->getCreatedAt()->format('Y-m-d H:i:s'),
-                ], escape: '');
-            }
-        }
-
-        rewind($handle);
-        $response->setContent(stream_get_contents($handle));
-        fclose($handle);
+        $response->headers->set('Content-Disposition', 'attachment; filename="'.$filename.'"');
 
         return $response;
     }

@@ -108,6 +108,7 @@
         "friends-of-behat/mink-extension": "^2.7",
         "friends-of-behat/symfony-extension": "^2.6",
         "friendsofphp/php-cs-fixer": "^3.64",
+        "phpspec/phpspec": "^8.2",
         "phpunit/phpunit": "^12.4",
         "symfony/browser-kit": "7.4.*",
         "symfony/css-selector": "7.4.*",

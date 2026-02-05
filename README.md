@@ -50,24 +50,35 @@ URLs pratiques (dev):
 - Mercure Hub: http://127.0.0.1 (port selon configuration; avec `SERVER_NAME=':80'`, port 80)
 
 5) Tests
-PHPUnit
-- Config: `phpunit.dist.xml` (bootstrap `tests/bootstrap.php`).
-- Lancer: ./vendor/bin/phpunit
-- Base de test au choix:
-  1) Postgres dédié via `.env.test.local`
-     DATABASE_URL="postgresql://app:!ChangeMe!@127.0.0.1:5432/app_test?serverVersion=16&charset=utf8"
-     Puis:
-     php bin/console doctrine:database:create --env=test
-     php bin/console doctrine:migrations:migrate -n --env=test
-  2) SQLite fichier (rapide) via `.env.test.local`
-     DATABASE_URL="sqlite:///%kernel.project_dir%/var/data_test.db"
 
-Behat
-- Dépendances présentes en require-dev.
-- Config: `behat.yml.dist` (créez `behat.yml` local pour overrides si besoin).
-- Exécution: composer behat ou vendor/bin/behat.
-- Session par défaut: kernel Symfony via BrowserKit (pas de serveur externe).
-- Pour la DB en scénarios: utilisez `APP_ENV=test`, base dédiée, purge entre scénarios, fixtures côté Contexts. Ne dépendez pas du hub Mercure; validez l’état via HTTP/DOM.
+Le projet utilise une approche complète avec **tests unitaires** (PHPSpec) et **tests fonctionnels** (Behat).
+
+PHPSpec (Tests unitaires)
+- Framework de tests unitaires orienté spécification (BDD)
+- Config: `phpspec.yml`
+- Lancer: ./vendor/bin/phpspec run
+- Specs dans `spec/` (miroir de `src/`)
+- Tests rapides et isolés pour la logique métier
+- Exemple: `spec/Service/WinnerExportServiceSpec.php`
+
+Behat (Tests fonctionnels)
+- Framework de tests comportementaux en langage naturel (Gherkin)
+- Config: `behat.yml.dist` (créez `behat.yml` local pour overrides si besoin)
+- Exécution: composer behat ou vendor/bin/behat
+- Scénarios dans `features/*.feature`
+- Contexts de test dans `tests/Behat/`
+- Session par défaut: kernel Symfony via BrowserKit (pas de serveur externe)
+- Pour la DB en scénarios: utilisez `APP_ENV=test`, base dédiée, purge entre scénarios, fixtures côté Contexts
+- Ne dépendez pas du hub Mercure; validez l'état via HTTP/DOM
+
+Base de test
+- Postgres dédié via `.env.test.local`
+  DATABASE_URL="postgresql://app:!ChangeMe!@127.0.0.1:5432/app_test?serverVersion=16&charset=utf8"
+  Puis:
+  php bin/console doctrine:database:create --env=test
+  php bin/console doctrine:migrations:migrate -n --env=test
+- SQLite fichier (rapide, recommandé pour les tests) via `.env.test.local`
+  DATABASE_URL="sqlite:///%kernel.project_dir%/var/data_test.db"
 
 6) Structure du projet
 ```
@@ -103,9 +114,11 @@ src/
       ├── CardService.php              Gestion des cartons
       ├── DrawService.php              Tirages de numéros
       ├── WinnerDetectionService.php   Détection automatique
-      └── WinnerService.php            Validation des gagnants
+      ├── WinnerService.php            Validation des gagnants
+      └── WinnerExportService.php      Export CSV des gagnants
+spec/                 Specs PHPSpec (tests unitaires)
 templates/            Vues Twig (admin/public)
-tests/                PHPUnit & Behat Contexts
+tests/                Behat Contexts (tests fonctionnels)
 translations/         Fichiers de traduction
 ```
 
@@ -190,9 +203,10 @@ php bin/console app:import-cards <fichier>         # Importer des cartons
 
 **Tests & qualité**
 ```bash
-./vendor/bin/phpunit                               # Tests unitaires
-./vendor/bin/behat                                 # Tests fonctionnels
+./vendor/bin/phpspec run                           # Tests unitaires (PHPSpec)
+./vendor/bin/behat                                 # Tests fonctionnels (Behat)
 composer behat                                     # Alias Behat avec progress
+./vendor/bin/phpspec run && ./vendor/bin/behat     # Tous les tests
 composer cs:check                                  # Vérifier le style de code
 composer cs:fix                                    # Corriger le style de code
 ```
@@ -217,6 +231,7 @@ composer cs:fix                                    # Corriger le style de code
 - Navigation entre parties (précédent/suivant) avec conservation des tirages
 - Démarque d'une partie : reset complet (tirages, gel, blocages, gagnants)
 - Recherche et pagination des cartons
+- **Export CSV des gagnants** : export complet des gagnants d'un événement (partie, règle, prix, joueur, téléphone, email, source, date)
 
 **Affichage public** (`/events/{id}/public`)
 - Vue en temps réel des tirages via Mercure
