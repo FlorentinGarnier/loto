@@ -264,4 +264,110 @@ final class EventContext extends BaseContext
         // Rafraîchir l'entité pour voir les changements
         $this->entityManager->refresh($game);
     }
+
+    /**
+     * @When /^j'exporte les gagnants de l'événement "([^"]*)"$/
+     */
+    public function jExporteLesGagnantsDeLEvenement(string $eventName): void
+    {
+        $event = $this->eventRepo->findOneBy(['name' => $eventName]);
+        Assert::assertNotNull($event, "L'événement '{$eventName}' n'existe pas");
+
+        $this->client->request('GET', "/admin/events/{$event->getId()}/winners/export");
+    }
+
+    /**
+     * @Then /^le fichier CSV doit contenir (\d+) lignes? de données$/
+     */
+    public function leFichierCsvDoitContenirLignesDeData(int $expectedCount): void
+    {
+        $response = $this->client->getResponse();
+        $statusCode = $response->getStatusCode();
+
+        if ($statusCode !== 200) {
+            // Debug: afficher l'URL de redirection si c'est une 302
+            $redirectUrl = $response->headers->get('Location');
+            throw new \RuntimeException("La requête n'a pas réussi. Status: {$statusCode}, Redirect: {$redirectUrl}");
+        }
+
+        Assert::assertEquals('text/csv; charset=utf-8', $response->headers->get('Content-Type'), 'Le type de contenu n\'est pas CSV');
+
+        $content = $response->getContent();
+        $lines = explode("\n", trim($content));
+
+        // Enlever la ligne d'en-tête
+        array_shift($lines);
+
+        // Compter les lignes de données non vides
+        $dataLines = array_filter($lines, fn($line) => !empty(trim($line)));
+        Assert::assertCount($expectedCount, $dataLines, 'Le nombre de lignes de données ne correspond pas');
+    }
+
+    /**
+     * @Then /^la première ligne doit contenir "([^"]*)"$/
+     */
+    public function laPremiereDoitContenir(string $expectedContent): void
+    {
+        $response = $this->client->getResponse();
+        $content = $response->getContent();
+        $lines = explode("\n", trim($content));
+
+        // Enlever la ligne d'en-tête
+        array_shift($lines);
+
+        if (empty($lines)) {
+            throw new \RuntimeException('Aucune ligne de données trouvée');
+        }
+
+        $firstLine = $lines[0];
+        if (strpos($firstLine, $expectedContent) === false) {
+            throw new \RuntimeException("La première ligne ne contient pas '{$expectedContent}'. Ligne trouvée: {$firstLine}");
+        }
+    }
+
+    /**
+     * @Then /^la deuxième ligne doit contenir "([^"]*)"$/
+     */
+    public function laDeuxiemeDoitContenir(string $expectedContent): void
+    {
+        $response = $this->client->getResponse();
+        $content = $response->getContent();
+        $lines = explode("\n", trim($content));
+
+        // Enlever la ligne d'en-tête
+        array_shift($lines);
+
+        if (count($lines) < 2) {
+            throw new \RuntimeException('Pas assez de lignes de données (attendu: au moins 2, trouvé: ' . count($lines) . ')');
+        }
+
+        $secondLine = $lines[1];
+        if (strpos($secondLine, $expectedContent) === false) {
+            throw new \RuntimeException("La deuxième ligne ne contient pas '{$expectedContent}'. Ligne trouvée: {$secondLine}");
+        }
+    }
+
+    /**
+     * @Then /^le fichier CSV ne doit contenir aucune ligne de données$/
+     */
+    public function leFichierCsvNeDoitContenirAucuneLigneDeData(): void
+    {
+        $response = $this->client->getResponse();
+        $statusCode = $response->getStatusCode();
+
+        if ($statusCode !== 200) {
+            $content = $response->getContent();
+            throw new \RuntimeException("La requête n'a pas réussi. Status: {$statusCode}, Content: " . substr($content, 0, 500));
+        }
+
+        $content = $response->getContent();
+        $lines = explode("\n", trim($content));
+
+        // Enlever la ligne d'en-tête
+        array_shift($lines);
+
+        // Vérifier qu'il n'y a aucune ligne de données non vide
+        $dataLines = array_filter($lines, fn($line) => !empty(trim($line)));
+        Assert::assertEmpty($dataLines, 'Le fichier CSV contient des lignes de données alors qu\'il ne devrait pas');
+    }
 }

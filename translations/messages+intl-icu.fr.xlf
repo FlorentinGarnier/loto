@@ -9,30 +9,38 @@
         <source>app.admin.loto.title</source>
         <target>Loto Quine Admin</target>
       </trans-unit>
-        <trans-unit id="1">
-            <source>app.rules.QUINE</source>
-            <target>1 ligne</target>
-        </trans-unit>
-        <trans-unit id="2">
-            <source>app.rules.DOUBLE_QUINE</source>
-            <target>2 lignes</target>
-        </trans-unit>
-        <trans-unit id="3">
-            <source>app.rules.FULL_CARD</source>
-            <target>Carton plein</target>
-        </trans-unit>
-        <trans-unit id="4">
-            <source>app.state.FINISHED</source>
-            <target>Terminée</target>
-        </trans-unit>
-        <trans-unit id="5">
-            <source>app.state.PENDING</source>
-            <target>En attente</target>
-        </trans-unit>
-        <trans-unit id="6">
-            <source>app.state.RUNNING</source>
-            <target>En cours</target>
-        </trans-unit>
+      <trans-unit id="UlmSkwY" resname="app.rules.QUINE">
+        <source>app.rules.QUINE</source>
+        <target>1 ligne</target>
+      </trans-unit>
+      <trans-unit id="9_okIFE" resname="app.rules.DOUBLE_QUINE">
+        <source>app.rules.DOUBLE_QUINE</source>
+        <target>2 lignes</target>
+      </trans-unit>
+      <trans-unit id="qPMyEcu" resname="app.rules.FULL_CARD">
+        <source>app.rules.FULL_CARD</source>
+        <target>Carton plein</target>
+      </trans-unit>
+      <trans-unit id="hg6Cgjx" resname="app.state.FINISHED">
+        <source>app.state.FINISHED</source>
+        <target>Terminée</target>
+      </trans-unit>
+      <trans-unit id="gYy_u7." resname="app.state.PENDING">
+        <source>app.state.PENDING</source>
+        <target>En attente</target>
+      </trans-unit>
+      <trans-unit id="TEz6yQh" resname="app.state.RUNNING">
+        <source>app.state.RUNNING</source>
+        <target>En cours</target>
+      </trans-unit>
+      <trans-unit id="WinSrc1" resname="app.winner.SYSTEM">
+        <source>app.winner.SYSTEM</source>
+        <target>Logiciel</target>
+      </trans-unit>
+      <trans-unit id="WinSrc2" resname="app.winner.OFFLINE">
+        <source>app.winner.OFFLINE</source>
+        <target>En salle</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -108,12 +108,6 @@ abstract class BaseContext implements Context
     protected function loginAsAdmin(): void
     {
         $user = new InMemoryUser('admin', 'password', ['ROLE_ADMIN']);
-        $token = new UsernamePasswordToken(
-            $user,
-            'main',
-            $user->getRoles(),
-        );
-
-        $this->client->getContainer()->get('security.token_storage')->setToken($token);
+        $this->client->loginUser($user, 'main');
     }
 }
