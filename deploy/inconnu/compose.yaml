@@ -1,0 +1,53 @@
+# Page « aucun loto à cette adresse », servie pour tout sous-domaine de quinou.fr qui n'est pas une instance.
+# Un fichier statique derrière Traefik ; indépendante de l'application et de ses déploiements.
+#
+# Prérequis : le résolveur « letsencrypt-dns » de Traefik (validation DNS chez OVH), qui obtient le certificat
+# générique *.quinou.fr. Sans lui, le visiteur voit l'alerte de sécurité du navigateur avant la page.
+# À ajouter une fois dans /opt/traefik/compose.yaml, puis « docker compose up -d » (Traefik redémarre) :
+#   command:
+#       - --certificatesresolvers.letsencrypt-dns.acme.email=${ACME_EMAIL}
+#       - --certificatesresolvers.letsencrypt-dns.acme.storage=/acme/acme-dns.json
+#       - --certificatesresolvers.letsencrypt-dns.acme.dnschallenge.provider=ovh
+#   environment:
+#       OVH_ENDPOINT: ovh-eu
+#       OVH_APPLICATION_KEY: ${OVH_APPLICATION_KEY}
+#       OVH_APPLICATION_SECRET: ${OVH_APPLICATION_SECRET}
+#       OVH_CONSUMER_KEY: ${OVH_CONSUMER_KEY}
+# Les trois clés vont dans /opt/traefik/.env (mode 600). Jeton OVH limité à la zone quinou.fr :
+# GET, POST, PUT et DELETE sur /domain/zone/quinou.fr/*.
+#
+# Sur le serveur : copier ce dossier dans ~/quinou-inconnu (compte florentin), puis
+#   docker compose up -d
+# Mise à jour du texte : remplacer public/index.html, rien à redémarrer.
+# Retrait : docker compose down.
+
+name: quinou-inconnu
+
+services:
+    web:
+        image: nginx:1.28-alpine
+        restart: unless-stopped
+        volumes:
+            # Le dossier est monté, pas le fichier : un index.html remplacé est servi sans redémarrage.
+            - ./public:/usr/share/nginx/html:ro
+            - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+        networks: [proxy]
+        labels:
+            - traefik.enable=true
+            - traefik.docker.network=proxy
+            # Priorité 1 : toute route nommée (instance, staging, www) passe avant celle-ci.
+            - traefik.http.routers.quinou-inconnu.rule=HostRegexp(`^[a-z0-9-]+\.quinou\.fr$$`)
+            - traefik.http.routers.quinou-inconnu.priority=1
+            - traefik.http.routers.quinou-inconnu.entrypoints=websecure
+            - traefik.http.routers.quinou-inconnu.tls=true
+            - traefik.http.routers.quinou-inconnu.tls.certresolver=letsencrypt-dns
+            - traefik.http.routers.quinou-inconnu.tls.domains[0].main=*.quinou.fr
+            - traefik.http.services.quinou-inconnu.loadbalancer.server.port=80
+        logging:
+            driver: json-file
+            options: { max-size: "5m", max-file: "2" }
+
+networks:
+    proxy:
+        external: true
+        name: proxy
