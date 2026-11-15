@@ -21,9 +21,15 @@ server {
 
     # Sonde de santé et robots.txt : jamais derrière l'authentification (déploiement, tests de fumée ;
     # un robots.txt en erreur 4xx vaut « tout autorisé » pour Google).
+    # PHP est appelé directement : une redirection interne vers /index.php repasserait par l'authentification
+    # du serveur et la sonde répondrait 401 sur un environnement protégé.
     location ~ ^/(healthz|robots\.txt)$ {
         auth_basic off;
-        try_files $uri /index.php$is_args$args;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root/index.php;
+        fastcgi_param SCRIPT_NAME /index.php;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        fastcgi_pass $php_upstream;
     }
 
     location ^~ /assets/ {
