@@ -307,8 +307,12 @@ final class AdminController extends AbstractController
         try {
             $eventId = $game->getEvent()->getId();
             $json = json_encode($payload);
-            $this->hub->publish(new Update("/events/{$eventId}/games/{$game->getId()}/state", $json));
-            $this->hub->publish(new Update("/events/{$eventId}/public", $json));
+            // Une seule publication pour l'écran d'animation et l'écran de salle :
+            // si le hub ne répond pas, on n'attend qu'une fois
+            $this->hub->publish(new Update(
+                ["/events/{$eventId}/games/{$game->getId()}/state", "/events/{$eventId}/public"],
+                $json,
+            ));
         } catch (\Exception $e) {
             // En environnement de test, Mercure peut ne pas être disponible - ignorer silencieusement
         }
