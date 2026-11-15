@@ -63,6 +63,7 @@ Points à faire valider par un juriste avant ouverture commerciale :
 * la version en vigueur des textes (un plafond de valeur des lots a existé puis a été abrogé en 2021) ;
 * la vente de cartons en ligne en amont de l'événement (évoquée au [lot 5](#8-lotissement)) : des plateformes la proposent, mais sa compatibilité avec le cadre du loto traditionnel n'est pas confirmée par une source officielle ;
 * la responsabilité de l'éditeur si un client organise un loto hors cadre ;
+* les règles de vente en ligne applicables à une association cliente (rétractation, mentions du récapitulatif de commande) ;
 * les cartons vendus à des personnes qui ne viennent pas et joués pour elles en salle : c'est le positionnement de la [charte](charte-graphique.md), et il est à confronter à la condition de jeu en présentiel du tableau ci-dessus.
 
 Le produit traite par ailleurs des données personnelles de joueurs (nom, téléphone, e-mail) : voir [§6.4](#64-données-personnelles-rgpd).
@@ -264,7 +265,7 @@ Le comportement décrit au [§4](#4-socle-métier-existant) est repris sans chan
 
 ### 5.7 Abonnement et facturation
 
-Les formules et les prix sont détaillés dans le [business plan](business-plan.md#5-offre-et-prix). La facturation est dans le portail et passe par Mollie : le paiement se fait sur la page hébergée par Mollie, le portail ne voit ni ne conserve aucun numéro de carte. Les factures et l'espace client (formule en cours, historique, résiliation) sont à la charge du portail.
+Les formules et les prix sont détaillés dans le [business plan](business-plan.md#5-offre-et-prix). La facturation est dans le portail et passe par Mollie, en paiement intégré : le formulaire de carte est affiché dans le tunnel du portail, sans passage par la page de paiement de Mollie ([§5.9](#59-tunnel-de-vente)). Le portail ne voit ni ne conserve aucun numéro de carte. Les factures et l'espace client (formule en cours, historique, résiliation) sont à la charge du portail.
 
 **À trancher avant ce lot** : paiement par événement ou abonnement. Un loto est ponctuel ; avec un pass par événement, l'instance est créée avant le loto et archivée après, alors qu'un abonnement la garde en service toute l'année. Le choix change FAC-7 et le coût d'hébergement par client.
 
@@ -288,6 +289,58 @@ Les formules et les prix sont détaillés dans le [business plan](business-plan.
 | EXP-4 | Création d'une instance par une seule commande (`make provision CLIENT=x`) : base, premier compte, secrets, routage, sauvegarde. Le portail appelle ensuite cette même commande. | A | M |
 | EXP-5 | Chaque instance a un état visible : en attente, en cours de création, active, suspendue, en erreur. Une création qui échoue se relance sans dégât. | P | M |
 | EXP-6 | Mise à jour de toutes les instances par une seule commande, instance par instance, avec arrêt à la première erreur. Une instance dont un événement est en cours n'est pas mise à jour. | A | M |
+
+### 5.9 Tunnel de vente
+
+Le tunnel est le chemin qui mène d'un visiteur du site à une instance en service. Il est dans le portail, en Symfony, avec la bibliothèque PHP de Mollie et ses champs de carte intégrés (Mollie Components). Sylius n'est pas retenu : il n'y a ni catalogue, ni panier, ni livraison, et l'abonnement n'y est pas natif. Le choix est à revoir si le service vend un jour des produits expédiés (impression et envoi de cartons).
+
+```
+Formule → Sous-domaine → Compte → Paiement (dans le portail) → Création de l'instance → Instance prête
+                                   └ formule gratuite : étape sautée
+```
+
+**Parcours**
+
+| Réf. | Exigence | Priorité |
+| --- | --- | --- |
+| TUN-1 | Le tunnel enchaîne quatre étapes : choix de la formule, choix du sous-domaine, création du compte, paiement. Une étape par écran, utilisable d'une main sur un téléphone. | M |
+| TUN-2 | Le sous-domaine est contrôlé dès la saisie (format, noms réservés, disponibilité, voir ORG-7) et l'adresse complète est affichée telle qu'elle apparaîtra en salle. | M |
+| TUN-3 | Le sous-domaine choisi est réservé 30 minutes, le temps de finir le tunnel. Sans paiement abouti, il est libéré. | M |
+| TUN-4 | Le compte est créé avec un e-mail et un mot de passe ; l'e-mail est vérifié avant toute création d'instance. | M |
+| TUN-5 | La formule gratuite suit le même tunnel sans l'étape de paiement : l'instance est demandée dès l'e-mail vérifié. | M |
+| TUN-6 | L'écran de paiement affiche le récapitulatif (formule, prix toutes taxes comprises, adresse de l'instance) et le formulaire de carte. Les conditions générales de vente sont acceptées sur cet écran. | M |
+
+**Paiement et création de l'instance**
+
+| Réf. | Exigence | Priorité |
+| --- | --- | --- |
+| TUN-7 | La commande est enregistrée avant l'envoi du paiement à Mollie, à l'état « en attente de paiement », avec la formule et le montant figés. | M |
+| TUN-18 | Le paiement est intégré au portail : pas de redirection vers la page de paiement de Mollie. Les champs de carte (numéro, date, cryptogramme) sont servis par Mollie à l'intérieur de la page et habillés selon la charte ; le portail ne reçoit qu'un jeton à usage unique, qu'il transmet à Mollie avec la commande. Aucun numéro de carte ne passe par le serveur du portail ni par ses journaux. | M |
+| TUN-19 | Quand la banque demande une authentification forte (3-D Secure), le client est envoyé sur la page de sa banque puis revient dans le tunnel. C'est la seule sortie du portail pendant le paiement. | M |
+| TUN-20 | Une carte refusée ou une saisie invalide est signalée sur l'écran de paiement, champ par champ, sans perdre la commande ni recharger le tunnel. | M |
+| TUN-21 | À l'ouverture, le seul moyen de paiement est la carte bancaire. Les moyens qui imposent une redirection (virement, prélèvement) sont hors du tunnel, voir FAC-6. | M |
+| TUN-8 | Seule la notification de Mollie (webhook) fait foi. À sa réception, le portail relit l'état du paiement auprès de Mollie avant d'agir. L'écran affiché après le paiement ou au retour de la banque n'active rien : il affiche l'état lu en base. | M |
+| TUN-9 | Au paiement confirmé, une seule transaction marque la commande payée, émet la facture, écrit l'état voulu de l'instance et envoie la demande de création au worker ([§6.1](#61-architecture-et-isolation-des-données)). | M |
+| TUN-10 | Une notification reçue plusieurs fois ne crée qu'une instance et qu'une facture. | M |
+| TUN-11 | Après le paiement, une page montre l'avancement de la création, puis le lien vers l'instance. Un e-mail est envoyé quand elle est prête, avec son adresse et un lien pour définir le mot de passe du premier compte. Aucun mot de passe n'est envoyé par e-mail. | M |
+
+**Cas d'échec**
+
+| Réf. | Exigence | Priorité |
+| --- | --- | --- |
+| TUN-12 | Paiement abandonné, refusé ou expiré : la commande est annulée, le sous-domaine libéré, et le client peut reprendre au paiement sans ressaisir ses choix tant que la réservation court. | M |
+| TUN-13 | Sous-domaine pris par un autre entre la réservation expirée et le paiement : le client garde son paiement et choisit un autre sous-domaine avant la création. | M |
+| TUN-14 | Création en erreur après un paiement confirmé : le client voit que son instance est en préparation, l'exploitant est alerté et relance la création (EXP-5). Si elle n'aboutit pas, le remboursement est fait à la main depuis Mollie. | M |
+| TUN-15 | Notification de Mollie jamais reçue : une tâche périodique relit auprès de Mollie les commandes restées en attente de paiement. | M |
+
+**Après l'achat**
+
+| Réf. | Exigence | Priorité |
+| --- | --- | --- |
+| TUN-16 | Depuis l'espace client, passer de la formule gratuite à une formule payante reprend le tunnel à l'étape du paiement. L'instance n'est pas recréée : elle reçoit ses nouvelles limites (FAC-3). | M |
+| TUN-17 | Code de réduction saisi au récapitulatif, pour l'offre de lancement et les préventes. | S |
+
+Le renouvellement et la résiliation dépendent du modèle de prix à trancher ([§5.7](#57-abonnement-et-facturation)) et ne sont pas décrits ici. Les règles de rétractation applicables à une association cliente sont à faire préciser par le juriste ([§2](#2-cadre-réglementaire)).
 
 ---
 
@@ -350,6 +403,7 @@ Instances : client1.quinou.fr, client2.quinou.fr…
 * Canaux temps réel non devinables et réservés aux abonnés autorisés pour l'écran d'animation.
 * Aucun secret par défaut ni partagé : clé applicative, clé Mercure et mot de passe de base sont générés pour chaque instance à sa création.
 * Le portail et le worker n'ont pas les mêmes droits (voir [§6.1](#61-architecture-et-isolation-des-données)).
+* Sur l'écran de paiement, la politique de sécurité du contenu n'autorise que les scripts du portail et celui de Mollie. Aucun script tiers (mesure d'audience, polices distantes) n'y est chargé.
 
 ### 6.3 Disponibilité et performance
 
@@ -405,9 +459,9 @@ Mentions légales, conditions générales de vente et d'utilisation, politique d
 | --- | --- | --- |
 | **0 – Assainissement** | Corrections qui ne dépendent pas du SaaS : gel, resets, repository, jeton CSRF obligatoire sur toutes les actions (fait) | Socle fiable |
 | **1 – Instances créées à la main** | DNS et certificat génériques, routage par sous-domaine, EXP-4, EXP-6, sauvegarde par base, ORG-2, ORG-3, EVT-1, PUB-1, PUB-2, §6.2 | L'exploitant crée une instance par association pilote, en accès gratuit |
-| **2 – Portail** | Dépôt du portail, site vitrine, ORG-1, ORG-6, ORG-7, EXP-1, EXP-5, worker de provisionnement, EVT-4, CAR-2, CAR-4, JOU-1, JOU-2, ANI-1 | Une association s'inscrit seule et reçoit son instance |
-| **3 – Facturation et ouverture** | FAC-1 à FAC-5, FAC-7, §6.3 à §6.5 | Paiement en ligne, ouverture commerciale |
-| **4 – Confort et fidélisation** | ORG-4, EVT-2, EVT-3, CAR-5, JOU-3, ANI-2, ANI-3, PUB-3, PUB-4, EXP-2, EXP-3 | Raisons de s'abonner à l'année |
+| **2 – Portail** | Dépôt du portail, site vitrine, ORG-1, ORG-6, ORG-7, EXP-1, EXP-5, worker de provisionnement, tunnel sans paiement (TUN-1 à TUN-5, TUN-11), EVT-4, CAR-2, CAR-4, JOU-1, JOU-2, ANI-1 | Une association s'inscrit seule et reçoit son instance |
+| **3 – Facturation et ouverture** | FAC-1 à FAC-5, FAC-7, tunnel avec paiement (TUN-6 à TUN-10, TUN-12 à TUN-16, TUN-18 à TUN-21), §6.3 à §6.5 | Paiement en ligne, ouverture commerciale |
+| **4 – Confort et fidélisation** | ORG-4, EVT-2, EVT-3, CAR-5, JOU-3, ANI-2, ANI-3, PUB-3, PUB-4, EXP-2, EXP-3, TUN-17 | Raisons de s'abonner à l'année |
 | **5 – Extensions** | ORG-5, ORG-8, CAR-6, ANI-4, PUB-5, FAC-6, vente de cartons en amont (sous réserve juridique) | Nouvelles sources de revenu |
 
 Le lot 1 doit être validé par deux ou trois associations pilotes sur de vrais lotos avant d'engager le lot 2. Le modèle de prix (voir [§5.7](#57-abonnement-et-facturation)) est à trancher avant le lot 3.
@@ -433,6 +487,6 @@ Le SaaS est prêt à ouvrir commercialement quand :
 1. une association inconnue s'inscrit, reçoit son instance à son adresse, importe ses cartons et anime une partie de démonstration en moins de 15 minutes, sans aide ;
 2. deux organisations animent un loto le même soir, chacune sur son instance, et l'arrêt de l'une ne perturbe pas l'autre ; un test automatisé vérifie qu'un compte de l'une est refusé par l'autre ;
 3. un événement réel de 300 joueurs et 1 500 cartons se déroule sans incident ni ralentissement ;
-4. un paiement, sa facture et l'application des limites de formule fonctionnent de bout en bout ;
+4. un paiement, sa facture, la création de l'instance qui en découle et l'application des limites de formule fonctionnent de bout en bout ; un paiement abandonné et une notification reçue deux fois ne laissent ni instance ni facture en trop ;
 5. la sauvegarde d'une instance a été restaurée avec succès, et une création d'instance interrompue a été relancée jusqu'au bout ;
 6. les documents légaux sont publiés et le cadre réglementaire a été relu par un juriste.
