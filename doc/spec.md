@@ -1,328 +1,375 @@
-# Cahier des charges – Application de gestion de loto quine (traditionnel)
+# Cahier des charges – Loto Quine en SaaS
 
-## 1. Contexte
+> Version consolidée du 15 novembre 2026.
+> Ce document remplace le cahier des charges initial (application mono-association). Il décrit d'abord le produit tel qu'il existe dans le code, puis la cible SaaS, puis le chemin pour y aller. Le volet économique est dans [business-plan.md](business-plan.md).
 
-Cette application est un **outil d’assistance au loto quine traditionnel en salle**, avec cartons papier, joueurs physiquement présents et animateur humain.
+## Sommaire
 
-Elle ne remplace pas le jeu réel :
-
-* le tirage reste manuel,
-* la validation des gagnants reste humaine,
-* l’application garantit **la cohérence, la traçabilité et l’affichage public**.
-
----
-
-## 2. Objectifs
-
-* Assister l’animateur dans la gestion du tirage.
-* Afficher une grille de tirage claire (admin + public).
-* Détecter automatiquement les **gagnants potentiels**.
-* Gérer des **gagnants système** et des **gagnants salle (offline)**.
-* Enchaîner plusieurs parties **sans remise à zéro des tirages**.
-* Geler une partie dès qu’un gain est détecté.
-* Bloquer un carton gagnant jusqu’au prochain reset (démarque).
-* Garantir un affichage public fiable et synchronisé.
+1. [Vision et périmètre](#1-vision-et-périmètre)
+2. [Cadre réglementaire](#2-cadre-réglementaire)
+3. [Utilisateurs](#3-utilisateurs)
+4. [Socle métier existant](#4-socle-métier-existant)
+5. [Cible SaaS : exigences fonctionnelles](#5-cible-saas--exigences-fonctionnelles)
+6. [Cible SaaS : exigences techniques](#6-cible-saas--exigences-techniques)
+7. [Écarts entre l'existant et la cible](#7-écarts-entre-lexistant-et-la-cible)
+8. [Lotissement](#8-lotissement)
+9. [Hors périmètre](#9-hors-périmètre)
+10. [Critères d'acceptation](#10-critères-dacceptation)
 
 ---
 
-## 3. Terminologie officielle loto
+## 1. Vision et périmètre
 
-| Terme            | Définition                                   |
-| ---------------- | -------------------------------------------- |
-| **Quine**        | 1 ligne complète (5 numéros)                 |
-| **Double quine** | 2 lignes complètes (10 numéros)              |
-| **Carton plein** | 3 lignes complètes (15 numéros)              |
-| **Démarque**     | Réinitialisation manuelle du tirage (reset)  |
-| **Gel du gain**  | Blocage de la partie au moment exact du gain |
+### 1.1 Ce que fait le produit
 
----
+L'application est un **outil d'assistance au loto quine traditionnel en salle** : cartons papier, joueurs présents, animateur humain. Elle ne remplace pas le jeu réel.
 
-## 4. Utilisateurs
+* Le tirage reste manuel : l'animateur coche les numéros sortis du boulier.
+* La validation des gagnants reste humaine.
+* L'application garantit la cohérence, la traçabilité et l'affichage public.
 
-### 4.1 Administrateur (animateur)
+### 1.2 Ce qui change avec le SaaS
 
-* Gère l’événement et les parties.
-* Effectue le tirage.
-* Valide les gagnants.
-* Gère les transitions et la démarque.
+Aujourd'hui, une instance sert une seule association, avec un seul compte administrateur et un seul événement affiché. La cible est un **service en ligne multi-organisations** : chaque association ouvre un compte, prépare ses lotos, les anime depuis un navigateur, et paie selon son usage.
 
-### 4.2 Public / joueurs
+### 1.3 Proposition de valeur
 
-* Accès en lecture seule.
-* Visualisation du tirage, de la partie et des gagnants.
+Les logiciels de loto existants se limitent presque tous à l'affichage du tirage. Le produit se distingue sur quatre points, déjà présents dans le code :
 
----
+* **Détection automatique des cartons gagnants** parmi tous les cartons vendus, dès le numéro qui fait gagner.
+* **Gel du gain** : la partie se bloque à l'instant exact du gain, ce qui tranche les égalités et les contestations.
+* **Registre joueurs ↔ cartons** : on sait à qui appartient le carton gagnant et comment le joindre.
+* **Traçabilité** : gagnants horodatés, export CSV pour la remise des lots et le bilan.
 
-## 5. Modèle de données
-
-### 5.1 Événement (Event)
-
-* id
-* name
-* date
-* relations :
-
-    * games (OneToMany)
-    * players (OneToMany)
-    * cards (OneToMany)
+S'y ajoute, en SaaS, l'absence d'installation : un navigateur et une connexion suffisent.
 
 ---
 
-### 5.2 Partie (Game)
+## 2. Cadre réglementaire
 
-Représente **un lot** avec une règle précise.
+Le produit doit rester un outil d'animation et ne jamais devenir un opérateur de jeu. Le loto traditionnel est une exception à l'interdiction des loteries (article L322-4 du code de la sécurité intérieure). Les conditions à respecter par l'organisateur, et que le produit ne doit pas aider à contourner :
 
-* id
-* event (ManyToOne)
-* position (ordre d’exécution)
-* rule (enum `GameRule`)
+| Condition | Conséquence pour le produit |
+| --- | --- |
+| Cercle restreint, but social, culturel, scientifique, éducatif, sportif ou d'animation sociale | Les conditions d'utilisation réservent le service à ce cadre. |
+| Mises de faible valeur, inférieures à 20 € | Si un prix de carton est saisi, l'application avertit au-delà de ce seuil. |
+| Lots ni en argent ni remboursables | Le champ « lot » est un texte libre décrivant un bien ou un bon d'achat ; l'aide en ligne rappelle la règle. |
+| Jeu en présentiel | Pas de participation à distance, pas de tirage diffusé pour des joueurs hors salle. |
 
-    * QUINE
-    * DOUBLE_QUINE
-    * FULL_CARD
-* prize (texte libre)
-* status (enum `GameStatus`)
+Points à faire valider par un juriste avant ouverture commerciale :
 
-    * PENDING
-    * RUNNING
-    * FINISHED
-* isFrozen (bool)
-* freezeOrderIndex (int|null)
+* la version en vigueur des textes (un plafond de valeur des lots a existé puis a été abrogé en 2021) ;
+* la vente de cartons en ligne en amont de l'événement (évoquée au [lot 4](#8-lotissement)) : des plateformes la proposent, mais sa compatibilité avec le cadre du loto traditionnel n'est pas confirmée par une source officielle ;
+* la responsabilité de l'éditeur si un client organise un loto hors cadre.
 
-Relations :
-
-* draws (OneToMany)
-* winners (OneToMany)
+Le produit traite par ailleurs des données personnelles de joueurs (nom, téléphone, e-mail) : voir [§6.4](#64-données-personnelles-rgpd).
 
 ---
 
-### 5.3 Joueur (Player)
+## 3. Utilisateurs
 
-* id
-* name
-* email (nullable)
-* phone (nullable)
-* notes (nullable)
-* event (ManyToOne)
-* cards (OneToMany)
-
----
-
-### 5.4 Carton (Card)
-
-* id
-* reference (numéro imprimé)
-* grid (JSON – 3 lignes × 5 numéros)
-* event (ManyToOne, nullable)
-* player (ManyToOne, nullable)
-
-Blocage :
-
-* isBlocked (bool)
-* blockedAt (DateTimeImmutable|null)
-* blockedReason (enum : WINNER)
-
-Un carton bloqué **ne peut plus gagner** tant qu’une démarque n’a pas été effectuée.
+| Rôle | Existant | Cible SaaS |
+| --- | --- | --- |
+| **Propriétaire d'organisation** | — | Crée le compte de l'association, gère l'abonnement et invite des membres. |
+| **Animateur** | Compte `admin` unique | Prépare l'événement, effectue le tirage, valide les gagnants, gère la démarque. |
+| **Assistant de salle** | — | Enregistre les joueurs et attribue les cartons à l'entrée ; ne touche pas au tirage. |
+| **Public / joueurs** | Lecture seule sur `/public` | Lecture seule sur l'écran de l'événement, sans compte. |
+| **Exploitant de la plateforme** | — | Supervise les organisations, les abonnements et le support. |
 
 ---
 
-### 5.5 Tirage (Draw)
+## 4. Socle métier existant
 
-* id
-* game (ManyToOne)
-* number (1–90)
-* orderIndex (ordre du tirage)
-* createdAt
+Cette partie décrit le comportement réellement implémenté. Elle est couverte par les specs PHPSpec (`spec/`) et les scénarios Behat (`features/`), et doit être conservée à l'identique dans la version SaaS.
 
-Contrainte unique : `(game_id, number)`
+### 4.1 Terminologie
 
----
+| Terme | Définition |
+| --- | --- |
+| **Quine** | 1 ligne complète (5 numéros) |
+| **Double quine** | 2 lignes complètes (10 numéros) |
+| **Carton plein** | 3 lignes complètes (15 numéros) |
+| **Démarque** | Remise à zéro manuelle du tirage d'une partie |
+| **Gel du gain** | Blocage de la partie au moment exact du gain |
+| **Gagnant système** | Carton détecté par l'application puis validé par l'animateur |
+| **Gagnant salle** | Gagnant saisi à la main (carton non enregistré ou partie « salle uniquement ») |
 
-### 5.6 Gagnant (Winner)
+### 4.2 Modèle de données
 
-* id
-* game (ManyToOne)
-* card (ManyToOne, nullable)
-* source (enum `WinnerSource`)
+**Événement (`Event`)** : nom, date ; contient des parties et des joueurs.
 
-    * SYSTEM
-    * OFFLINE
-* reference (texte libre)
-* createdAt
-* winningOrderIndex (index du tirage déclencheur)
+**Partie (`Game`)** : un lot et une règle.
 
----
+* `position` (ordre de passage, réordonnable par glisser-déposer)
+* `rule` : `QUINE`, `DOUBLE_QUINE`, `FULL_CARD`
+* `prize` (texte libre)
+* `status` : `PENDING`, `RUNNING`, `FINISHED`
+* `isFrozen`, `freezeOrderIndex`
+* `hallOnly` : mode « salle uniquement », sans détection automatique
+* tirages et gagnants
 
-## 6. Règles de tirage
+**Joueur (`Player`)** : nom, e-mail, téléphone, notes ; rattaché à un événement ; possède des cartons.
 
-* Le tirage est **manuel** (cochage/décochage).
-* Autorisé uniquement si :
+**Carton (`Card`)** :
 
-    * partie RUNNING
-    * partie non gelée (`isFrozen = false`)
-* Chaque numéro ne peut être tiré qu’une seule fois par partie.
+* `reference` (numéro imprimé, unique)
+* `grid` (JSON : 3 lignes × 5 numéros)
+* `player` (optionnel) ; l'événement du carton est celui de son joueur
+* blocage : `isBlocked`, `blockedAt`, `blockedReason` (`WINNER`, `WINNER_VALIDATED`, `WINNER_OFFLINE`)
 
----
+**Tirage (`Draw`)** : numéro (1–90), `orderIndex`, horodatage ; un numéro ne sort qu'une fois par partie.
 
-## 7. Détection des gagnants
+**Gagnant (`Winner`)** : partie, carton (optionnel), `source` (`SYSTEM` ou `OFFLINE`), référence libre, `winningOrderIndex`, horodatage.
 
-### 7.1 Règles appliquées
+### 4.3 Tirage
 
-Selon la règle de la partie :
+* Le tirage est manuel : un clic coche un numéro, un second le décoche.
+* Il n'est autorisé que si la partie est `RUNNING` et non gelée.
+* Les numéros valides vont de 1 à 90.
+* Décocher un numéro renumérote les tirages suivants sans trou.
 
-#### Quine
+### 4.4 Détection des gagnants
 
-* Au moins **1 ligne complète**.
+Après chaque numéro coché, l'application calcule les gagnants potentiels parmi les cartons de l'événement.
 
-#### Double quine
+* Quine : au moins 1 ligne complète. Double quine : au moins 2. Carton plein : 3.
+* Une ligne ne compte que si elle contient exactement 5 numéros.
+* Les cartons bloqués sont ignorés.
+* Si la partie est gelée, seuls les tirages jusqu'à `freezeOrderIndex` comptent.
+* En mode « salle uniquement », aucune détection n'a lieu.
 
-* Au moins **2 lignes complètes**.
+### 4.5 Gel du gain
 
-#### Carton plein
+Le gel intervient automatiquement dès qu'un gagnant potentiel est détecté, ou lorsque l'animateur saisit un gagnant salle.
 
-* **3 lignes complètes**.
+* Le tirage s'arrête.
+* La liste des gagnants potentiels est figée à l'instant du gain.
+* Plusieurs cartons complétés sur le même numéro sont tous gagnants (égalité).
+* L'animateur peut dégeler la partie à la main, par exemple après une fausse annonce.
 
----
+### 4.6 Validation des gagnants
 
-### 7.2 Détection automatique
+**Gagnant système** : choisi parmi les gagnants potentiels, validé à la main. Contrôles : partie gelée, carton non bloqué, carton du même événement, règle respectée au moment du gel, pas de doublon. Effet : création du gagnant et blocage du carton.
 
-Après chaque tirage :
+**Gagnant salle** : référence libre, carton associé facultatif. Gèle la partie si elle ne l'est pas. Si un carton est associé, il est bloqué.
 
-* le système calcule les gagnants potentiels,
-* **si au moins un gagnant est détecté** :
+Un carton bloqué n'apparaît plus dans les gagnants potentiels et ne peut plus gagner jusqu'à la démarque ou un reset global.
 
-    * la partie est **gelée immédiatement**,
-    * `freezeOrderIndex` est enregistré,
-    * aucun nouveau tirage n’est autorisé.
+### 4.7 Enchaînement des parties
 
----
+* Une seule partie est `RUNNING` à la fois.
+* Passer à la partie suivante termine la partie courante, démarre la suivante et **lui transfère les numéros déjà tirés** : la grille reste allumée (quine, puis double quine, puis carton plein sur les mêmes numéros).
 
-## 8. Gel du gain (règle fondamentale)
+### 4.8 Démarque et resets
 
-Le gel du gain intervient :
+* **Démarque d'une partie** (partie en cours uniquement) : supprime ses tirages, la dégèle, supprime ses gagnants et débloque leurs cartons.
+* **Resets de l'événement** : tous les tirages, tous les gagnants, ou désassociation de tous les joueurs.
+* Les actions destructrices demandent une confirmation.
 
-* automatiquement si le système détecte un gagnant,
-* manuellement si l’admin valide un gagnant salle (offline).
+### 4.9 Préparation de l'événement
 
-Effets :
+* Gestion des événements, parties, joueurs et cartons depuis l'administration.
+* Attribution des cartons à un joueur par recherche de référence.
+* Import de cartons par fichier CSV (`cardRef,line1,line2,line3`), aujourd'hui en ligne de commande seulement.
+* Jeu de données de démonstration en ligne de commande.
 
-* arrêt du tirage,
-* la liste des gagnants potentiels est figée **à l’instant du gain**,
-* seuls les cartons gagnants **au même numéro** peuvent être validés.
+### 4.10 Affichage public
 
-Gestion des égalités :
+* Grille 1–90 mise à jour en temps réel (Mercure).
+* Dernier numéro mis en évidence.
+* Partie en cours : règle, lot, statut.
+* Gagnants validés.
 
-* plusieurs gagnants possibles si complétés sur le même tirage.
+### 4.11 Export
 
----
+Export CSV des gagnants d'un événement : partie, règle, lot, ordre de victoire, référence du carton, joueur, téléphone, e-mail, source, date.
 
-## 9. Validation des gagnants
+### 4.12 Pile technique
 
-### 9.1 Gagnant système
-
-* sélection dans les gagnants potentiels,
-* validation manuelle obligatoire,
-* contrôles :
-
-    * carton non bloqué,
-    * règle respectée à `freezeOrderIndex`,
-    * absence de doublon.
-
-Effets :
-
-* création d’un `Winner`,
-* **blocage du carton** (`isBlocked = true`).
-
----
-
-### 9.2 Gagnant salle (offline)
-
-* saisie manuelle (référence libre),
-* carton associé optionnel,
-* **gèle immédiatement la partie** si ce n’est pas déjà fait,
-* si carton associé :
-
-    * il est bloqué comme un gagnant système.
+Symfony 7.4, PHP ≥ 8.2, PostgreSQL 16, Mercure, Twig + Stimulus + Turbo (AssetMapper), Docker, déploiement par GitHub Actions. Tests : PHPSpec (unitaires) et Behat (fonctionnels).
 
 ---
 
-## 10. Blocage des cartons
+## 5. Cible SaaS : exigences fonctionnelles
 
-* Un carton bloqué :
+Priorités : **M** = indispensable à l'ouverture commerciale, **S** = à livrer ensuite, **C** = optionnel.
 
-    * n’apparaît plus dans les gagnants potentiels,
-    * ne peut pas gagner d’autres lots.
-* Le déblocage ne peut se faire que par :
+### 5.1 Organisations et comptes
 
-    * une **démarque**,
-    * ou une action globale de reset.
+| Réf. | Exigence | Priorité |
+| --- | --- | --- |
+| ORG-1 | Une association crée son organisation en libre-service (nom, e-mail, mot de passe), avec vérification de l'e-mail. | M |
+| ORG-2 | Toutes les données (événements, parties, joueurs, cartons, gagnants) appartiennent à une organisation et sont invisibles des autres. | M |
+| ORG-3 | Connexion par e-mail et mot de passe, réinitialisation du mot de passe par e-mail. | M |
+| ORG-4 | Le propriétaire invite des membres avec un rôle : animateur ou assistant de salle. | S |
+| ORG-5 | Un utilisateur peut appartenir à plusieurs organisations (animateur intervenant pour plusieurs associations). | C |
+| ORG-6 | Suppression du compte et de ses données à la demande du propriétaire. | M |
+
+### 5.2 Événements
+
+| Réf. | Exigence | Priorité |
+| --- | --- | --- |
+| EVT-1 | Une organisation gère plusieurs événements ; l'animateur choisit celui qu'il anime (aujourd'hui : le dernier créé). | M |
+| EVT-2 | Dupliquer un événement passé (parties, lots) pour préparer le suivant. | S |
+| EVT-3 | Archiver un événement terminé : lecture seule, export toujours possible. | S |
+| EVT-4 | Mode démonstration : un événement d'exemple prêt à jouer dès l'inscription. | M |
+
+### 5.3 Cartons
+
+| Réf. | Exigence | Priorité |
+| --- | --- | --- |
+| CAR-1 | La référence d'un carton est unique **par organisation** (aujourd'hui : unique sur toute la base). | M |
+| CAR-2 | Import CSV des cartons depuis l'interface, avec rapport d'erreurs ligne par ligne. | M |
+| CAR-3 | Les cartons d'une organisation sont réutilisables d'un événement à l'autre. | M |
+| CAR-4 | Contrôle de validité d'une grille à la saisie : 3 lignes de 5 numéros entre 1 et 90, sans doublon. | M |
+| CAR-5 | Génération de planches de cartons en PDF à imprimer, pour les associations sans stock de cartons. | S |
+| CAR-6 | Bibliothèque des séries de cartons du commerce, pour éviter la saisie. | C |
+
+### 5.4 Joueurs
+
+| Réf. | Exigence | Priorité |
+| --- | --- | --- |
+| JOU-1 | Saisie rapide à l'entrée de la salle : nom, puis cartons scannés ou saisis à la suite. | M |
+| JOU-2 | La saisie du joueur est facultative : un carton peut être mis en jeu sans joueur nominatif. | M |
+| JOU-3 | Recherche d'un joueur par nom ou par référence de carton. | S |
+
+### 5.5 Animation
+
+Le comportement décrit au [§4](#4-socle-métier-existant) est repris sans changement, avec ces ajouts :
+
+| Réf. | Exigence | Priorité |
+| --- | --- | --- |
+| ANI-1 | Tolérance aux coupures réseau : l'écran d'animation signale la perte de connexion et se resynchronise sans perte de tirage. | M |
+| ANI-2 | Historique des actions de l'animateur sur l'événement (tirages, gels, validations, démarques), horodaté. | S |
+| ANI-3 | Annulation de la dernière validation de gagnant sans démarque complète. | S |
+| ANI-4 | Raccourcis clavier pour le tirage. | C |
+
+### 5.6 Affichage public
+
+| Réf. | Exigence | Priorité |
+| --- | --- | --- |
+| PUB-1 | Chaque événement a sa propre adresse d'affichage, non devinable. | M |
+| PUB-2 | L'affichage ne montre jamais de données personnelles au-delà de ce que l'animateur choisit (référence du carton, nom du gagnant en option). | M |
+| PUB-3 | Personnalisation : nom et logo de l'association. | S |
+| PUB-4 | Écran d'attente entre deux parties : lot suivant, messages de l'association, sponsors. | S |
+| PUB-5 | QR code menant à une vue « téléphone » du tirage pour les joueurs en salle. | C |
+
+### 5.7 Abonnement et facturation
+
+Les formules et les prix sont détaillés dans le [business plan](business-plan.md#5-offre-et-prix).
+
+| Réf. | Exigence | Priorité |
+| --- | --- | --- |
+| FAC-1 | Formule gratuite limitée, sans carte bancaire. | M |
+| FAC-2 | Achat d'un pass pour un événement et d'un abonnement annuel, par carte bancaire via un prestataire de paiement. | M |
+| FAC-3 | Les limites de la formule sont appliquées par l'application (nombre de cartons, export, personnalisation). | M |
+| FAC-4 | Facture téléchargeable, au nom de l'association. | M |
+| FAC-5 | Un événement en cours n'est jamais interrompu par une échéance d'abonnement. | M |
+| FAC-6 | Paiement par virement ou mandat administratif pour les comités des fêtes et collectivités. | C |
+
+### 5.8 Exploitation de la plateforme
+
+| Réf. | Exigence | Priorité |
+| --- | --- | --- |
+| EXP-1 | Console d'exploitation : liste des organisations, formule, dernière activité. | M |
+| EXP-2 | Prise en main d'un compte client pour le support, tracée. | S |
+| EXP-3 | Indicateurs : inscriptions, activation (premier événement animé), conversion, attrition. | S |
 
 ---
 
-## 11. Enchaînement des parties (Option A)
+## 6. Cible SaaS : exigences techniques
 
-### 11.1 Principe
+### 6.1 Isolation des données
 
-* Les tirages sont **conservés** entre les parties.
-* Exemple :
+* Chaque entité métier porte une référence à son organisation.
+* Le filtrage par organisation est appliqué de façon systématique (filtre Doctrine ou équivalent), pas contrôleur par contrôleur.
+* Les accès par identifiant vérifient l'appartenance à l'organisation de l'utilisateur connecté.
+* Des tests automatisés prouvent qu'une organisation ne peut ni lire ni modifier les données d'une autre.
 
-    * Partie 1 : Quine
-    * Partie 2 : Double quine
-    * Partie 3 : Carton plein
-* La grille reste allumée.
+### 6.2 Sécurité
 
----
+* Comptes en base, mots de passe hachés, limitation des tentatives de connexion.
+* Protection CSRF sur toutes les actions qui modifient des données, sans exception.
+* Canaux temps réel non devinables et réservés aux abonnés autorisés pour l'écran d'animation.
+* Aucun secret par défaut en production (clé applicative, clé Mercure, mot de passe de base).
 
-### 11.2 Transition vers la partie suivante
+### 6.3 Disponibilité et performance
 
-* Partie courante → FINISHED
-* Partie suivante → RUNNING
-* Tirages conservés
-* Nouvelle règle et nouveau lot affichés
+* Un loto dure une soirée : une panne pendant l'événement est l'incident le plus grave. Objectif de disponibilité de 99,5 % sur les créneaux de soirée et de week-end.
+* Cochage d'un numéro visible sur l'écran public en moins d'une seconde.
+* Détection des gagnants en moins d'une seconde pour 5 000 cartons en jeu.
+* Sauvegarde quotidienne de la base, restauration testée.
+* Supervision et alerte en cas d'indisponibilité.
 
----
+### 6.4 Données personnelles (RGPD)
 
-## 12. Démarque (reset)
+* L'association est responsable du traitement des données de ses joueurs ; l'éditeur est sous-traitant. Un accord de sous-traitance est intégré aux conditions générales.
+* Données minimales : seul le nom du joueur est utile au jeu ; téléphone et e-mail restent facultatifs.
+* Durée de conservation : les données de joueurs d'un événement sont supprimées ou anonymisées après un délai configurable (12 mois par défaut).
+* Export et suppression des données d'une organisation à la demande.
+* Hébergement dans l'Union européenne.
 
-### 12.1 Démarque d’une partie
+### 6.5 Documents légaux
 
-* suppression de tous les tirages,
-* déblocage des cartons gagnants,
-* suppression des gagnants de la partie,
-* partie repasse en état RUNNING.
+Mentions légales, conditions générales de vente et d'utilisation, politique de confidentialité, rappel du cadre légal du loto traditionnel.
 
-### 12.2 Actions globales événement
+### 6.6 Qualité
 
-* reset de tous les tirages,
-* reset de tous les gagnants,
-* désassociation des joueurs/cartons.
-
----
-
-## 13. Affichage public
-
-* Grille 1–90 en temps réel,
-* Dernier numéro mis en évidence,
-* Partie en cours (règle, lot, statut),
-* Gagnants validés affichés,
-* Grille **conservée entre les parties** (Option A).
+* Les specs PHPSpec et les scénarios Behat existants restent verts à chaque étape.
+* Toute nouvelle règle métier est décrite par une spec avant d'être codée.
 
 ---
 
-## 14. Sécurité et traçabilité
+## 7. Écarts entre l'existant et la cible
 
-* Validation manuelle obligatoire des gains,
-* Horodatage de tous les événements critiques,
-* Logs des actions admin,
-* Protection CSRF complète.
+| Sujet | Existant | À faire |
+| --- | --- | --- |
+| Comptes | Un utilisateur `admin` en mémoire, mot de passe en variable d'environnement | Utilisateurs et organisations en base, inscription, rôles |
+| Cloisonnement | Aucun : une instance = une association | Rattachement de toutes les entités à une organisation |
+| Événement courant | Le dernier événement créé, pour l'admin comme pour le public | Choix de l'événement animé ; adresse publique par événement |
+| Référence de carton | Unique sur toute la base | Unique par organisation |
+| Import de cartons | Ligne de commande | Interface web |
+| Temps réel | Sujets Mercure construits sur l'identifiant de l'événement | Sujets non devinables, abonnements autorisés |
+| CSRF | Jeton facultatif sur la validation d'un gagnant | Jeton obligatoire partout |
+| Journal des actions | Annoncé dans l'ancien cahier des charges, absent du code | À créer (ANI-2) |
+| Facturation | Aucune | Formules, paiement, factures |
+| Repository des gagnants | `Winner` référence une classe `WinnerRepository` qui n'existe pas | À créer |
+| Gagnant salle refusé | La partie reste gelée si le carton associé est déjà bloqué | Vérifier le carton avant de geler |
+| Reset des tirages de l'événement | Ne dégèle pas les parties | Dégeler en même temps |
 
 ---
 
-## 15. Résumé métier
+## 8. Lotissement
 
-✔ Respect strict du loto quine traditionnel
-✔ Gel immédiat au gain
-✔ Égalités gérées proprement
-✔ Cartons gagnants bloqués
-✔ Tirage continu entre parties
-✔ Contrôle humain permanent
+| Lot | Contenu | Résultat |
+| --- | --- | --- |
+| **0 – Assainissement** | Corrections du tableau des écarts qui ne dépendent pas du SaaS (CSRF, repository, gel, reset) | Socle fiable |
+| **1 – Multi-organisation** | ORG-1 à ORG-3, ORG-6, EVT-1, CAR-1, CAR-3, PUB-1, PUB-2, §6.1, §6.2 | Plusieurs associations sur une même instance, en accès gratuit sur invitation |
+| **2 – Ouverture commerciale** | EVT-4, CAR-2, CAR-4, JOU-1, JOU-2, ANI-1, FAC-1 à FAC-5, EXP-1, §6.3 à §6.5 | Inscription libre et paiement en ligne |
+| **3 – Confort et fidélisation** | ORG-4, EVT-2, EVT-3, CAR-5, JOU-3, ANI-2, ANI-3, PUB-3, PUB-4, EXP-2, EXP-3 | Raisons de s'abonner à l'année |
+| **4 – Extensions** | ORG-5, CAR-6, ANI-4, PUB-5, FAC-6, vente de cartons en amont (sous réserve juridique) | Nouvelles sources de revenu |
+
+Le lot 1 doit être validé par deux ou trois associations pilotes sur de vrais lotos avant d'engager le lot 2.
+
+---
+
+## 9. Hors périmètre
+
+* Tirage automatique ou aléatoire décidant du résultat : le boulier reste la source du tirage.
+* Participation à distance, loto en ligne, diffusion vidéo.
+* Lots en argent, encaissement des mises pour le compte de l'association.
+* Bingo à 75 numéros et autres variantes de grille.
+* Comptabilité de l'association, gestion des adhérents.
+
+---
+
+## 10. Critères d'acceptation
+
+Le SaaS est prêt à ouvrir commercialement quand :
+
+1. une association inconnue s'inscrit, importe ses cartons et anime une partie de démonstration en moins de 15 minutes, sans aide ;
+2. deux organisations utilisent le service le même soir sans jamais voir les données l'une de l'autre, tests automatisés à l'appui ;
+3. un événement réel de 300 joueurs et 1 500 cartons se déroule sans incident ni ralentissement ;
+4. un paiement, sa facture et l'application des limites de formule fonctionnent de bout en bout ;
+5. une sauvegarde a été restaurée avec succès ;
+6. les documents légaux sont publiés et le cadre réglementaire a été relu par un juriste.
