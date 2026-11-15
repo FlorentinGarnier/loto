@@ -11,6 +11,7 @@ use App\Repository\EventRepository;
 use App\Repository\GameRepository;
 use App\Repository\PlayerRepository;
 use Behat\Behat\Context\Context;
+use Behat\Hook\BeforeScenario;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\Security\Core\User\InMemoryUser;
@@ -44,9 +45,7 @@ abstract class BaseContext implements Context
         $this->client = $client;
     }
 
-    /**
-     * @BeforeScenario
-     */
+    #[BeforeScenario]
     public function cleanDatabase(): void
     {
         // Réinitialiser les erreurs partagées

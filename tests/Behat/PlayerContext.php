@@ -11,6 +11,9 @@ use App\Repository\EventRepository;
 use App\Repository\GameRepository;
 use App\Repository\PlayerRepository;
 use Behat\Gherkin\Node\TableNode;
+use Behat\Step\Given;
+use Behat\Step\Then;
+use Behat\Step\When;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Assert;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -31,9 +34,7 @@ final class PlayerContext extends BaseContext
         parent::__construct($entityManager, $eventRepo, $gameRepo, $cardRepo, $playerRepo, $client);
     }
 
-    /**
-     * @When /^je crée un joueur avec les informations suivantes:$/
-     */
+    #[When('/^je crée un joueur avec les informations suivantes:$/')]
     public function jeCreerUnJoueurAvecLesInformationsSuivantes(TableNode $table): void
     {
         $data = $table->getHash()[0];
@@ -49,9 +50,7 @@ final class PlayerContext extends BaseContext
         $this->currentPlayer = $player;
     }
 
-    /**
-     * @Then /^le joueur "([^"]*)" doit exister$/
-     */
+    #[Then('/^le joueur "([^"]*)" doit exister$/')]
     public function leJoueurDoitExister(string $name): void
     {
         $player = $this->playerRepo->findOneBy(['name' => $name]);
@@ -59,9 +58,7 @@ final class PlayerContext extends BaseContext
         $this->currentPlayer = $player;
     }
 
-    /**
-     * @Then /^le joueur "([^"]*)" doit avoir l'email "([^"]*)"$/
-     */
+    #[Then('/^le joueur "([^"]*)" doit avoir l\'email "([^"]*)"$/')]
     public function leJoueurDoitAvoirLEmail(string $name, string $expectedEmail): void
     {
         $player = $this->playerRepo->findOneBy(['name' => $name]);
@@ -69,9 +66,7 @@ final class PlayerContext extends BaseContext
         Assert::assertEquals($expectedEmail, $player->getEmail(), "L'email du joueur ne correspond pas");
     }
 
-    /**
-     * @Then /^le joueur "([^"]*)" doit avoir le téléphone "([^"]*)"$/
-     */
+    #[Then('/^le joueur "([^"]*)" doit avoir le téléphone "([^"]*)"$/')]
     public function leJoueurDoitAvoirLeTelephone(string $name, string $expectedPhone): void
     {
         $player = $this->playerRepo->findOneBy(['name' => $name]);
@@ -79,9 +74,7 @@ final class PlayerContext extends BaseContext
         Assert::assertEquals($expectedPhone, $player->getPhone(), 'Le téléphone du joueur ne correspond pas');
     }
 
-    /**
-     * @Given /^un joueur "([^"]*)" existe$/
-     */
+    #[Given('/^un joueur "([^"]*)" existe$/')]
     public function quUnJoueurExiste(string $name): void
     {
         $player = $this->playerRepo->findOneBy(['name' => $name]);
@@ -96,11 +89,8 @@ final class PlayerContext extends BaseContext
         $this->currentPlayer = $player;
     }
 
-    /**
-     * @Given /^le joueur "([^"]*)" est associé à l'événement "([^"]*)"$/
-     *
-     * @When /^j'associe le joueur "([^"]*)" à l'événement "([^"]*)"$/
-     */
+    #[Given('/^le joueur "([^"]*)" est associé à l\'événement "([^"]*)"$/')]
+    #[When('/^j\'associe le joueur "([^"]*)" à l\'événement "([^"]*)"$/')]
     public function jAssocieLeJoueurALEvenement(string $playerName, string $eventName): void
     {
         $player = $this->playerRepo->findOneBy(['name' => $playerName]);
@@ -113,9 +103,7 @@ final class PlayerContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @Then /^le joueur "([^"]*)" doit être associé à l'événement "([^"]*)"$/
-     */
+    #[Then('/^le joueur "([^"]*)" doit être associé à l\'événement "([^"]*)"$/')]
     public function leJoueurDoitEtreAssocieALEvenement(string $playerName, string $eventName): void
     {
         $player = $this->playerRepo->findOneBy(['name' => $playerName]);
@@ -127,9 +115,7 @@ final class PlayerContext extends BaseContext
         Assert::assertEquals($event->getId(), $player->getEvent()?->getId(), "Le joueur n'est pas associé à l'événement");
     }
 
-    /**
-     * @Given /^les joueurs suivants sont associés à l'événement "([^"]*)":$/
-     */
+    #[Given('/^les joueurs suivants sont associés à l\'événement "([^"]*)":$/')]
     public function queLesJoueursSuivantsSontAssociesALEvenement(string $eventName, TableNode $table): void
     {
         $event = $this->eventRepo->findOneBy(['name' => $eventName]);
@@ -151,9 +137,7 @@ final class PlayerContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @When /^je liste les joueurs de l'événement "([^"]*)"$/
-     */
+    #[When('/^je liste les joueurs de l\'événement "([^"]*)"$/')]
     public function jeListeLesJoueursDeLEvenement(string $eventName): void
     {
         $event = $this->eventRepo->findOneBy(['name' => $eventName]);
@@ -162,17 +146,13 @@ final class PlayerContext extends BaseContext
         $this->players = $this->playerRepo->findBy(['event' => $event]);
     }
 
-    /**
-     * @Then /^je dois voir (\d+) joueurs$/
-     */
+    #[Then('/^je dois voir (\\d+) joueurs$/')]
     public function jeDoisVoirJoueurs(int $expectedCount): void
     {
         Assert::assertCount($expectedCount, $this->players, 'Le nombre de joueurs ne correspond pas');
     }
 
-    /**
-     * @Then /^je dois voir les joueurs "([^"]*)"$/
-     */
+    #[Then('/^je dois voir les joueurs "([^"]*)"$/')]
     public function jeDoisVoirLesJoueurs(string $names): void
     {
         $expectedNames = array_map('trim', explode(',', $names));
@@ -184,9 +164,7 @@ final class PlayerContext extends BaseContext
         Assert::assertEquals($expectedNames, $actualNames, 'Les noms des joueurs ne correspondent pas');
     }
 
-    /**
-     * @Given /^les joueurs suivants ont des cartons pour l'événement "([^"]*)":$/
-     */
+    #[Given('/^les joueurs suivants ont des cartons pour l\'événement "([^"]*)":$/')]
     public function queLesJoueursSuivantsOntDesCartonsPourLEvenement(string $eventName, TableNode $table): void
     {
         $event = $this->eventRepo->findOneBy(['name' => $eventName]);
@@ -221,9 +199,7 @@ final class PlayerContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @When /^je désassocie tous les joueurs de leurs cartons pour l'événement "([^"]*)"$/
-     */
+    #[When('/^je désassocie tous les joueurs de leurs cartons pour l\'événement "([^"]*)"$/')]
     public function jeDesassocieTousLesJoueursDeLeurCartonsPourLEvenement(string $eventName): void
     {
         $event = $this->eventRepo->findOneBy(['name' => $eventName]);
@@ -238,9 +214,7 @@ final class PlayerContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @Then /^les cartons "([^"]*)" ne doivent plus avoir de joueurs associés$/
-     */
+    #[Then('/^les cartons "([^"]*)" ne doivent plus avoir de joueurs associés$/')]
     public function lesCartonsNeDoiventPlusAvoirDeJoueursAssocies(string $references): void
     {
         $refs = array_map('trim', explode(',', $references));

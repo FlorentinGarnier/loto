@@ -10,6 +10,8 @@ use App\Entity\Game;
 use App\Enum\GameStatus;
 use App\Enum\RuleType;
 use Behat\Gherkin\Node\TableNode;
+use Behat\Step\Given;
+use Behat\Step\Then;
 use Behat\Step\When;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Assert;
@@ -33,17 +35,13 @@ final class EventContext extends BaseContext
         $this->adminController = $adminController;
     }
 
-    /**
-     * @Given /^je suis connecté en tant qu'administrateur$/
-     */
+    #[Given('/^je suis connecté en tant qu\'administrateur$/')]
     public function queJeSuisConnecteEnTantQuAdministrateur(): void
     {
         $this->loginAsAdmin();
     }
 
-    /**
-     * @When /^je crée un événement de loto nommé "([^"]*)" pour le "([^"]*)"$/
-     */
+    #[When('/^je crée un événement de loto nommé "([^"]*)" pour le "([^"]*)"$/')]
     public function jeCreerUnEvenementDeLotoNommePourLe(string $name, string $date): void
     {
         $dateTime = \DateTimeImmutable::createFromFormat('Y-m-d', $date);
@@ -56,9 +54,7 @@ final class EventContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @Then /^l'événement "([^"]*)" doit exister$/
-     */
+    #[Then('/^l\'événement "([^"]*)" doit exister$/')]
     public function lEvenementDoitExister(string $name): void
     {
         $event = $this->entityManager->getRepository(Event::class)->findOneBy(['name' => $name]);
@@ -66,9 +62,7 @@ final class EventContext extends BaseContext
         $this->currentEvent = $event;
     }
 
-    /**
-     * @Then /^la date de l'événement "([^"]*)" doit être "([^"]*)"$/
-     */
+    #[Then('/^la date de l\'événement "([^"]*)" doit être "([^"]*)"$/')]
     public function laDateDeLEvenementDoitEtre(string $name, string $expectedDate): void
     {
         $event = $this->entityManager->getRepository(Event::class)->findOneBy(['name' => $name]);
@@ -78,9 +72,7 @@ final class EventContext extends BaseContext
         Assert::assertEquals($expectedDate, $actualDate, "La date de l'événement ne correspond pas");
     }
 
-    /**
-     * @Given /^un événement "([^"]*)" existe$/
-     */
+    #[Given('/^un événement "([^"]*)" existe$/')]
     public function quUnEvenementExiste(string $name): void
     {
         $event = $this->entityManager->getRepository(Event::class)->findOneBy(['name' => $name]);
@@ -94,9 +86,7 @@ final class EventContext extends BaseContext
         $this->currentEvent = $event;
     }
 
-    /**
-     * @When /^je définis les parties suivantes pour l'événement "([^"]*)":$/
-     */
+    #[When('/^je définis les parties suivantes pour l\'événement "([^"]*)":$/')]
     public function jeDefinisLesPartiesSuivantesPourLEvenement(string $eventName, TableNode $table): void
     {
         $event = $this->entityManager->getRepository(Event::class)->findOneBy(['name' => $eventName]);
@@ -118,17 +108,13 @@ final class EventContext extends BaseContext
         $this->currentEvent = $event;
     }
 
-    /**
-     * @Given /^les parties suivantes sont définies pour l'événement "([^"]*)":$/
-     */
+    #[Given('/^les parties suivantes sont définies pour l\'événement "([^"]*)":$/')]
     public function queLesPartiesSuivantesSontDefiniesPourLEvenement(string $eventName, TableNode $table): void
     {
         $this->jeDefinisLesPartiesSuivantesPourLEvenement($eventName, $table);
     }
 
-    /**
-     * @Then /^l'événement "([^"]*)" doit avoir (\d+) parties$/
-     */
+    #[Then('/^l\'événement "([^"]*)" doit avoir (\\d+) parties$/')]
     public function lEvenementDoitAvoirParties(string $eventName, int $expectedCount): void
     {
         $event = $this->entityManager->getRepository(Event::class)->findOneBy(['name' => $eventName]);
@@ -138,9 +124,7 @@ final class EventContext extends BaseContext
         Assert::assertEquals($expectedCount, $actualCount, 'Le nombre de parties ne correspond pas');
     }
 
-    /**
-     * @Then /^la partie d'ordre (\d+) doit avoir la règle "([^"]*)" et le lot "([^"]*)"$/
-     */
+    #[Then('/^la partie d\'ordre (\\d+) doit avoir la règle "([^"]*)" et le lot "([^"]*)"$/')]
     public function laPartieDOrdreDoitAvoirLaRegleEtLeLot(int $position, string $rule, string $prize): void
     {
         Assert::assertNotNull($this->currentEvent, 'Aucun événement courant défini');
@@ -160,9 +144,7 @@ final class EventContext extends BaseContext
         Assert::assertEquals($prize, $game->getPrize(), 'Le lot de la partie ne correspond pas');
     }
 
-    /**
-     * @When /^je démarre la première partie de l'événement "([^"]*)"$/
-     */
+    #[When('/^je démarre la première partie de l\'événement "([^"]*)"$/')]
     public function jeDemarrelaPremièrePartieDeLEvenement(string $eventName): void
     {
         $event = $this->entityManager->getRepository(Event::class)->findOneBy(['name' => $eventName]);
@@ -183,9 +165,7 @@ final class EventContext extends BaseContext
         $this->currentEvent = $event;
     }
 
-    /**
-     * @Then /^la partie d'ordre (\d+) doit être en statut "([^"]*)"$/
-     */
+    #[Then('/^la partie d\'ordre (\\d+) doit être en statut "([^"]*)"$/')]
     public function laPartieDOrdreDoitEtreEnStatut(int $position, string $expectedStatus): void
     {
         Assert::assertNotNull($this->currentEvent, 'Aucun événement courant défini');
@@ -208,9 +188,7 @@ final class EventContext extends BaseContext
         Assert::assertEquals($expectedStatus, $game->getStatus()->value, 'Le statut de la partie ne correspond pas');
     }
 
-    /**
-     * @Given /^la partie d'ordre (\d+) est en statut "([^"]*)"$/
-     */
+    #[Given('/^la partie d\'ordre (\\d+) est en statut "([^"]*)"$/')]
     public function queLaPartieDOrdreEstEnStatut(int $position, string $status): void
     {
         Assert::assertNotNull($this->currentEvent, 'Aucun événement courant défini');
@@ -220,9 +198,7 @@ final class EventContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @When /^je termine la partie d'ordre (\d+) et passe à la suivante$/
-     */
+    #[When('/^je termine la partie d\'ordre (\\d+) et passe à la suivante$/')]
     public function jeTermineLaPartieDOrdreEtPasseALaSuivante(int $position): void
     {
         Assert::assertNotNull($this->currentEvent, 'Aucun événement courant défini');
@@ -239,9 +215,7 @@ final class EventContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @When /^je termine la partie d'ordre (\d+)$/
-     */
+    #[When('/^je termine la partie d\'ordre (\\d+)$/')]
     public function jeTermineLaPartieDOrdre(int $position): void
     {
         Assert::assertNotNull($this->currentEvent, 'Aucun événement courant défini');
@@ -265,9 +239,7 @@ final class EventContext extends BaseContext
         $this->entityManager->refresh($game);
     }
 
-    /**
-     * @When /^j'exporte les gagnants de l'événement "([^"]*)"$/
-     */
+    #[When('/^j\'exporte les gagnants de l\'événement "([^"]*)"$/')]
     public function jExporteLesGagnantsDeLEvenement(string $eventName): void
     {
         $event = $this->eventRepo->findOneBy(['name' => $eventName]);
@@ -276,9 +248,7 @@ final class EventContext extends BaseContext
         $this->client->request('GET', "/admin/events/{$event->getId()}/winners/export");
     }
 
-    /**
-     * @Then /^le fichier CSV doit contenir (\d+) lignes? de données$/
-     */
+    #[Then('/^le fichier CSV doit contenir (\\d+) lignes? de données$/')]
     public function leFichierCsvDoitContenirLignesDeData(int $expectedCount): void
     {
         $response = $this->client->getResponse();
@@ -303,9 +273,7 @@ final class EventContext extends BaseContext
         Assert::assertCount($expectedCount, $dataLines, 'Le nombre de lignes de données ne correspond pas');
     }
 
-    /**
-     * @Then /^la première ligne doit contenir "([^"]*)"$/
-     */
+    #[Then('/^la première ligne doit contenir "([^"]*)"$/')]
     public function laPremiereDoitContenir(string $expectedContent): void
     {
         $response = $this->client->getResponse();
@@ -325,9 +293,7 @@ final class EventContext extends BaseContext
         }
     }
 
-    /**
-     * @Then /^la deuxième ligne doit contenir "([^"]*)"$/
-     */
+    #[Then('/^la deuxième ligne doit contenir "([^"]*)"$/')]
     public function laDeuxiemeDoitContenir(string $expectedContent): void
     {
         $response = $this->client->getResponse();
@@ -347,9 +313,7 @@ final class EventContext extends BaseContext
         }
     }
 
-    /**
-     * @Then /^le fichier CSV ne doit contenir aucune ligne de données$/
-     */
+    #[Then('/^le fichier CSV ne doit contenir aucune ligne de données$/')]
     public function leFichierCsvNeDoitContenirAucuneLigneDeData(): void
     {
         $response = $this->client->getResponse();

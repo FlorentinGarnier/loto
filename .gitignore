@@ -22,7 +22,7 @@
 ###< symfony/asset-mapper ###
 
 ###> friends-of-behat/symfony-extension ###
-/behat.yml
+/behat.php
 ###< friends-of-behat/symfony-extension ###
 
 ###> editors/ides/os ###

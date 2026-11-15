@@ -11,6 +11,9 @@ use App\Repository\GameRepository;
 use App\Repository\PlayerRepository;
 use App\Service\DrawService;
 use Behat\Gherkin\Node\TableNode;
+use Behat\Step\Given;
+use Behat\Step\Then;
+use Behat\Step\When;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Assert;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -32,10 +35,8 @@ final class GamePlayContext extends BaseContext
         $this->drawService = $drawService;
     }
 
-    /**
-     * @When /^je tire le numéro (\d+) pour la partie d'ordre (\d+)$/
-     * @When /^je tente de tirer le numéro (\d+) pour la partie d'ordre (\d+)$/
-     */
+    #[When('/^je tire le numéro (\\d+) pour la partie d\'ordre (\\d+)$/')]
+    #[When('/^je tente de tirer le numéro (\\d+) pour la partie d\'ordre (\\d+)$/')]
     public function jeTireLeNumeroPourLaPartieDOrdre(int $number, int $position): void
     {
         self::$lastException = null;
@@ -80,9 +81,7 @@ final class GamePlayContext extends BaseContext
         }
     }
 
-    /**
-     * @Then /^le numéro (\d+) doit être marqué comme tiré dans la partie d'ordre (\d+)$/
-     */
+    #[Then('/^le numéro (\\d+) doit être marqué comme tiré dans la partie d\'ordre (\\d+)$/')]
     public function leNumeroDoitEtreMarqueCommeTireDansLaPartieDOrdre(int $number, int $position): void
     {
         $game = $this->findGameByPosition($position);
@@ -101,9 +100,7 @@ final class GamePlayContext extends BaseContext
         Assert::assertTrue($found, "Le numéro {$number} n'a pas été trouvé dans les tirages");
     }
 
-    /**
-     * @Then /^la partie d'ordre (\d+) doit avoir (\d+) numéros? tirés?$/
-     */
+    #[Then('/^la partie d\'ordre (\\d+) doit avoir (\\d+) numéros? tirés?$/')]
     public function laPartieDOrdreDoitAvoirNumerosTires(int $position, int $expectedCount): void
     {
         $game = $this->findGameByPosition($position);
@@ -115,9 +112,7 @@ final class GamePlayContext extends BaseContext
         Assert::assertEquals($expectedCount, $actualCount, 'Le nombre de numéros tirés ne correspond pas');
     }
 
-    /**
-     * @When /^je tire les numéros suivants pour la partie d'ordre (\d+):$/
-     */
+    #[When('/^je tire les numéros suivants pour la partie d\'ordre (\\d+):$/')]
     public function jeTireLesNumerosSuivantsPourLaPartieDOrdre(int $position, TableNode $table): void
     {
         $game = $this->findGameByPosition($position);
@@ -140,9 +135,7 @@ final class GamePlayContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @Then /^les numéros "([^"]*)" doivent être marqués comme tirés dans la partie d'ordre (\d+)$/
-     */
+    #[Then('/^les numéros "([^"]*)" doivent être marqués comme tirés dans la partie d\'ordre (\\d+)$/')]
     public function lesNumerosDoiventEtreMarquesCommeTiresDansLaPartieDOrdre(string $numbers, int $position): void
     {
         $expectedNumbers = array_map('intval', explode(',', $numbers));
@@ -158,11 +151,8 @@ final class GamePlayContext extends BaseContext
         Assert::assertEquals($expectedNumbers, $actualNumbers, 'Les numéros tirés ne correspondent pas');
     }
 
-    /**
-     * @Given /^les numéros "([^"]*)" ont été tirés pour la partie d'ordre (\d+)$/
-     *
-     * @When /^je tire les numéros "([^"]*)" pour la partie d'ordre (\d+)$/
-     */
+    #[Given('/^les numéros "([^"]*)" ont été tirés pour la partie d\'ordre (\\d+)$/')]
+    #[When('/^je tire les numéros "([^"]*)" pour la partie d\'ordre (\\d+)$/')]
     public function queLesNumerosOntEtesTiresPourLaPartieDOrdre(string $numbers, int $position): void
     {
         $game = $this->findGameByPosition($position);
@@ -184,9 +174,7 @@ final class GamePlayContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @When /^j'annule le dernier numéro tiré \((\d+)\) de la partie d'ordre (\d+)$/
-     */
+    #[When('/^j\'annule le dernier numéro tiré \\((\\d+)\\) de la partie d\'ordre (\\d+)$/')]
     public function jAnnuleLeDernierNumeroTireDeLaPartieDOrdre(int $expectedNumber, int $position): void
     {
         $game = $this->findGameByPosition($position);
@@ -204,9 +192,7 @@ final class GamePlayContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @Then /^le numéro (\d+) ne doit plus être marqué comme tiré$/
-     */
+    #[Then('/^le numéro (\\d+) ne doit plus être marqué comme tiré$/')]
     public function leNumeroNeDroitPlusEtreMarqueCommeTire(int $number): void
     {
         // On vérifie dans toutes les parties de l'événement courant
@@ -223,9 +209,7 @@ final class GamePlayContext extends BaseContext
         }
     }
 
-    /**
-     * @When /^je démarque tous les numéros de la partie d'ordre (\d+)$/
-     */
+    #[When('/^je démarque tous les numéros de la partie d\'ordre (\\d+)$/')]
     public function jeDemarqueTousLesNumerosDeLaPartieDOrdre(int $position): void
     {
         $game = $this->findGameByPosition($position);
@@ -234,10 +218,8 @@ final class GamePlayContext extends BaseContext
         $this->drawService->clearAll($game);
     }
 
-    /**
-     * @Then /^la partie d'ordre (\d+) ne doit plus avoir de numéros tirés$/
-     * @Then /^la partie d'ordre (\d+) ne doit pas avoir de numéros tirés$/
-     */
+    #[Then('/^la partie d\'ordre (\\d+) ne doit plus avoir de numéros tirés$/')]
+    #[Then('/^la partie d\'ordre (\\d+) ne doit pas avoir de numéros tirés$/')]
     public function laPartieDOrdreNeDroitPlusAvoirDeNumerosTires(int $position): void
     {
         $game = $this->findGameByPosition($position);
@@ -247,9 +229,7 @@ final class GamePlayContext extends BaseContext
         Assert::assertCount(0, $game->getDraws(), 'La partie a encore des numéros tirés');
     }
 
-    /**
-     * @When /^je réinitialise tous les tirages de l'événement "([^"]*)"$/
-     */
+    #[When('/^je réinitialise tous les tirages de l\'événement "([^"]*)"$/')]
     public function jeReinitialiseTousLesTiragesDeLEvenement(string $eventName): void
     {
         $event = $this->eventRepo->findOneBy(['name' => $eventName]);
@@ -258,9 +238,7 @@ final class GamePlayContext extends BaseContext
         $this->drawService->clearAllForEvent($event);
     }
 
-    /**
-     * @When /^je passe à la partie suivante en conservant les tirages$/
-     */
+    #[When('/^je passe à la partie suivante en conservant les tirages$/')]
     public function jePasseALaPartieSuivanteEnConservantLesTirages(): void
     {
         $events = $this->eventRepo->findAll();
@@ -309,9 +287,7 @@ final class GamePlayContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @Given /^la partie d'ordre (\d+) est gelée \(gagnant détecté\)$/
-     */
+    #[Given('/^la partie d\'ordre (\\d+) est gelée \\(gagnant détecté\\)$/')]
     public function queLaPartieDOrdreEstGeleeGagnantDetecte(int $position): void
     {
         $game = $this->findGameByPosition($position);
@@ -321,26 +297,20 @@ final class GamePlayContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @Then /^le tirage doit être refusé$/
-     */
+    #[Then('/^le tirage doit être refusé$/')]
     public function leTirageDoitEtreRefuse(): void
     {
         Assert::assertNotNull(self::$lastError, "Aucune erreur n'a été enregistrée");
     }
 
-    /**
-     * @Then /^un message d'erreur doit indiquer que la partie est gelée$/
-     */
+    #[Then('/^un message d\'erreur doit indiquer que la partie est gelée$/')]
     public function unMessageDErreurDoitIndiquerQueLaPartieEstGelee(): void
     {
         Assert::assertNotNull(self::$lastError, "Aucune erreur n'a été enregistrée");
         Assert::assertStringContainsString('frozen', strtolower(self::$lastError), "Le message d'erreur ne mentionne pas que la partie est gelée");
     }
 
-    /**
-     * @When /^les tirages doivent encore exister pour la partie suivante$/
-     */
+    #[When('/^les tirages doivent encore exister pour la partie suivante$/')]
     public function lesTiragesDoiventEncoreExisterPourLaPartieSuivante()
     {
         $game = $this->gameRepo->findOneBy(['position' => 1]);

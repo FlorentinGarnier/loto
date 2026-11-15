@@ -14,6 +14,9 @@ use App\Repository\GameRepository;
 use App\Repository\PlayerRepository;
 use App\Service\WinnerDetectionService;
 use App\Service\WinnerService;
+use Behat\Step\Given;
+use Behat\Step\Then;
+use Behat\Step\When;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Assert;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -38,9 +41,7 @@ final class ErrorContext extends BaseContext
         $this->winnerService = $winnerService;
     }
 
-    /**
-     * @When /^je tente de créer un événement avec la date invalide "([^"]*)"$/
-     */
+    #[When('/^je tente de créer un événement avec la date invalide "([^"]*)"$/')]
     public function jeTenteDeCreerUnEvenementAvecLaDateInvalide(string $invalidDate): void
     {
         self::$lastException = null;
@@ -57,9 +58,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @Then /^une erreur doit être levée$/
-     */
+    #[Then('/^une erreur doit être levée$/')]
     public function uneErreurDoitEtrelevee(): void
     {
         Assert::assertTrue(
@@ -68,9 +67,7 @@ final class ErrorContext extends BaseContext
         );
     }
 
-    /**
-     * @Then /^le message doit contenir "([^"]*)"$/
-     */
+    #[Then('/^le message doit contenir "([^"]*)"$/')]
     public function leMessageDoitContenir(string $expectedMessage): void
     {
         // Copier les propriétés statiques dans des variables locales pour éviter les bugs
@@ -91,9 +88,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @When /^je tente de démarrer la partie d'ordre (\d+)$/
-     */
+    #[When('/^je tente de démarrer la partie d\'ordre (\\d+)$/')]
     public function jeTenteDeDemarrerLaPartieDOrdre(int $position): void
     {
         self::$lastException = null;
@@ -117,9 +112,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @When /^je tente de créer une partie avec la règle invalide "([^"]*)"$/
-     */
+    #[When('/^je tente de créer une partie avec la règle invalide "([^"]*)"$/')]
     public function jeTenteDeCreerUnePartieAvecLaRegleInvalide(string $invalidRule): void
     {
         self::$lastException = null;
@@ -133,9 +126,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @When /^je tente de créer un joueur avec l'email invalide "([^"]*)"$/
-     */
+    #[When('/^je tente de créer un joueur avec l\'email invalide "([^"]*)"$/')]
     public function jeTenteDeCreerUnJoueurAvecLEmailInvalide(string $invalidEmail): void
     {
         self::$lastException = null;
@@ -151,9 +142,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @When /^je tente d'associer le joueur "([^"]*)" à l'événement inexistant "([^"]*)"$/
-     */
+    #[When('/^je tente d\'associer le joueur "([^"]*)" à l\'événement inexistant "([^"]*)"$/')]
     public function jeTenteDAssocierLeJoueurALEvenementInexistant(string $playerName, string $eventName): void
     {
         self::$lastException = null;
@@ -170,9 +159,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @When /^je tente de créer un carton avec seulement (\d+) lignes$/
-     */
+    #[When('/^je tente de créer un carton avec seulement (\\d+) lignes$/')]
     public function jeTenteDeCreerUnCartonAvecSeulementLignes(int $lineCount): void
     {
         self::$lastException = null;
@@ -188,9 +175,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @When /^je tente de créer un carton avec (\d+) numéros sur une ligne$/
-     */
+    #[When('/^je tente de créer un carton avec (\\d+) numéros sur une ligne$/')]
     public function jeTenteDeCreerUnCartonAvecNumerosSurUneLigne(int $numberCount): void
     {
         self::$lastException = null;
@@ -206,9 +191,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @When /^je tente de bloquer à nouveau le carton "([^"]*)"$/
-     */
+    #[When('/^je tente de bloquer à nouveau le carton "([^"]*)"$/')]
     public function jeTenteDeBloquerANouveauLeCarton(string $reference): void
     {
         self::$lastException = null;
@@ -229,9 +212,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @Then /^la raison de blocage doit toujours être "([^"]*)"$/
-     */
+    #[Then('/^la raison de blocage doit toujours être "([^"]*)"$/')]
     public function laRaisonDeBlocageDoitToujoursEtre(string $expectedReason): void
     {
         // Récupérer le dernier carton manipulé
@@ -243,9 +224,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @When /^je tente de créer un autre carton avec la référence "([^"]*)"$/
-     */
+    #[When('/^je tente de créer un autre carton avec la référence "([^"]*)"$/')]
     public function jeTenteDeCreerUnAutreCartonAvecLaReference(string $reference): void
     {
         self::$lastException = null;
@@ -269,9 +248,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @When /^je tente d'associer le carton "([^"]*)" au joueur inexistant "([^"]*)"$/
-     */
+    #[When('/^je tente d\'associer le carton "([^"]*)" au joueur inexistant "([^"]*)"$/')]
     public function jeTenteDAssocierLeCartonAuJoueurInexistant(string $reference, string $playerName): void
     {
         self::$lastException = null;
@@ -288,9 +265,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @Then /^le numéro (\d+) ne doit pas être marqué comme tiré dans la partie d'ordre (\d+)$/
-     */
+    #[Then('/^le numéro (\\d+) ne doit pas être marqué comme tiré dans la partie d\'ordre (\\d+)$/')]
     public function leNumeroNeDroitPasEtreMarqueCommeTireDansLaPartieDOrdre(int $number, int $position): void
     {
         $game = $this->findGameByPosition($position);
@@ -303,9 +278,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @Given /^le numéro (\d+) a été tiré pour la partie d'ordre (\d+)$/
-     */
+    #[Given('/^le numéro (\\d+) a été tiré pour la partie d\'ordre (\\d+)$/')]
     public function queLeNumeroAEteTirePourLaPartieDOrdre(int $number, int $position): void
     {
         $game = $this->findGameByPosition($position);
@@ -320,9 +293,7 @@ final class ErrorContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @When /^je tente de tirer à nouveau le numéro (\d+) pour la partie d'ordre (\d+)$/
-     */
+    #[When('/^je tente de tirer à nouveau le numéro (\\d+) pour la partie d\'ordre (\\d+)$/')]
     public function jeTenteDeTirerANouveauLeNumeroPourLaPartieDOrdre(int $number, int $position): void
     {
         self::$lastException = null;
@@ -357,9 +328,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @When /^je tente d'annuler le dernier numéro tiré$/
-     */
+    #[When('/^je tente d\'annuler le dernier numéro tiré$/')]
     public function jeTenteDannulerLeDernierNumeroTire(): void
     {
         self::$lastException = null;
@@ -389,9 +358,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @When /^je tente de valider le carton "([^"]*)" comme gagnant système$/
-     */
+    #[When('/^je tente de valider le carton "([^"]*)" comme gagnant système$/')]
     public function jeTenteDeValiderLeCartonCommeGagnantSysteme(string $reference): void
     {
         self::$lastException = null;
@@ -421,9 +388,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @Given /^le carton "([^"]*)" est validé comme gagnant$/
-     */
+    #[Given('/^le carton "([^"]*)" est validé comme gagnant$/')]
     public function queLeCartonEstValideCommeGagnant(string $reference): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -449,17 +414,13 @@ final class ErrorContext extends BaseContext
         $this->winnerService->validateSystemWinner($runningGame, $card);
     }
 
-    /**
-     * @When /^je tente de valider à nouveau le carton "([^"]*)" comme gagnant$/
-     */
+    #[When('/^je tente de valider à nouveau le carton "([^"]*)" comme gagnant$/')]
     public function jeTenteDeValiderANouveauLeCartonCommeGagnant(string $reference): void
     {
         $this->jeTenteDeValiderLeCartonCommeGagnantSysteme($reference);
     }
 
-    /**
-     * @When /^je tente d'ajouter le carton "([^"]*)" comme gagnant offline$/
-     */
+    #[When('/^je tente d\'ajouter le carton "([^"]*)" comme gagnant offline$/')]
     public function jeTenteDajouterLeCartonCommeGagnantOffline(string $reference): void
     {
         self::$lastException = null;
@@ -489,9 +450,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @When /^je tente de démarrer la première partie de l'événement "([^"]*)"$/
-     */
+    #[When('/^je tente de démarrer la première partie de l\'événement "([^"]*)"$/')]
     public function jeTenteDeDemarrerLaPremierePartieDeLEvenement(string $eventName): void
     {
         self::$lastException = null;
@@ -518,9 +477,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @When /^je tente de passer à la partie suivante$/
-     */
+    #[When('/^je tente de passer à la partie suivante$/')]
     public function jeTenteDePasserALaPartieSuivante(): void
     {
         self::$lastException = null;
@@ -559,9 +516,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @When /^je tente de créer un carton avec une grille vide$/
-     */
+    #[When('/^je tente de créer un carton avec une grille vide$/')]
     public function jeTenteDeCreerUnCartonAvecUneGrilleVide(): void
     {
         self::$lastException = null;
@@ -578,9 +533,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @Then /^aucun gagnant ne doit être détecté$/
-     */
+    #[Then('/^aucun gagnant ne doit être détecté$/')]
     public function aucunGagnantNeDroitEtreDetecte(): void
     {
         $events = $this->eventRepo->findAll();
@@ -603,9 +556,7 @@ final class ErrorContext extends BaseContext
         Assert::assertCount(0, $potentials, "Des gagnants ont été détectés alors qu'il ne devrait pas y en avoir");
     }
 
-    /**
-     * @Then /^la partie d'ordre (\d+) ne doit pas être gelée$/
-     */
+    #[Then('/^la partie d\'ordre (\\d+) ne doit pas être gelée$/')]
     public function laPartieDOrdreNeDroitPasEtreGelee(int $position): void
     {
         $game = $this->findGameByPosition($position);
@@ -618,9 +569,7 @@ final class ErrorContext extends BaseContext
         }
     }
 
-    /**
-     * @Then /^la partie d'ordre (\d+) doit rester en statut "([^"]*)"$/
-     */
+    #[Then('/^la partie d\'ordre (\\d+) doit rester en statut "([^"]*)"$/')]
     public function laPartieDOitResterEnStatut(int $position, string $expectedStatus): void
     {
         $game = $this->findGameByPosition($position);
@@ -634,9 +583,7 @@ final class ErrorContext extends BaseContext
         );
     }
 
-    /**
-     * @Then /^le carton "([^"]*)" doit rester bloqué$/
-     */
+    #[Then('/^le carton "([^"]*)" doit rester bloqué$/')]
     public function leCartonDoitResterBloque(string $reference): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -646,9 +593,7 @@ final class ErrorContext extends BaseContext
         Assert::assertTrue($card->isBlocked(), "Le carton '{$reference}' devrait rester bloqué");
     }
 
-    /**
-     * @Then /^la partie d'ordre (\d+) doit toujours avoir (\d+) numéros? tirés?$/
-     */
+    #[Then('/^la partie d\'ordre (\\d+) doit toujours avoir (\\d+) numéros? tirés?$/')]
     public function laPartieDOrdreDoitToujoursAvoirNumerosTires(int $position, int $expectedCount): void
     {
         $game = $this->findGameByPosition($position);
