@@ -197,8 +197,8 @@ php bin/console messenger:setup-transports         # Créer les tables Messenger
 php bin/console cache:clear                        # Vider le cache
 php bin/console debug:container                    # Lister les services
 php bin/console debug:router                       # Lister les routes
-php bin/console app:seed-demo                      # Créer données de démo
-php bin/console app:import-cards <fichier>         # Importer des cartons
+php bin/console app:seed:demo                      # Créer données de démo
+php bin/console app:cards:import 0 <fichier>       # Importer des cartons (0 = sans vérifier d'événement)
 ```
 
 **Tests & qualité**
