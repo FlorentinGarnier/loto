@@ -1,4 +1,4 @@
-.PHONY: help install start stop restart logs db-create db-migrate db-reset test test-unit test-functional cs-check cs-fix clear cache seed docker-up docker-down docker-restart db-diff test-behat-verbose test-db-reset routes services entities console import-cards watch watch-stop
+.PHONY: help install start stop restart logs db-create db-migrate db-reset test test-unit test-functional cs-check cs-fix clear cache seed seed-staging docker-up docker-down docker-restart db-diff test-behat-verbose test-db-reset routes services entities console import-cards watch watch-stop
 
 .DEFAULT_GOAL := help
 
@@ -73,6 +73,9 @@ db-diff: ## Génère une migration à partir des changements d'entités
 
 seed: ## Charge des données de démo
 	symfony php bin/console app:seed:demo
+
+seed-staging: ## Efface la base et charge le jeu de données de recette (soirée de loto en cours)
+	ALLOW_DATA_RESET=1 symfony php bin/console app:seed:staging
 
 ## —— 🧪 Tests ———————————————————————————————————————————————————————————————
 test: ## Lance tous les tests (PHPSpec + Behat)
