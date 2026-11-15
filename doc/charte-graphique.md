@@ -57,14 +57,15 @@ Règles de contraste (calculées, niveau AA) :
 
 | Rôle | Police | Graisses | Usage |
 | --- | --- | --- | --- |
-| Titres et numéro | Plus Jakarta Sans | 700, 800 | Titres, numéro annoncé, chiffres clés |
-| Texte | Figtree | 400, 500, 600, 700 | Texte courant, boutons, formulaires, tableaux |
-| Données | Azeret Mono | 500, 700 | Références de cartons, cases du tirage, étiquettes en capitales, traces |
+| Titres et numéro | Jost | 500, 600, 700 | Titres, numéro annoncé, chiffres clés |
+| Texte | Source Sans 3 | 400, 500, 600, 700 | Tout le reste : texte courant, boutons, formulaires, tableaux, références, étiquettes |
 
-- Grands titres : graisse 800, interligne 1 à 1,05, approche de -0,035 em. De 40 px sur téléphone à 78 px sur grand écran.
+Jost est une géométrique de la famille du Futura : ses « o » en cercle et ses traits coupés net reprennent la construction du logo. Deux polices seulement, et aucune police à chasse fixe. Les fichiers sont hébergés dans `assets/fonts` : l'application n'appelle aucun service de polices extérieur.
+
+- Grands titres : graisse 700, interligne 1 à 1,05, approche de -0,03 em. De 40 px sur téléphone à 78 px sur grand écran.
 - Texte courant : 17 px sur le site, 16 px dans l'administration, interligne 1,5.
-- Étiquettes : Azeret Mono 12 px, capitales, approche de 0,1 em.
-- Tous les numéros en chiffres à chasse fixe (`font-variant-numeric: tabular-nums`).
+- Étiquettes : Source Sans 3 en 600, 12 px, capitales, approche de 0,1 em.
+- Tous les numéros en chiffres alignés (`font-variant-numeric: tabular-nums`), dans la police de texte.
 - Trois tailles de texte visibles au maximum par écran.
 
 ## 5. Formes et espacements
@@ -84,9 +85,9 @@ Règles de contraste (calculées, niveau AA) :
 - **Pastille de statut** : pleine largeur de la cellule, libellé en 700. Gris « En jeu », Bleu « Il en manque 2 », Rose « Plus qu'un numéro », Vert « Quine ! ».
 - **Ligne de tableau** : fond Brume, coins arrondis, 6 px entre deux lignes. La ligne gagnante passe en vert très clair (`#D9F7EA`).
 - **Tableau de tirage** : 10 colonnes, cases Brume ; numéro tiré en Encre ; dernier numéro en Bleu, légèrement agrandi.
-- **Numéro annoncé** : Plus Jakarta Sans 800, blanc sur la couleur de la règle en cours (Bleu pour la quine).
+- **Numéro annoncé** : Jost 700, blanc sur la couleur de la règle en cours (Bleu pour la quine).
 - **Soulignement du titre** : une barre en quatre segments aux couleurs des pastilles, sous les mots clés du titre du héros.
-- **Bandeau de gel** : fond Vert, texte Encre, trace en Azeret Mono (« Quine au 11e numéro · carton 0417 »).
+- **Bandeau de gel** : fond Vert, texte Encre, trace en chiffres alignés (« Quine au 11e numéro · carton 0417 »).
 - **Champ** : fond blanc, bordure Ligne de 1 px, bordure Bleu de 2 px au focus.
 - Focus clavier toujours visible : contour Bleu de 3 px, décalé de 2 px.
 
@@ -157,9 +158,8 @@ La charte est appliquée dans `assets/styles/app.css`, chargée par `templates/b
   --couleur-ligne: #E3E5F0;
   --couleur-erreur: #B3261E;
 
-  --police-titres: "Plus Jakarta Sans", "Trebuchet MS", sans-serif;
-  --police-texte: "Figtree", system-ui, sans-serif;
-  --police-donnees: "Azeret Mono", ui-monospace, Menlo, monospace;
+  --police-titres: "Jost", "Century Gothic", "Trebuchet MS", sans-serif;
+  --police-texte: "Source Sans 3", "Source Sans Pro", system-ui, sans-serif;
 
   --rayon-pilule: 999px;
   --rayon-panneau: 14px;

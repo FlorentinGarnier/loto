@@ -3,6 +3,40 @@
  * Référence : doc/charte-graphique.md
  */
 
+/* Polices hébergées dans l'application (assets/fonts), sous licence SIL Open Font License. */
+@font-face {
+    font-family: "Jost";
+    font-style: normal;
+    font-weight: 500 700;
+    font-display: swap;
+    src: url("../fonts/jost-latin-ext.woff2") format("woff2");
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+    font-family: "Jost";
+    font-style: normal;
+    font-weight: 500 700;
+    font-display: swap;
+    src: url("../fonts/jost-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: "Source Sans 3";
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url("../fonts/source-sans-3-latin-ext.woff2") format("woff2");
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+    font-family: "Source Sans 3";
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url("../fonts/source-sans-3-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 :root {
     --couleur-blanc: #FFFFFF;
     --couleur-brume: #F4F5FB;
@@ -21,9 +55,8 @@
     --couleur-bleu-clair: #E6EDFD;
     --couleur-jaune-clair: #FFF5CC;
 
-    --police-titres: "Plus Jakarta Sans", "Trebuchet MS", sans-serif;
-    --police-texte: "Figtree", system-ui, sans-serif;
-    --police-donnees: "Azeret Mono", ui-monospace, Menlo, monospace;
+    --police-titres: "Jost", "Century Gothic", "Trebuchet MS", sans-serif;
+    --police-texte: "Source Sans 3", "Source Sans Pro", system-ui, sans-serif;
 
     --rayon-pilule: 999px;
     --rayon-panneau: 14px;
@@ -53,7 +86,7 @@ body {
 
 h1, h2, h3 {
     font-family: var(--police-titres);
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: -0.03em;
     line-height: 1.1;
     margin: 0;
@@ -74,7 +107,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 .muted { color: var(--couleur-encre-douce); }
-.data { font-family: var(--police-donnees); font-size: 0.85em; font-variant-numeric: tabular-nums; }
+.data { font-variant-numeric: tabular-nums; }
 .stack { display: flex; flex-direction: column; gap: calc(var(--espace) * 2); }
 .stack--tight { gap: var(--espace); }
 .stack--loose { gap: calc(var(--espace) * 3); }
@@ -236,8 +269,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .table th {
     padding: 0 12px 4px;
     text-align: left;
-    font-family: var(--police-donnees);
-    font-weight: 500;
+    font-family: var(--police-texte);
+    font-weight: 600;
     font-size: 0.72rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -273,7 +306,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
     background: var(--couleur-blanc);
     transition: border-color 0.3s, box-shadow 0.3s;
 }
-.form textarea { min-height: 120px; font-family: var(--police-donnees); font-size: 0.95rem; }
+.form textarea { min-height: 120px; font-variant-numeric: tabular-nums; }
 .form input:focus, .form select:focus, .form textarea:focus, .input:focus {
     outline: none;
     border-color: var(--couleur-bleu);
@@ -291,7 +324,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .details { display: grid; gap: calc(var(--espace) * 2); grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin: 0; }
 .details dt {
-    font-family: var(--police-donnees);
+    font-family: var(--police-texte);
     font-size: 0.72rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -306,7 +339,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--espace); }
 .kpi { padding: 12px 14px; border-radius: var(--rayon-cellule); background: var(--couleur-brume); }
 .kpi__label {
-    font-family: var(--police-donnees);
+    font-family: var(--police-texte);
     font-size: 0.72rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -314,7 +347,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .kpi__value {
     font-family: var(--police-titres);
-    font-weight: 800;
+    font-weight: 700;
     font-size: 1.75rem;
     letter-spacing: -0.03em;
     line-height: 1.1;
@@ -330,7 +363,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
     border-radius: var(--rayon-cellule);
     background: var(--couleur-brume);
     font-family: var(--police-titres);
-    font-weight: 800;
+    font-weight: 700;
     font-size: 1.25rem;
     font-variant-numeric: tabular-nums;
 }
@@ -346,8 +379,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
     border: 0;
     border-radius: var(--rayon-cellule);
     background: var(--couleur-brume);
-    font-family: var(--police-donnees);
-    font-weight: 500;
+    font-family: var(--police-texte);
+    font-weight: 600;
     font-variant-numeric: tabular-nums;
     transition: background 0.3s, color 0.3s, transform 0.3s;
 }
@@ -392,7 +425,7 @@ button.cell.is-drawn:hover { background: #2A2A48; }
     border-radius: 3px;
     background: var(--couleur-blanc);
     text-align: center;
-    font-family: var(--police-donnees);
+    font-family: var(--police-texte);
     font-weight: 700;
     font-size: 0.72rem;
     font-variant-numeric: tabular-nums;
@@ -504,17 +537,17 @@ button.cell.is-drawn:hover { background: #2A2A48; }
 /* L'écran de salle est projeté par un vidéoprojecteur faible dans une salle éclairée :
    pas de texte fin ni petit, pas de gris sur fond sombre pour une information utile,
    et un état ne repose jamais sur la seule teinte (les couleurs sortent délavées). */
-.screen__label { font-family: var(--police-donnees); font-weight: 700; font-size: clamp(1rem, 1.5vw, 1.5rem); letter-spacing: 0.12em; text-transform: uppercase; }
+.screen__label { font-family: var(--police-texte); font-weight: 700; font-size: clamp(1rem, 1.5vw, 1.5rem); letter-spacing: 0.12em; text-transform: uppercase; }
 .screen__number {
     font-family: var(--police-titres);
-    font-weight: 800;
+    font-weight: 700;
     font-size: clamp(6rem, 20vw, 18rem);
     line-height: 0.85;
-    letter-spacing: -0.06em;
+    letter-spacing: -0.04em;
     font-variant-numeric: tabular-nums;
 }
 .screen__number.is-waiting { font-size: clamp(3rem, 8vw, 7rem); opacity: 0.6; }
-.screen__five { font-family: var(--police-donnees); font-weight: 700; font-size: clamp(1.25rem, 2.4vw, 2.5rem); letter-spacing: 0.1em; font-variant-numeric: tabular-nums; }
+.screen__five { font-family: var(--police-texte); font-weight: 700; font-size: clamp(1.25rem, 2.4vw, 2.5rem); letter-spacing: 0.1em; font-variant-numeric: tabular-nums; }
 .screen .draw-grid { gap: clamp(4px, 0.6vw, 10px); }
 .screen .cell {
     min-height: 0;
