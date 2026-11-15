@@ -1,15 +1,24 @@
 import { Controller } from '@hotwired/stimulus';
 import { adminCsrfToken } from '../csrf.js';
 
+/**
+ * Écran d'animation. L'affichage suit toujours l'état renvoyé par le serveur
+ * (réponse au tirage, flux Mercure, resynchronisation) : une case ne change
+ * d'aspect que si le tirage a été accepté.
+ */
 export default class extends Controller {
-    static targets = ['potentials', 'potentialsContainer', 'mercureStatus', 'lastNumber', 'grid', 'draws', 'progression'];
+    static targets = [
+        'potentials', 'potentialsContainer', 'lastNumber', 'grid', 'draws', 'progression',
+        'freezeBanner', 'unfreeze', 'offline', 'gridMessage', 'demarque'
+    ];
 
     static values = {
         eventId: Number,
         gameId: Number,
         mercureUrl: String,
         toggleUrl: String,
-        potentialsFragmentUrl: String
+        potentialsFragmentUrl: String,
+        stateUrl: String
     }
 
     connect() {
@@ -26,129 +35,149 @@ export default class extends Controller {
     setupGridToggle() {
         if (!this.hasGridTarget) return;
 
-        this.gridTarget.addEventListener('click', async (e) => {
+        this.gridTarget.addEventListener('click', (e) => {
             const btn = e.target.closest('button.cell');
-            if (!btn) return;
-
-            const num = btn.dataset.number;
-            const url = this.toggleUrlValue.replace('/0', '/' + num);
-
-            try {
-                const res = await fetch(url, {
-                    method: 'POST',
-                    body: new URLSearchParams({ _token: adminCsrfToken() })
-                });
-                if (res.ok) {
-                    btn.classList.toggle('is-drawn');
-                }
-            } catch (err) {
-                console.error('Error toggling number:', err);
-            }
+            if (btn) this.toggle(btn);
         });
     }
 
-    setupMercure() {
-        if (!this.hasMercureStatusTarget || !this.eventIdValue) return;
+    async toggle(btn) {
+        // Un second clic pendant l'envoi annulerait le tirage
+        if (btn.getAttribute('aria-busy') === 'true') return;
 
-        this.setMercureStatus(false);
-
-        // Request notification permission
-        if ('Notification' in window && Notification.permission === 'default') {
-            Notification.requestPermission();
-        }
+        const num = btn.dataset.number;
+        const url = this.toggleUrlValue.replace('/0', '/' + num);
+        btn.setAttribute('aria-busy', 'true');
 
         try {
-            const topic = encodeURIComponent(`/events/${this.eventIdValue}/games/${this.gameIdValue}/state`);
-            const url = `${this.mercureUrlValue}?topic=${topic}`;
-
-            this.eventSource = new EventSource(url);
-
-            this.eventSource.onopen = () => {
-                this.setMercureStatus(true);
-            };
-
-            this.eventSource.onmessage = async (e) => {
-                await this.handleMercureMessage(JSON.parse(e.data));
-            };
-
-            this.eventSource.onerror = () => {
-                this.setMercureStatus(false);
-            };
-
-            // Refresh status on page visibility change
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible' && this.eventSource) {
-                    this.setMercureStatus(this.eventSource.readyState === 1);
-                }
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                body: new URLSearchParams({ _token: adminCsrfToken() })
             });
-        } catch (e) {
-            console.error('Mercure connection error:', e);
-            this.setMercureStatus(false);
+            const isJson = res.headers.get('content-type')?.includes('json');
+            const data = isJson ? await res.json() : null;
+
+            if (data?.state) this.applyState(data.state);
+
+            if (res.ok && data?.state) {
+                this.showGridMessage('');
+            } else if (data?.message) {
+                this.showGridMessage(data.message);
+            } else {
+                // Réponse inattendue : session expirée ou jeton périmé
+                this.showGridMessage(`Le numéro ${num} n'a pas été enregistré. Rechargez la page, puis recommencez.`);
+            }
+        } catch (err) {
+            this.showGridMessage(`Connexion perdue : le numéro ${num} n'a pas été enregistré. Réessayez.`);
+        } finally {
+            btn.removeAttribute('aria-busy');
         }
     }
 
-    async handleMercureMessage(data) {
-        // Update potentials count
-        if (data.potentialsCount !== undefined && this.hasPotentialsTarget) {
-            const currentPotentials = parseInt(this.potentialsTarget.textContent);
+    setupMercure() {
+        if (!this.hasOfflineTarget || !this.eventIdValue || !this.mercureUrlValue) return;
 
-            // Show notification if new potential winner
-            if (data.potentialsCount > currentPotentials) {
-                this.notifyNewPotentialWinner();
-            }
+        const topic = encodeURIComponent(`/events/${this.eventIdValue}/games/${this.gameIdValue}/state`);
+        this.eventSource = new EventSource(`${this.mercureUrlValue}?topic=${topic}`);
 
-            this.potentialsTarget.textContent = data.potentialsCount;
-        }
+        // À chaque (re)connexion, on relit l'état : le flux ne rejoue pas ce qui a été manqué
+        this.eventSource.onopen = () => {
+            this.offlineTarget.hidden = true;
+            this.resync();
+        };
 
-        // Refresh potentials list
-        if (this.hasPotentialsContainerTarget && this.potentialsFragmentUrlValue) {
+        this.eventSource.onmessage = (e) => {
             try {
-                const res = await fetch(this.potentialsFragmentUrlValue);
-                if (res.ok) {
-                    this.potentialsContainerTarget.innerHTML = await res.text();
-                }
+                this.applyState(JSON.parse(e.data));
             } catch (err) {
-                console.error('Error refreshing potentials:', err);
+                console.error('Message temps réel illisible :', err);
             }
-        }
+        };
 
-        // Update draws count and progression
-        if (data.draws) {
-            const drawsCount = data.draws.length;
+        // Le navigateur retente seul la connexion
+        this.eventSource.onerror = () => {
+            this.offlineTarget.hidden = false;
+        };
+    }
 
-            // Update draws KPI
-            if (this.hasDrawsTarget) {
-                this.drawsTarget.textContent = drawsCount;
+    async resync() {
+        if (!this.stateUrlValue) return;
+
+        try {
+            const res = await fetch(this.stateUrlValue, { headers: { 'Accept': 'application/json' } });
+            if (res.ok && res.headers.get('content-type')?.includes('json')) {
+                this.applyState(await res.json());
             }
-
-            // Update progression KPI
-            if (this.hasProgressionTarget) {
-                this.progressionTarget.textContent = `${drawsCount}/90`;
-            }
-
-            // Update last number
-            if (this.hasLastNumberTarget) {
-                const lastNum = drawsCount > 0 ? data.draws[data.draws.length - 1] : '—';
-                this.lastNumberTarget.textContent = lastNum;
-
-                this.lastNumberTarget.classList.toggle('is-set', lastNum !== '—');
-            }
+        } catch (err) {
+            // Sans réseau, le bandeau de coupure s'affichera par le flux temps réel
         }
     }
 
-    setMercureStatus(ok) {
-        if (!this.hasMercureStatusTarget) return;
+    /**
+     * state : { gameId, draws: [numéros dans l'ordre du tirage], potentialsCount, isFrozen, … }
+     */
+    applyState(state) {
+        if (!state || state.gameId !== this.gameIdValue) return;
 
-        this.mercureStatusTarget.textContent = ok ? 'OK' : 'Hors ligne';
-        this.mercureStatusTarget.classList.toggle('pill--ok', ok);
-        this.mercureStatusTarget.classList.toggle('pill--off', !ok);
+        const draws = state.draws || [];
+        const drawn = new Set(draws);
+
+        if (this.hasGridTarget) {
+            this.gridTarget.querySelectorAll('button.cell').forEach((cell) => {
+                cell.classList.toggle('is-drawn', drawn.has(Number(cell.dataset.number)));
+            });
+        }
+        if (this.hasDrawsTarget) this.drawsTarget.textContent = draws.length;
+        if (this.hasProgressionTarget) this.progressionTarget.textContent = `${draws.length}/90`;
+        if (this.hasLastNumberTarget) {
+            this.lastNumberTarget.textContent = draws.length > 0 ? draws[draws.length - 1] : '—';
+            this.lastNumberTarget.classList.toggle('is-set', draws.length > 0);
+        }
+        if (this.hasPotentialsTarget && state.potentialsCount !== undefined) {
+            this.potentialsTarget.textContent = state.potentialsCount;
+        }
+
+        // La confirmation de la démarque annonce le nombre réel de numéros qui seront effacés
+        if (this.hasDemarqueTarget) {
+            this.demarqueTarget.dataset.confirmActionMessageValue =
+                this.demarqueTarget.dataset.messageTemplate.replace('%n%', draws.length);
+        }
+
+        const frozen = state.isFrozen === true;
+        if (this.hasFreezeBannerTarget) this.freezeBannerTarget.hidden = !frozen;
+        if (this.hasUnfreezeTarget) this.unfreezeTarget.hidden = !frozen;
+        // Le message de refus « partie gelée » n'a plus lieu d'être une fois la partie dégelée
+        if (!frozen && this.wasFrozen) this.showGridMessage('');
+        this.wasFrozen = frozen;
+
+        // La liste des potentiels n'est relue que si l'état a changé :
+        // la réponse au tirage et le flux temps réel annoncent souvent le même
+        const signature = JSON.stringify([draws, frozen, state.potentialsCount, state.hasSystemWinner]);
+        if (signature !== this.lastSignature) {
+            this.lastSignature = signature;
+            this.refreshPotentials();
+        }
     }
 
-    notifyNewPotentialWinner() {
-        if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification('Nouveau gagnant potentiel !');
-        } else {
-            alert('Nouveau gagnant potentiel !');
+    async refreshPotentials() {
+        if (!this.hasPotentialsContainerTarget || !this.potentialsFragmentUrlValue) return;
+
+        try {
+            const res = await fetch(this.potentialsFragmentUrlValue);
+            // Une redirection signifie une session expirée : on n'injecte pas la page de connexion
+            if (res.ok && !res.redirected) {
+                this.potentialsContainerTarget.innerHTML = await res.text();
+            }
+        } catch (err) {
+            // La liste sera relue au prochain changement d'état
         }
+    }
+
+    showGridMessage(message) {
+        if (!this.hasGridMessageTarget) return;
+
+        this.gridMessageTarget.textContent = message;
+        this.gridMessageTarget.hidden = message === '';
     }
 }

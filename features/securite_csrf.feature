@@ -53,7 +53,7 @@ Fonctionnalité: Protection CSRF des actions d'administration
         Alors la requête doit être acceptée
 
     Scénario: Faire la démarque depuis le tableau de bord
-        Quand je clique sur "Démarque (reset)" depuis le tableau de bord
+        Quand je clique sur "Démarque" depuis le tableau de bord
         Alors la partie d'ordre 1 ne doit plus avoir de numéros tirés
 
     Scénario: Passer à la partie suivante depuis le tableau de bord

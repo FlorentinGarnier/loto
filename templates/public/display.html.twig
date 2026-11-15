@@ -6,33 +6,31 @@
 <main class="screen" id="screen" data-rule="{{ current ? current.rule.value : '' }}">
   <header class="screen__head">
     <img src="{{ asset('brand/quinou-logo-inverse.svg') }}" alt="Quinou">
-    {% if current %}
-      <div class="screen__game" id="game-info">
-        <span class="screen__rule" id="game-rule">{{ current.rule|trans }}</span>
-        <span>Lot : <span id="game-prize">{{ current.prize }}</span></span>
-        <span class="screen__status" id="status">{{ current.status.value }}</span>
-      </div>
-    {% endif %}
+    <span class="screen__offline" id="offline" role="status" hidden>Connexion perdue · reconnexion en cours</span>
+    <div class="screen__game" id="game-info" {{ current ? '' : 'hidden' }}>
+      <span class="screen__rule" id="game-rule">{{ current ? current.rule|trans : '' }}</span>
+      <span>Lot : <span id="game-prize">{{ current ? current.prize : '' }}</span></span>
+    </div>
   </header>
 
-  {% if current %}
-    {# État initial rendu côté serveur ; le flux Mercure prend ensuite le relais #}
-    {% set numbers = current.draws|map(d => d.number) %}
-    {% set last = numbers|length > 0 ? numbers|last : null %}
-    <div class="screen__main">
-      <div class="screen__last">
-        <span class="screen__label">Dernier numéro</span>
-        <span class="screen__number {{ last is null ? 'is-waiting' }}" id="last-number">{{ last ?? '—' }}</span>
-        <span class="screen__five" id="last-five">{{ numbers|length > 0 ? numbers|slice(-5)|join(' · ') : '—' }}</span>
-      </div>
-
-      <div id="grid" class="draw-grid">
-        {% for n in 1..90 %}
-          <div data-number="{{ n }}" class="cell {{ n in numbers ? 'is-drawn' }} {{ n == last ? 'is-last' }}">{{ n }}</div>
-        {% endfor %}
-      </div>
+  {# La structure est toujours rendue, masquée s'il n'y a pas de partie en cours :
+     l'écran s'allume seul au démarrage d'une partie, sans rechargement. #}
+  {% set numbers = current ? current.draws|map(d => d.number) : [] %}
+  {% set last = numbers|length > 0 ? numbers|last : null %}
+  <div class="screen__main" id="main" {{ current ? '' : 'hidden' }}>
+    <div class="screen__last">
+      <span class="screen__label">Dernier numéro</span>
+      <span class="screen__number {{ last is null ? 'is-waiting' }}" id="last-number">{{ last ?? '—' }}</span>
+      <span class="screen__five" id="last-five">{{ numbers|length > 0 ? numbers|slice(-5)|join(' · ') : '—' }}</span>
     </div>
 
+    <div id="grid" class="draw-grid">
+      {% for n in 1..90 %}
+        <div data-number="{{ n }}" class="cell {{ n in numbers ? 'is-drawn' }} {{ n == last ? 'is-last' }}">{{ n }}</div>
+      {% endfor %}
+    </div>
+
+    {# Le carton gagnant prend la place de la grille : sous elle, il sortirait de l'image projetée #}
     <div id="winner-card-container" class="screen__winner" hidden>
       <h2>Gagnant !</h2>
       <p id="winner-info"></p>
@@ -40,9 +38,9 @@
         <tbody></tbody>
       </table>
     </div>
-  {% else %}
-    <p class="screen__empty">Aucune partie en cours.</p>
-  {% endif %}
+  </div>
+
+  <p class="screen__empty" id="empty" {{ current ? 'hidden' : '' }}>Aucune partie en cours.</p>
 </main>
 {% endblock %}
 
@@ -53,12 +51,14 @@
   const grid = document.getElementById('grid');
   const lastSpan = document.getElementById('last-number');
   const lastFiveSpan = document.getElementById('last-five');
-  const statusEl = document.getElementById('status');
   const gameRuleEl = document.getElementById('game-rule');
   const gamePrizeEl = document.getElementById('game-prize');
-  if (!grid) return;
+  const gameInfoEl = document.getElementById('game-info');
+  const mainEl = document.getElementById('main');
+  const emptyEl = document.getElementById('empty');
+  const offlineEl = document.getElementById('offline');
 
-  const RULE_LABELS = { QUINE: 'Quine', DOUBLE_QUINE: 'Double quine', FULL_CARD: 'Carton plein' };
+  const RULE_LABELS = {{ {QUINE: 'app.rules.QUINE'|trans, DOUBLE_QUINE: 'app.rules.DOUBLE_QUINE'|trans, FULL_CARD: 'app.rules.FULL_CARD'|trans}|json_encode|raw }};
   const BRAND_COLORS = ['#FFCB00', '#2459E6', '#FF4F9A', '#00B872'];
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -80,13 +80,19 @@
     }
   }
 
+  // Le carton gagnant et la grille occupent la même place : l'un masque l'autre
+  function showWinner(visible) {
+    document.getElementById('winner-card-container').hidden = !visible;
+    grid.hidden = visible;
+  }
+
   function displayWinnerCard(winnerCard, draws) {
     const container = document.getElementById('winner-card-container');
     const cardTable = document.getElementById('winner-card');
     const winnerInfo = document.getElementById('winner-info');
 
     if (!winnerCard || !winnerCard.grid) {
-      container.hidden = true;
+      showWinner(false);
       return;
     }
 
@@ -130,12 +136,19 @@
       tbody.appendChild(tr);
     });
 
-    container.hidden = false;
+    showWinner(true);
   }
 
   let previousState = null;
   function applyState(state){
     // state: { gameId, position, rule, prize, status, draws: [numbers], hasSystemWinner, detectedCard, isFrozen }
+    // Une partie démarre : l'écran quitte l'attente
+    if (state.status === 'RUNNING') {
+      mainEl.hidden = false;
+      gameInfoEl.hidden = false;
+      emptyEl.hidden = true;
+    }
+
     // Mettre à jour les informations de la partie
     if (state.rule) {
       screen.dataset.rule = state.rule;
@@ -161,37 +174,71 @@
       lastSpan.classList.add('is-waiting');
       if (lastFiveSpan) lastFiveSpan.textContent = '—';
     }
-    if (statusEl) statusEl.textContent = state.status || '';
 
     // Afficher le carton détecté dès qu'un gagnant potentiel est trouvé (partie gelée)
     if (state.isFrozen && state.detectedCard) {
       displayWinnerCard(state.detectedCard, state.draws);
 
       // Déclencher l'animation seulement au moment de la détection (transition vers gelé)
-      if (!previousState || !previousState.isFrozen) {
+      // (pas à l'ouverture de la page ni au retour d'une coupure sur une partie déjà gelée)
+      if (previousState && !previousState.isFrozen) {
         setTimeout(() => triggerCelebration(), 500);
       }
     } else {
-      document.getElementById('winner-card-container').hidden = true;
+      showWinner(false);
     }
 
     previousState = state;
   }
 
-  // Initial state could be rendered server-side later; for now rely on stream
   const eventId = {{ event ? event.id : 'null' }};
-  if (eventId) {
-    const topic = encodeURIComponent(`/events/${eventId}/public`);
-    const hub = "{{ app.request.server.get('MERCURE_PUBLIC_URL') ? (app.request.server.get('MERCURE_PUBLIC_URL')) : 'null' }}";
-    const url = hub && hub !== 'null' ? `${hub}?topic=${topic}` : null;
-    if (url) {
-      const es = new EventSource(url);
-      es.onmessage = function(e){
-        try { const data = JSON.parse(e.data); applyState(data); } catch(err) { console.error(err); }
-      };
-      es.onerror = function(e){ console.warn('Mercure connection issue'); };
+  const hub = {{ (app.request.server.get('MERCURE_PUBLIC_URL') ?: null)|json_encode|raw }};
+  const stateUrl = {{ path('public_state')|json_encode|raw }};
+  let es = null;
+  let offlineTimer = null;
+
+  // Relit l'état sur le serveur : le flux temps réel ne rejoue pas ce qui a été manqué
+  async function resync() {
+    try {
+      const res = await fetch(stateUrl, { headers: { 'Accept': 'application/json' }, cache: 'no-store' });
+      if (!res.ok) return;
+      const state = await res.json();
+      // Un autre événement est devenu l'événement courant : la page doit changer de flux
+      if (state.eventId !== eventId) { window.location.reload(); return; }
+      if (state.gameId) applyState(state);
+    } catch (err) {
+      // Pas de réseau : on réessaiera
     }
   }
+
+  function setOffline(offline) {
+    if (!offline) {
+      clearTimeout(offlineTimer);
+      offlineTimer = null;
+      offlineEl.hidden = true;
+      return;
+    }
+    // Une micro-coupure ne s'affiche pas devant la salle. Le navigateur signale chaque
+    // nouvelle tentative échouée : le délai ne repart pas de zéro à chaque fois.
+    if (!offlineTimer) offlineTimer = setTimeout(() => { offlineEl.hidden = false; }, 5000);
+  }
+
+  if (eventId && hub) {
+    const topic = encodeURIComponent(`/events/${eventId}/public`);
+    es = new EventSource(`${hub}?topic=${topic}`);
+    es.onopen = function(){ setOffline(false); resync(); };
+    es.onmessage = function(e){
+      try { applyState(JSON.parse(e.data)); } catch(err) { console.error(err); }
+    };
+    // Le navigateur retente seul la connexion
+    es.onerror = function(){ setOffline(true); };
+  }
+
+  // À l'ouverture, l'état complet (carton gagnant compris) est lu sans attendre le flux temps réel
+  resync();
+
+  // Filet de sécurité tant que le flux temps réel n'est pas ouvert (ou qu'aucun événement n'existe encore)
+  setInterval(() => { if (!es || es.readyState !== EventSource.OPEN) resync(); }, 15000);
 })();
 </script>
 {% endblock %}
