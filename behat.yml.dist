@@ -15,8 +15,11 @@ default:
         - App\Tests\Behat\WinnerContext
         - App\Tests\Behat\ErrorContext
         - App\Tests\Behat\TransfertContext
+        - App\Tests\Behat\AdminActionContext
   extensions:
     FriendsOfBehat\SymfonyExtension\ServiceContainer\SymfonyExtension:
+      # Charge .env.test : les scénarios tournent sans variables d'environnement à fournir
+      bootstrap: tests/bootstrap.php
       kernel:
         class: App\Kernel
         environment: test

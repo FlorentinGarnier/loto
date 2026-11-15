@@ -1,5 +1,10 @@
 {% extends 'base.html.twig' %}
 
+{# Jeton des actions d'administration, lu par le JavaScript (assets/csrf.js) #}
+{% block head %}
+    <meta name="csrf-token" content="{{ csrf_token('admin_action') }}">
+{% endblock %}
+
 {% block body %}
   {% set route = app.request.attributes.get('_route') %}
   <div class="page">

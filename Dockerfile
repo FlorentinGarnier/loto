@@ -1,89 +1,61 @@
-# Dockerfile pour l'application Symfony
-FROM php:8.2-fpm-alpine AS base
+# syntax=docker/dockerfile:1.7
+#
+# Dockerfile de la CI/CD commune (FlorentinGarnier/ci-symfony) : deux images, identiques en staging et en production (seul l'environnement change).
+#   - cible « php » : PHP-FPM + code + dépendances ; sert aussi aux workers Messenger et au cron.
+#   - cible « web » : Nginx + fichiers publics + page de maintenance (deploy/maintenance).
+# Assets : AssetMapper, compilés à la construction de l'image.
 
-# Installation des dépendances système
-RUN apk add --no-cache \
-    postgresql-dev \
-    icu-dev \
-    libzip-dev \
-    git \
-    unzip
+ARG PHP_VERSION=8.4
+ARG NGINX_VERSION=1.28
 
-# Installation des extensions PHP
-RUN docker-php-ext-install \
-    pdo_pgsql \
-    intl \
-    opcache \
-    zip
+# ---------------------------------------------------------------- PHP de base
+FROM php:${PHP_VERSION}-fpm-alpine AS php-base
 
-# Configuration d'OPcache pour la production
-RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini \
-    && echo "opcache.memory_consumption=256" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini \
-    && echo "opcache.max_accelerated_files=20000" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini \
-    && echo "opcache.validate_timestamps=0" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
+COPY --from=ghcr.io/mlocati/php-extension-installer:2 /usr/bin/install-php-extensions /usr/local/bin/
+RUN install-php-extensions apcu intl opcache pdo_pgsql zip
 
-# Installation de Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+ENV COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_NO_INTERACTION=1
+WORKDIR /srv/app
 
-# Configuration du répertoire de travail
-WORKDIR /app
+# ---------------------------------------------------------------- Construction
+FROM php-base AS build
 
-# ===== Stage de build =====
-FROM base AS build
-
-# Copie des fichiers de dépendances
 COPY composer.json composer.lock symfony.lock ./
+RUN --mount=type=cache,target=/root/.composer/cache \
+    composer install --no-dev --prefer-dist --no-scripts --no-autoloader --no-progress
 
-ENV APP_ENV=prod APP_DEBUG=0
-
-# Installation des dépendances Composer (sans les dev)
-RUN composer install --no-dev --no-scripts --no-progress --optimize-autoloader
-
-# Copie du reste de l'application
 COPY . .
+# Valeurs factices, uniquement pour construire : les vraies sont fournies au démarrage (app.env).
+ENV APP_ENV=prod APP_DEBUG=0 APP_SECRET=build DATABASE_URL="postgresql://build@127.0.0.1/build?serverVersion=16"
+RUN composer dump-autoload --classmap-authoritative --no-dev \
+    && composer run-script --no-dev post-install-cmd \
+    && if [ -f importmap.php ]; then bin/console importmap:install && bin/console asset-map:compile; fi \
+    && rm -rf var/cache
 
-# Génération du cache (assets seront compilés au démarrage)
-RUN composer dump-autoload --optimize --classmap-authoritative \
-    && php bin/console importmap:install
+# ---------------------------------------------------------------- Image php
+FROM php-base AS php
 
-# Nettoyage
-RUN rm -rf .env.dev .env.test tests/ features/ .git/
+COPY --from=build --chown=www-data:www-data /srv/app /srv/app
+RUN mkdir -p var/cache var/log var/sessions && chown -R www-data:www-data var
 
-# ===== Stage de production =====
-FROM base AS production
-
-# Variables d'environnement par défaut (peuvent être overridées au runtime)
+ARG APP_VERSION=dev
+ARG APP_COMMIT=unknown
 ENV APP_ENV=prod \
-    APP_DEBUG=0
+    APP_DEBUG=0 \
+    APP_VERSION=${APP_VERSION} \
+    APP_COMMIT=${APP_COMMIT}
 
-# Copie des fichiers depuis le stage de build
-COPY --from=build /app /app
-
-# Copie de l'entrypoint
-COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
-# Création et configuration des permissions pour les répertoires var et assets
-RUN mkdir -p /app/var/cache /app/var/log /app/var/sessions /app/public/assets \
-    && chown -R www-data:www-data /app/var /app/public/assets
-
-# Port exposé (PHP-FPM)
-EXPOSE 9000
-
-# Utilisateur non-root
 USER www-data
+CMD ["php-fpm"]
 
-# Commande de démarrage
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+# ---------------------------------------------------------------- Image web
+FROM nginx:${NGINX_VERSION}-alpine AS web
 
-# ===== Stage nginx =====
-FROM nginx:alpine AS nginx
-
-# Copier les fichiers publics depuis le stage de build
-COPY --from=build /app/public /app/public
-
-# Copier la config nginx
-COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
-
-# Port exposé
-EXPOSE 80
+ENV AUTH_BASIC=off
+COPY docker/nginx.conf.template /etc/nginx/templates/default.conf.template
+RUN rm -f /etc/nginx/conf.d/default.conf && touch /etc/nginx/htpasswd
+COPY --from=build /srv/app/public /srv/app/public
+# La page de maintenance voyage dans l'image : aucun fichier côté serveur ne peut diverger de la CI.
+COPY deploy/maintenance /srv/maintenance

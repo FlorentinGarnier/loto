@@ -1,4 +1,4 @@
-.PHONY: help install start stop restart logs db-create db-migrate db-reset test test-unit test-functional cs-check cs-fix clear cache seed docker-up docker-down docker-restart
+.PHONY: help install start stop restart logs db-create db-migrate db-reset test test-unit test-functional cs-check cs-fix clear cache seed docker-up docker-down docker-restart db-diff test-behat-verbose test-db-reset routes services entities console import-cards watch watch-stop
 
 .DEFAULT_GOAL := help
 
@@ -72,7 +72,7 @@ db-diff: ## Génère une migration à partir des changements d'entités
 	symfony php bin/console doctrine:migrations:diff
 
 seed: ## Charge des données de démo
-	symfony php bin/console app:seed-demo
+	symfony php bin/console app:seed:demo
 
 ## —— 🧪 Tests ———————————————————————————————————————————————————————————————
 test: ## Lance tous les tests (PHPSpec + Behat)
@@ -124,8 +124,9 @@ entities: ## Liste toutes les entités
 console: ## Lance la console Symfony interactive
 	symfony php bin/console
 
-import-cards: ## Importe des cartons depuis un fichier (ex: make import-cards FILE=cards.csv)
-	symfony php bin/console app:import-cards $(FILE)
+import-cards: ## Importe des cartons depuis un fichier CSV (ex: make import-cards FILE=cards.csv)
+	@test -n "$(FILE)" || (echo "Usage : make import-cards FILE=chemin/vers/cartons.csv" && exit 1)
+	symfony php bin/console app:cards:import 0 $(FILE)
 
 watch: ## Lance le serveur avec rechargement auto (nécessite symfony-cli)
 	symfony serve --daemon

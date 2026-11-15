@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
+import { adminCsrfToken } from '../csrf.js';
 
 export default class extends Controller {
     static targets = ['potentials', 'potentialsContainer', 'mercureStatus', 'lastNumber', 'grid', 'draws', 'progression'];
@@ -33,7 +34,10 @@ export default class extends Controller {
             const url = this.toggleUrlValue.replace('/0', '/' + num);
 
             try {
-                const res = await fetch(url, { method: 'POST' });
+                const res = await fetch(url, {
+                    method: 'POST',
+                    body: new URLSearchParams({ _token: adminCsrfToken() })
+                });
                 if (res.ok) {
                     btn.classList.toggle('is-drawn');
                 }

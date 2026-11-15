@@ -197,8 +197,8 @@ php bin/console messenger:setup-transports         # Créer les tables Messenger
 php bin/console cache:clear                        # Vider le cache
 php bin/console debug:container                    # Lister les services
 php bin/console debug:router                       # Lister les routes
-php bin/console app:seed-demo                      # Créer données de démo
-php bin/console app:import-cards <fichier>         # Importer des cartons
+php bin/console app:seed:demo                      # Créer données de démo
+php bin/console app:cards:import 0 <fichier>       # Importer des cartons (0 = sans vérifier d'événement)
 ```
 
 **Tests & qualité**
@@ -251,3 +251,15 @@ composer cs:fix                                    # Corriger le style de code
 - **Mercure**: https://mercure.rocks/
 - **Mailpit**: https://github.com/axllent/mailpit
 - **Doctrine**: https://www.doctrine-project.org/
+
+13) Intégration continue et déploiement
+
+Le projet utilise la CI/CD commune aux projets Symfony : `FlorentinGarnier/ci-symfony` (version épinglée dans `.github/workflows/`).
+
+- Demande de fusion : contrôles communs (Composer validate et audit, lint Twig/YAML/conteneur, assets, migrations sur base vide + `schema:validate`, PHPUnit, Behat), specs PHPSpec, construction des images `php` et `web`.
+- Fusion sur `main` : images publiées par digest sur GHCR, déploiement automatique sur staging, tests de fumée sur `/healthz`, retour arrière si échec.
+- GitHub Release publiée : mise en production des images validées en staging.
+
+Seul `.github/workflows/ci.yml` contient des réglages propres au projet. Le dossier `deploy/` fournit le Compose du serveur (base, php, web, Mercure, page de maintenance) et les modèles `app.env`, `stack.env` et `mercure.env`.
+
+Prérequis côté serveur et côté GitHub (environnements `staging` et `production`, variables et secrets) : voir le README de `ci-symfony`.

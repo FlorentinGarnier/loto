@@ -9,6 +9,15 @@ framework:
     #esi: true
     #fragments: true
 
+when@prod:
+    framework:
+        # Derrière Traefik puis Nginx : adresse du client et HTTPS lus dans les en-têtes transmis.
+        trusted_proxies: '%env(TRUSTED_PROXIES)%'
+        trusted_headers: ['x-forwarded-for', 'x-forwarded-proto', 'x-forwarded-host', 'x-forwarded-port']
+        session:
+            # Volume « sessions » du déploiement : l'animateur reste connecté après une mise en production.
+            save_path: '%kernel.project_dir%/var/sessions'
+
 when@test:
     framework:
         test: true

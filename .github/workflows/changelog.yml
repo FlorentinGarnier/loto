@@ -1,0 +1,24 @@
+# Notes de chaque release publiée, depuis la dernière release stable.
+name: Changelog
+
+on:
+    release:
+        types: [published]
+    workflow_dispatch:
+        inputs:
+            release_tag:
+                description: Release dont les notes sont à régénérer
+                required: true
+                type: string
+
+concurrency:
+    group: changelog-${{ github.event.release.tag_name || inputs.release_tag }}
+    cancel-in-progress: false
+
+jobs:
+    changelog:
+        uses: FlorentinGarnier/ci-symfony/.github/workflows/changelog.yml@19e1febea50c98db8a5fd812e90c6d3ca9e3d10a # v1.3.0
+        permissions:
+            contents: write
+        with:
+            release-tag: ${{ inputs.release_tag }}

@@ -24,12 +24,12 @@
                     {% if current.hallOnly %}<span class="pill pill--hall">Salle uniquement</span>{% endif %}
                 </div>
                 <div class="row">
-                    <form method="post" action="{{ path('admin_game_start', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Démarrer cette partie ? Les tirages en cours seront transférés.' }) }}><button class="btn btn--primary btn--small">Démarrer</button></form>
-                    <form method="post" action="{{ path('admin_game_finish', {id: current.id}) }}"><button class="btn btn--dark btn--small">Terminer</button></form>
-                    <form method="post" action="{{ path('admin_game_next', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Passer à la partie suivante ? Les tirages seront transférés.' }) }}><button class="btn btn--small">Partie suivante</button></form>
-                    <form method="post" action="{{ path('admin_game_demarque', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Confirmer la démarque (réinitialiser tous les tirages) ?' }) }}><button class="btn btn--danger btn--small">Démarque (remise à zéro)</button></form>
+                    <form method="post" action="{{ path('admin_game_start', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Démarrer cette partie ? Les tirages en cours seront transférés.' }) }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="btn btn--primary btn--small">Démarrer</button></form>
+                    <form method="post" action="{{ path('admin_game_finish', {id: current.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="btn btn--dark btn--small">Terminer</button></form>
+                    <form method="post" action="{{ path('admin_game_next', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Passer à la partie suivante ? Les tirages seront transférés.' }) }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="btn btn--small">Partie suivante</button></form>
+                    <form method="post" action="{{ path('admin_game_demarque', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Confirmer la démarque (réinitialiser tous les tirages) ?' }) }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="btn btn--danger btn--small">Démarque (reset)</button></form>
                     {% if current.isFrozen %}
-                        <form method="post" action="{{ path('admin_game_unfreeze', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Dégeler la partie ? Les tirages seront à nouveau possibles.' }) }}><button type="submit" class="btn btn--danger btn--small">Dégeler la partie</button></form>
+                        <form method="post" action="{{ path('admin_game_unfreeze', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Dégeler la partie ? Les tirages seront à nouveau possibles.' }) }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button type="submit" class="btn btn--danger btn--small">Dégeler la partie</button></form>
                     {% endif %}
                 </div>
 
@@ -134,7 +134,7 @@
                         {% if g.hallOnly %}<span class="pill pill--hall" title="Salle uniquement">Salle</span>{% endif %}
                         <span class="pill pill--{{ g.status.value|lower }}">{{ g.status.value|trans }}</span>
                     </div>
-                    <form method="post" action="{{ path('admin_game_start', {id: g.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Basculer vers cette partie ? Les tirages en cours seront transférés.' }) }}><button class="btn btn--small">Basculer</button></form>
+                    <form method="post" action="{{ path('admin_game_start', {id: g.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Basculer vers cette partie ? Les tirages en cours seront transférés.' }) }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="btn btn--small">Basculer</button></form>
                 </li>
             {% endfor %}
         </ul>

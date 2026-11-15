@@ -64,6 +64,11 @@ final class WinnerService
      */
     public function validateOfflineWinner(Game $game, string $reference, ?Card $card = null): Winner
     {
+        // Vérifier le carton avant tout effet : un refus ne doit pas laisser la partie gelée
+        if ($card && $card->isBlocked()) {
+            throw new \RuntimeException('Cannot validate blocked card');
+        }
+
         // Geler la partie si ce n'est pas déjà fait
         if (!$game->isFrozen()) {
             $maxOrderIndex = 0;
@@ -71,10 +76,6 @@ final class WinnerService
                 $maxOrderIndex = max($maxOrderIndex, $draw->getOrderIndex());
             }
             $game->freeze($maxOrderIndex);
-        }
-
-        if ($card && $card->isBlocked()) {
-            throw new \RuntimeException('Cannot validate blocked card');
         }
 
         $winner = new Winner();

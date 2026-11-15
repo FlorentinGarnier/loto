@@ -30,12 +30,15 @@
     <h2>Remises à zéro</h2>
     <div class="row">
       <form method="post" action="{{ path('admin_event_reset_all_draws', {id: event.id}) }}" onsubmit="return confirm('Confirmer la remise à zéro de tous les tirages de cet événement ?');">
+        <input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}">
         <button type="submit" class="btn btn--danger">Réinitialiser tous les tirages</button>
       </form>
       <form method="post" action="{{ path('admin_event_reset_all_winners', {id: event.id}) }}" onsubmit="return confirm('Confirmer la suppression de tous les gagnants de cet événement ?');">
+        <input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}">
         <button type="submit" class="btn btn--danger">Supprimer tous les gagnants</button>
       </form>
       <form method="post" action="{{ path('admin_event_unassign_all_players', {id: event.id}) }}" onsubmit="return confirm('Confirmer la désassociation de tous les joueurs des cartons ?');">
+        <input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}">
         <button type="submit" class="btn btn--danger">Désassocier tous les joueurs</button>
       </form>
     </div>

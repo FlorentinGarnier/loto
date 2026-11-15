@@ -9,7 +9,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use App\Security\AdminCsrf;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsCsrfTokenValid;
 
 #[Route('/admin')]
 final class PlayerCardController extends AbstractController
@@ -45,6 +47,7 @@ final class PlayerCardController extends AbstractController
     }
 
     #[Route('/players/{id}/cards/assign', name: 'admin_player_assign_card', methods: ['POST'])]
+    #[IsCsrfTokenValid(AdminCsrf::TOKEN_ID)]
     public function assign(Player $player, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent() ?: '{}', true) ?: [];
@@ -86,6 +89,7 @@ final class PlayerCardController extends AbstractController
     }
 
     #[Route('/players/{id}/cards/{ref}', name: 'admin_player_remove_card', methods: ['DELETE'])]
+    #[IsCsrfTokenValid(AdminCsrf::TOKEN_ID)]
     public function remove(Player $player, string $ref): JsonResponse
     {
         $card = $this->cards->findOneBy(['reference' => $ref, 'player' => $player]);
