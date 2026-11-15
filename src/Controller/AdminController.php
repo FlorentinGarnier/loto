@@ -354,9 +354,9 @@ final class AdminController extends AbstractController
 
             return $this->redirectToRoute('admin_dashboard');
         }
-        // Optional CSRF check
-        $token = $request->request->get('_token');
-        if ($token && !$this->isCsrfTokenValid('validate_winner_'.$game->getId().'_'.$cardId, $token)) {
+        // Jeton CSRF obligatoire : une requête sans jeton est refusée
+        $token = $request->request->getString('_token');
+        if (!$this->isCsrfTokenValid('validate_winner_'.$game->getId().'_'.$cardId, $token)) {
             $this->addFlash('error', 'Token CSRF invalide.');
 
             return $this->redirectToRoute('admin_dashboard');
