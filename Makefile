@@ -1,4 +1,4 @@
-.PHONY: help install start stop restart logs db-create db-migrate db-reset test test-unit test-functional cs-check cs-fix clear cache seed seed-staging docker-up docker-down docker-restart db-diff test-behat-verbose test-db-reset routes services entities console import-cards watch watch-stop
+.PHONY: provision instances-backup help install start stop restart logs db-create db-migrate db-reset test test-unit test-functional cs-check cs-fix clear cache seed seed-staging docker-up docker-down docker-restart db-diff test-behat-verbose test-db-reset routes services entities console import-cards watch watch-stop
 
 .DEFAULT_GOAL := help
 
@@ -98,6 +98,14 @@ test-db-reset: ## Reset la base de test
 	symfony php bin/console doctrine:database:drop --force --if-exists --env=test
 	symfony php bin/console doctrine:database:create --env=test
 	symfony php bin/console doctrine:migrations:migrate -n --env=test
+
+## —— 🏢 Instances clientes ——————————————————————————————————————————————————
+provision: ## Crée ou répare l'instance d'un client, sur la machine qui porte Docker (ex: make provision CLIENT=ape-jules-ferry)
+	@test -n "$(CLIENT)" || (echo "Usage : make provision CLIENT=identifiant [PHP_IMAGE=… WEB_IMAGE=…]" && exit 1)
+	deploy/instances/provision.sh $(CLIENT)
+
+instances-backup: ## Sauvegarde la base de toutes les instances, ou d'une seule (CLIENT=identifiant)
+	deploy/instances/backup.sh $(CLIENT)
 
 ## —— 🎨 Qualité de code ————————————————————————————————————————————————————
 cs-check: ## Vérifie le style de code
