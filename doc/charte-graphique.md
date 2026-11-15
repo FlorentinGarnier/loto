@@ -6,15 +6,15 @@ Cette charte vaut pour le site vitrine, l'administration et l'écran de salle.
 
 ## 1. Positionnement
 
-**Pour qui.** Les associations dont les cartons sont vendus par les enfants : associations de parents d'élèves, coopératives scolaires, clubs de sport avec des jeunes. Les comités des fêtes ne sont pas visés au départ.
+**Pour qui.** Les associations qui vendent des cartons à des joueurs hors salle : associations de parents d'élèves, coopératives scolaires, clubs de sport. Les comités des fêtes ne sont pas visés au départ.
 
 **Qui décide.** Un parent bénévole du bureau, 30 à 45 ans, qui prépare le loto le soir sur son téléphone.
 
-**Ce que fait l'outil.** Il joue les cartons des joueurs qui ne sont pas dans la salle. Les enfants vendent des cartons à la famille et aux proches qui ne viendront pas ; des bénévoles saisissent ces cartons ; le soir du loto, l'outil repère le gagnant, fige la partie au numéro exact et bloque le carton. Le lendemain, le bureau appelle les gagnants à partir de la liste exportée.
+**Ce que fait l'outil.** Il joue les cartons des joueurs qui ne sont pas dans la salle. L'association vend des cartons à la famille et aux proches qui ne viendront pas ; des bénévoles saisissent ces cartons ; le soir du loto, l'outil repère le gagnant, fige la partie au numéro exact et bloque le carton. Le lendemain, le bureau appelle les gagnants à partir de la liste exportée.
 
 **Promesse.** Un loto plus grand que la salle.
 
-**Ordre de grandeur réel.** Loto du 23 février 2025 : 605 cartons hors salle, 140 joueurs hors salle, 67 enfants vendeurs. À ne publier qu'avec l'accord de l'association.
+**Ordre de grandeur réel.** Loto du 23 février 2025 : 605 cartons hors salle, 140 joueurs hors salle. À ne publier qu'avec l'accord de l'association. Ces cartons ont été vendus par 67 enfants : ce chiffre reste interne et ne se publie pas.
 
 **Face aux concurrents.** Le plus visible (LotoAsso) est une suite complète, blanche, avec un seul bleu-violet. On s'en distingue par les quatre couleurs de la marque, les statuts multicolores et le produit montré dès le premier écran.
 
@@ -118,6 +118,7 @@ Une page, dans cet ordre :
 - De parent à parent : phrases courtes, concrètes, verbes d'action.
 - Vocabulaire du loto : quine, double quine, carton plein, démarque.
 - Vouvoiement (on s'adresse au bureau).
+- On ne met pas en avant la vente des cartons par les enfants, ni dans les textes ni dans les images : le sujet est sensible. On écrit que l'association vend des cartons à ceux qui ne peuvent pas venir.
 - On ne dit jamais « les absents » : le mot sonne funéraire, surtout à côté d'un grand-parent. On dit « hors salle », « ceux qui ne peuvent pas venir », « de loin ».
 
 ## 11. Logo
