@@ -2,10 +2,7 @@
 
 namespace App\Form;
 
-use App\Entity\Card;
 use App\Entity\Event;
-use Doctrine\ORM\EntityRepository;
-use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -15,31 +12,16 @@ final class WinnerOfflineType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        /** @var Event|null $event */
-        $event = $options['event'] ?? null;
-
         $builder
             ->add('reference', TextType::class, [
-                'label' => 'Référence libre (obligatoire)',
+                'label' => 'Gagnant en salle (nom ou repère)',
                 'required' => true,
             ])
-            ->add('card', EntityType::class, [
-                'class' => Card::class,
+            // Saisie de la référence lue sur le carton : une liste de plusieurs centaines de cartons est inutilisable
+            ->add('cardReference', TextType::class, [
+                'label' => 'Référence du carton (facultatif)',
                 'required' => false,
-                'label' => 'Associer à un carton (optionnel)',
-                'placeholder' => '— Aucun —',
-                'choice_label' => function (Card $c) {
-                    return sprintf('#%d · %s%s', $c->getId(), $c->getReference(), $c->getPlayer() ? ' · '.$c->getPlayer()->getName() : '');
-                },
-                'query_builder' => function (EntityRepository $er) use ($event) {
-                    $qb = $er->createQueryBuilder('c')
-                        ->leftJoin('c.player', 'p');
-                    if ($event) {
-                        $qb->andWhere('p.event = :event')->setParameter('event', $event);
-                    }
-
-                    return $qb->orderBy('c.id', 'ASC');
-                },
+                'attr' => ['autocomplete' => 'off', 'autocapitalize' => 'characters'],
             ])
         ;
     }

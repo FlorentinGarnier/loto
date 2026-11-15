@@ -8,7 +8,8 @@
     gameId: current ? current.id : null,
     mercureUrl: app.request.server.get('MERCURE_PUBLIC_URL'),
     toggleUrl: current ? path('admin_toggle_number', {id: current.id, number: 0}) : null,
-    potentialsFragmentUrl: current ? path('admin_game_potentials_fragment', {id: current.id}) : null
+    potentialsFragmentUrl: current ? path('admin_game_potentials_fragment', {id: current.id}) : null,
+    stateUrl: current ? path('admin_game_state', {id: current.id}) : null
 }) }}>
     <div class="panel">
         <div class="panel__head">
@@ -20,27 +21,31 @@
                     <span>Partie courante : #{{ current.position }}</span>
                     <span class="pill pill--blue">{{ current.rule|trans }}</span>
                     <span>Lot : {{ current.prize }}</span>
-                    <span class="pill pill--{{ current.status.value|lower }}">{{ current.status.value }}</span>
+                    <span class="pill pill--{{ current.status.value|lower }}">{{ current.status|trans }}</span>
                     {% if current.hallOnly %}<span class="pill pill--hall">Salle uniquement</span>{% endif %}
                 </div>
+                {# Actions de la partie : seules celles qui ont un sens dans l'état courant sont affichées.
+                   La démarque, destructive, est rangée à part en bas du panneau. #}
+                {% set running = current.status.value == 'RUNNING' %}
+                {% set has_next = games|filter(g => g.position > current.position)|length > 0 %}
+                {% set has_winner = current.winners is not empty %}
                 <div class="row">
-                    <form method="post" action="{{ path('admin_game_start', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Démarrer cette partie ? Les tirages en cours seront transférés.' }) }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="btn btn--primary btn--small">Démarrer</button></form>
-                    <form method="post" action="{{ path('admin_game_finish', {id: current.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="btn btn--dark btn--small">Terminer</button></form>
-                    <form method="post" action="{{ path('admin_game_next', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Passer à la partie suivante ? Les tirages seront transférés.' }) }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="btn btn--small">Partie suivante</button></form>
-                    <form method="post" action="{{ path('admin_game_demarque', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Confirmer la démarque (réinitialiser tous les tirages) ?' }) }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="btn btn--danger btn--small">Démarque (reset)</button></form>
-                    {% if current.isFrozen %}
-                        <form method="post" action="{{ path('admin_game_unfreeze', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Dégeler la partie ? Les tirages seront à nouveau possibles.' }) }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button type="submit" class="btn btn--danger btn--small">Dégeler la partie</button></form>
+                    {% if not running %}
+                        <form method="post" action="{{ path('admin_game_start', {id: current.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="btn btn--primary">Démarrer la partie</button></form>
+                    {% else %}
+                        {% if has_next %}
+                            <form method="post" action="{{ path('admin_game_next', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Passer à la partie suivante ? Les numéros tirés y seront reportés.' }) }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="btn btn--small {{ has_winner ? 'btn--primary' }}">Partie suivante</button></form>
+                        {% endif %}
+                        <form method="post" action="{{ path('admin_game_finish', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Terminer cette partie ? Le tirage sera arrêté.' }) }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="btn btn--small {{ (has_winner and not has_next) ? 'btn--primary' : 'btn--dark' }}">Terminer</button></form>
                     {% endif %}
+                    <form method="post" action="{{ path('admin_game_unfreeze', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Dégeler la partie ? Les tirages seront à nouveau possibles.' }) }} {{ stimulus_target('dashboard', 'unfreeze') }} {{ current.isFrozen ? '' : 'hidden' }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button type="submit" class="btn btn--small">Dégeler la partie</button></form>
                 </div>
 
                 {# Alertes tableau de bord #}
                 {% set potentials_count = potentials|length %}
                 {% set validated_count = current.winners|length %}
                 <div class="stack stack--tight">
-                    {% if current.isFrozen %}
-                        <div class="alert alert--success" role="status">Cette partie est gelée. Les tirages ne sont pas autorisés.</div>
-                    {% endif %}
-                    {% if current.status.value != 'RUNNING' %}
+                    {% if not running %}
                         <div class="alert alert--warning">Aucune partie en cours. Démarrez une partie pour activer le tirage.</div>
                     {% endif %}
                     {% if (cards_count ?? 0) == 0 %}
@@ -76,7 +81,12 @@
                     <div class="row muted">Dernier numéro :
                         <span {{ stimulus_target('dashboard', 'lastNumber') }} class="last-number {{ last ? 'is-set' }}">{{ last ?? '—' }}</span>
                     </div>
-                    <div class="row muted">Mercure : <span {{ stimulus_target('dashboard', 'mercureStatus') }} class="pill">…</span></div>
+                </div>
+                {# Messages posés au-dessus de la grille : c'est là que l'animateur regarde pendant le tirage #}
+                <div class="grid-messages">
+                    <div {{ stimulus_target('dashboard', 'freezeBanner') }} class="alert alert--success" role="status" {{ current.isFrozen ? '' : 'hidden' }}>Gagnant détecté : la partie est gelée. Les tirages sont bloqués tant qu'elle n'est pas dégelée.</div>
+                    <div {{ stimulus_target('dashboard', 'offline') }} class="alert alert--error" role="alert" hidden>Connexion temps réel perdue : cet écran ne se met plus à jour seul. Vérifiez que l'écran de salle suit toujours. Reconnexion en cours…</div>
+                    <div {{ stimulus_target('dashboard', 'gridMessage') }} class="alert alert--error" role="alert" hidden></div>
                 </div>
                 <div {{ stimulus_target('dashboard', 'grid') }} class="draw-grid">
                     {% for n in 1..90 %}
@@ -101,7 +111,7 @@
                     <ul class="list list--plain">
                         {% for w in current.winners %}
                             <li>
-                                {{ w.source.value }} – {{ w.reference ?? '—' }}{% if w.card %} · Carton {{ w.card.reference }}{% endif %} · <span class="data muted">{{ w.createdAt|date('H:i:s') }}</span>
+                                {{ w.source|trans }} – {{ w.reference ?? '—' }}{% if w.card %} · Carton {{ w.card.reference }}{% endif %} · <span class="data muted">{{ w.createdAt|date('H:i:s') }}</span>
                             </li>
                         {% endfor %}
                     </ul>
@@ -112,12 +122,21 @@
                         <h3>Déclarer un gagnant en salle</h3>
                         {{ form_start(winner_form, { action: path('admin_winner_offline', {id: current.id}), attr: {class: 'form form--inline'} }) }}
                             {{ form_row(winner_form.reference) }}
-                            {{ form_row(winner_form.card) }}
+                            {{ form_row(winner_form.cardReference) }}
                             <div class="form__submit"><button class="btn btn--primary">Enregistrer</button></div>
                         {{ form_end(winner_form) }}
                     </div>
                 {% endif %}
             </div>
+
+            {% if running %}
+                {% set demarque_message = 'Démarque : effacer les %n% numéros tirés et les gagnants de la partie #' ~ current.position ~ ' ?' %}
+                <div class="section section--ruled">
+                    <h2>Démarque</h2>
+                    <p class="muted" style="margin-bottom: 12px">Efface les numéros tirés et les gagnants de cette partie, pour la rejouer depuis le début.</p>
+                    <form method="post" action="{{ path('admin_game_demarque', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: demarque_message|replace({'%n%': current.draws|length}) }) }} {{ stimulus_target('dashboard', 'demarque') }} data-message-template="{{ demarque_message }}"><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="btn btn--danger btn--small">Démarque</button></form>
+                </div>
+            {% endif %}
         {% else %}
             <p>Aucune partie définie.</p>
         {% endif %}
@@ -130,9 +149,9 @@
                 <li data-id="{{ g.id }}" class="list__item is-sortable {{ (current and g.id == current.id) ? 'is-current' }}">
                     <div class="row">
                         <span class="handle" aria-hidden="true">☰</span>
-                        <span>#{{ g.position }} – {{ ('app.rules.' ~ g.rule.value)|trans }} – {{ g.prize }}</span>
+                        <span><span data-position>#{{ g.position }}</span> – {{ g.rule|trans }} – {{ g.prize }}</span>
                         {% if g.hallOnly %}<span class="pill pill--hall" title="Salle uniquement">Salle</span>{% endif %}
-                        <span class="pill pill--{{ g.status.value|lower }}">{{ g.status.value|trans }}</span>
+                        <span class="pill pill--{{ g.status.value|lower }}">{{ g.status|trans }}</span>
                     </div>
                     <form method="post" action="{{ path('admin_game_start', {id: g.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Basculer vers cette partie ? Les tirages en cours seront transférés.' }) }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="btn btn--small">Basculer</button></form>
                 </li>

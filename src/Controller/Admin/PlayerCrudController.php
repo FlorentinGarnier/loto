@@ -21,10 +21,13 @@ final class PlayerCrudController extends AbstractController
     }
 
     #[Route('', name: 'admin_player_index')]
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = trim($request->query->getString('search'));
+
         return $this->render('admin/player/index.html.twig', [
-            'players' => $this->players->findBy([], ['id' => 'ASC']),
+            'players' => $this->players->search($search),
+            'search' => $search,
         ]);
     }
 
