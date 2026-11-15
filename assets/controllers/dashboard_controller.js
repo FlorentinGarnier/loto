@@ -35,9 +35,7 @@ export default class extends Controller {
             try {
                 const res = await fetch(url, { method: 'POST' });
                 if (res.ok) {
-                    btn.classList.toggle('bg-white');
-                    btn.classList.toggle('bg-green-600');
-                    btn.classList.toggle('text-white');
+                    btn.classList.toggle('is-drawn');
                 }
             } catch (err) {
                 console.error('Error toggling number:', err);
@@ -129,13 +127,7 @@ export default class extends Controller {
                 const lastNum = drawsCount > 0 ? data.draws[data.draws.length - 1] : '—';
                 this.lastNumberTarget.textContent = lastNum;
 
-                if (lastNum !== '—') {
-                    this.lastNumberTarget.classList.add('bg-amber-600', 'text-white');
-                    this.lastNumberTarget.classList.remove('bg-gray-200');
-                } else {
-                    this.lastNumberTarget.classList.remove('bg-amber-600', 'text-white');
-                    this.lastNumberTarget.classList.add('bg-gray-200');
-                }
+                this.lastNumberTarget.classList.toggle('is-set', lastNum !== '—');
             }
         }
     }
@@ -144,16 +136,8 @@ export default class extends Controller {
         if (!this.hasMercureStatusTarget) return;
 
         this.mercureStatusTarget.textContent = ok ? 'OK' : 'Hors ligne';
-        this.mercureStatusTarget.classList.remove(
-            'bg-gray-300', 'bg-red-200', 'bg-green-200',
-            'text-red-900', 'text-green-900'
-        );
-
-        if (ok) {
-            this.mercureStatusTarget.classList.add('bg-green-200', 'text-green-900');
-        } else {
-            this.mercureStatusTarget.classList.add('bg-red-200', 'text-red-900');
-        }
+        this.mercureStatusTarget.classList.toggle('pill--ok', ok);
+        this.mercureStatusTarget.classList.toggle('pill--off', !ok);
     }
 
     notifyNewPotentialWinner() {

@@ -3,16 +3,13 @@
 {% block title %}Nouveau carton{% endblock %}
 
 {% block admin_body %}
-<div class="bg-white rounded shadow p-6">
-  <div class="flex items-center justify-between mb-4">
-    <h1 class="text-2xl font-bold">Nouveau carton</h1>
-    <a href="{{ path('admin_card_index') }}" class="px-3 py-1 bg-gray-200 rounded">Retour</a>
+<div class="panel">
+  <div class="panel__head">
+    <h1>Nouveau carton</h1>
+    <div class="row">
+      <a href="{{ path('admin_card_index') }}" class="btn btn--small">Retour</a>
+    </div>
   </div>
-  {% for type, messages in app.flashes %}
-    {% for msg in messages %}
-      <div class="mb-2 p-2 rounded {{ type == 'success' ? 'bg-green-100 text-green-800' : (type == 'error' ? 'bg-red-100 text-red-800' : 'bg-gray-100') }}">{{ msg }}</div>
-    {% endfor %}
-  {% endfor %}
   {% include 'admin/card/_form.html.twig' with { form: form } %}
 </div>
 {% endblock %}

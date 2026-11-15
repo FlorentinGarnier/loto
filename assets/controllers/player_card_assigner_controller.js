@@ -17,7 +17,7 @@ export default class extends Controller {
   setFeedback(msg, type = 'neutral') {
     if (!this.hasFeedbackTarget) return
     this.feedbackTarget.textContent = msg || ''
-    this.feedbackTarget.className = `text-sm mt-1 feedback ${type === 'success' ? 'text-green-700' : type === 'error' ? 'text-red-700' : type === 'pending' ? 'text-gray-500' : 'text-gray-700'}`
+    this.feedbackTarget.className = `feedback ${type === 'success' ? 'is-success' : type === 'error' ? 'is-error' : ''}`
   }
 
   setHint(text) {
@@ -129,10 +129,9 @@ export default class extends Controller {
 
   toastUndo(ref, backupNode) {
     const undo = document.createElement('div')
-    undo.className = 'fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-3 py-2 rounded shadow'
+    undo.className = 'toast'
     undo.textContent = 'Retiré. '
     const btn = document.createElement('button')
-    btn.className = 'underline ml-1'
     btn.textContent = 'Annuler'
     btn.onclick = async () => {
       try {
@@ -155,9 +154,9 @@ export default class extends Controller {
     const existing = this.listTarget.querySelector(`li[data-ref="${CSS.escape(ref)}"]`)
     if (existing) return // idempotent
     const li = document.createElement('li')
-    li.className = 'py-1 flex items-center justify-between'
+    li.className = 'list__item'
     li.dataset.ref = ref
-    li.innerHTML = `<strong>${ref}</strong> <button type="button" class="text-sm text-red-700 hover:underline" data-action="player-card-assigner#remove" data-ref-value="${ref}">Retirer</button>`
+    li.innerHTML = `<strong>${ref}</strong> <button type="button" class="link-danger" data-action="player-card-assigner#remove" data-ref-value="${ref}">Retirer</button>`
     this.listTarget.prepend(li)
   }
 
