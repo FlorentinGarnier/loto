@@ -2,10 +2,8 @@
 
 namespace App\Controller;
 
-use App\Entity\Card;
 use App\Entity\Event;
 use App\Entity\Game;
-use App\Entity\Winner;
 use App\Enum\GameStatus;
 use App\Repository\CardRepository;
 use App\Repository\EventRepository;
@@ -83,6 +81,22 @@ final class AdminController extends AbstractController
             'winner_form' => $winnerFormView,
             'cards_count' => \is_array($cards) ? \count($cards) : 0,
         ]);
+    }
+
+    /**
+     * Lien « Parties » du menu quand aucun événement n'est affiché : parties de l'événement courant.
+     */
+    #[Route('/games', name: 'admin_game_current')]
+    public function currentGames(): RedirectResponse
+    {
+        $event = $this->eventRepo->findLatest();
+        if (!$event) {
+            $this->addFlash('info', 'Créez d\'abord un événement : les parties se définissent par événement.');
+
+            return $this->redirectToRoute('admin_event_index');
+        }
+
+        return $this->redirectToRoute('admin_game_index', ['id' => $event->getId()]);
     }
 
     #[Route('/game/{id}/toggle/{number}', name: 'admin_toggle_number', requirements: ['number' => '\\d+'], methods: ['POST'])]
@@ -308,17 +322,31 @@ final class AdminController extends AbstractController
         $form = $this->createForm(\App\Form\WinnerOfflineType::class, null, ['event' => $game->getEvent()]);
         $form->handleRequest($request);
         if (!$form->isSubmitted() || !$form->isValid()) {
-            $this->addFlash('error', 'Formulaire invalide pour le gagnant.');
+            $this->addFlash('error', 'Indiquez le nom ou le repère du gagnant en salle.');
 
             return $this->redirectToRoute('admin_dashboard');
         }
         $data = $form->getData();
         $reference = $data['reference'] ?? null;
-        $card = ($data['card'] ?? null) instanceof Card ? $data['card'] : null;
+        $cardReference = trim((string) ($data['cardReference'] ?? ''));
+        $card = null;
+        if ('' !== $cardReference) {
+            $card = $this->cardRepo->findOneByReferenceForEvent($cardReference, $game->getEvent());
+            if (!$card) {
+                $this->addFlash('error', sprintf('Aucun carton « %s » parmi les cartons attribués de cet événement. Le gagnant n\'a pas été enregistré.', $cardReference));
+
+                return $this->redirectToRoute('admin_dashboard');
+            }
+            if ($card->isBlocked()) {
+                $this->addFlash('error', sprintf('Le carton « %s » a déjà gagné : il est bloqué. Le gagnant n\'a pas été enregistré.', $card->getReference()));
+
+                return $this->redirectToRoute('admin_dashboard');
+            }
+        }
 
         try {
             $this->winnerManagementService->validateOfflineWinner($game, $reference, $card);
-            $this->addFlash('success', 'Gagnant OFFLINE enregistré et partie gelée.');
+            $this->addFlash('success', 'Gagnant en salle enregistré. La partie est gelée.');
         } catch (\RuntimeException $e) {
             $this->addFlash('error', $e->getMessage());
         }

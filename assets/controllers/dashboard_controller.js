@@ -9,7 +9,7 @@ import { adminCsrfToken } from '../csrf.js';
 export default class extends Controller {
     static targets = [
         'potentials', 'potentialsContainer', 'lastNumber', 'grid', 'draws', 'progression',
-        'freezeBanner', 'unfreeze', 'offline', 'gridMessage'
+        'freezeBanner', 'unfreeze', 'offline', 'gridMessage', 'demarque'
     ];
 
     static values = {
@@ -136,6 +136,12 @@ export default class extends Controller {
         }
         if (this.hasPotentialsTarget && state.potentialsCount !== undefined) {
             this.potentialsTarget.textContent = state.potentialsCount;
+        }
+
+        // La confirmation de la démarque annonce le nombre réel de numéros qui seront effacés
+        if (this.hasDemarqueTarget) {
+            this.demarqueTarget.dataset.confirmActionMessageValue =
+                this.demarqueTarget.dataset.messageTemplate.replace('%n%', draws.length);
         }
 
         const frozen = state.isFrozen === true;

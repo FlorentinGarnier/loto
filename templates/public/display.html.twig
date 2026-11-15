@@ -58,7 +58,7 @@
   const emptyEl = document.getElementById('empty');
   const offlineEl = document.getElementById('offline');
 
-  const RULE_LABELS = { QUINE: 'Quine', DOUBLE_QUINE: 'Double quine', FULL_CARD: 'Carton plein' };
+  const RULE_LABELS = {{ {QUINE: 'app.rules.QUINE'|trans, DOUBLE_QUINE: 'app.rules.DOUBLE_QUINE'|trans, FULL_CARD: 'app.rules.FULL_CARD'|trans}|json_encode|raw }};
   const BRAND_COLORS = ['#FFCB00', '#2459E6', '#FF4F9A', '#00B872'];
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 

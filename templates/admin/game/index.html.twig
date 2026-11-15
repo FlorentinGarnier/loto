@@ -31,9 +31,9 @@
           {% for g in games %}
             <tr class="is-sortable" data-id="{{ g.id }}">
               <td class="data">#{{ g.position }}</td>
-              <td>{{ g.rule.value }}</td>
+              <td>{{ g.rule|trans }}</td>
               <td>{{ g.prize }}</td>
-              <td><span class="pill pill--{{ g.status.value|lower }}">{{ g.status.value }}</span></td>
+              <td><span class="pill pill--{{ g.status.value|lower }}">{{ g.status|trans }}</span></td>
               <td>
                 <div class="actions">
                   <a class="btn btn--small" href="{{ path('admin_game_edit', {id: event.id, gameId: g.id}) }}">Éditer</a>

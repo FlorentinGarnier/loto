@@ -31,4 +31,19 @@ class CardRepository extends ServiceEntityRepository
             ->orderBy('c.id', 'ASC')
             ->getQuery()->getResult();
     }
+
+    /**
+     * Carton attribué à un joueur de l'événement, cherché par sa référence (sans tenir compte de la casse).
+     */
+    public function findOneByReferenceForEvent(string $reference, Event $event): ?Card
+    {
+        return $this->createQueryBuilder('c')
+            ->innerJoin('c.player', 'p')
+            ->andWhere('p.event = :e')
+            ->andWhere('LOWER(c.reference) = :ref')
+            ->setParameter('e', $event)
+            ->setParameter('ref', mb_strtolower(trim($reference)))
+            ->setMaxResults(1)
+            ->getQuery()->getOneOrNullResult();
+    }
 }

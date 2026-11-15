@@ -172,6 +172,63 @@ final class AdminActionContext extends BaseContext
     }
 
     /**
+     * @When /^j'ouvre la page "([^"]*)"$/
+     */
+    public function jOuvreLaPage(string $path): void
+    {
+        $this->client->request('GET', $path);
+        $this->followRedirects();
+        Assert::assertSame(200, $this->client->getResponse()->getStatusCode(), "La page {$path} ne s'affiche pas");
+    }
+
+    /**
+     * @When /^je déclare en salle le gagnant "([^"]*)" avec le carton "([^"]*)"$/
+     */
+    public function jeDeclareEnSalleLeGagnantAvecLeCarton(string $reference, string $cardReference): void
+    {
+        $crawler = $this->client->request('GET', '/admin');
+        $form = $crawler->filter('form[name="winner_offline"]')->form([
+            'winner_offline[reference]' => $reference,
+            'winner_offline[cardReference]' => $cardReference,
+        ]);
+        $this->client->submit($form);
+        $this->followRedirects();
+        $this->entityManager->clear();
+    }
+
+    /**
+     * @Then /^la page doit contenir "([^"]*)"$/
+     */
+    public function laPageDoitContenir(string $text): void
+    {
+        Assert::assertStringContainsString($text, $this->pageText());
+    }
+
+    /**
+     * @Then /^la page ne doit pas contenir "([^"]*)"$/
+     */
+    public function laPageNeDoitPasContenir(string $text): void
+    {
+        Assert::assertStringNotContainsString($text, $this->pageText());
+    }
+
+    /**
+     * @Then /^la page doit proposer le bouton "([^"]*)"$/
+     */
+    public function laPageDoitProposerLeBouton(string $label): void
+    {
+        Assert::assertContains($label, $this->buttonLabels(), "Bouton « {$label} » absent");
+    }
+
+    /**
+     * @Then /^la page ne doit pas proposer le bouton "([^"]*)"$/
+     */
+    public function laPageNeDoitPasProposerLeBouton(string $label): void
+    {
+        Assert::assertNotContains($label, $this->buttonLabels(), "Bouton « {$label} » présent");
+    }
+
+    /**
      * @Then /^la requête doit être refusée$/
      */
     public function laRequeteDoitEtreRefusee(): void
@@ -198,6 +255,36 @@ final class AdminActionContext extends BaseContext
         Assert::assertGreaterThan(0, $node->count(), "Bouton « {$button} » introuvable sur {$page}");
 
         $this->client->submit($node->form());
+    }
+
+    private function followRedirects(): void
+    {
+        for ($i = 0; $i < 5 && $this->client->getResponse()->isRedirection(); ++$i) {
+            $this->client->followRedirect();
+        }
+    }
+
+    /**
+     * Texte visible de la page, sans les scripts ni les attributs.
+     */
+    private function pageText(): string
+    {
+        $body = $this->client->getCrawler()->filter('body');
+        $text = $body->count() > 0 ? $body->text() : '';
+
+        return preg_replace('/\s+/u', ' ', $text) ?? $text;
+    }
+
+    /**
+     * Libellés des boutons visibles : ceux d'un élément masqué (attribut hidden) ne comptent pas.
+     *
+     * @return string[]
+     */
+    private function buttonLabels(): array
+    {
+        return $this->client->getCrawler()
+            ->filterXPath('//button[not(ancestor-or-self::*[@hidden])]')
+            ->each(fn ($node) => trim($node->text()));
     }
 
     /**
