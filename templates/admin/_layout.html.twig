@@ -15,14 +15,14 @@
       <div class="topbar__links">
         <a href="{{ path('admin_dashboard') }}" class="{{ route starts with 'admin_dashboard' ? 'is-active' }}">Tableau de bord</a>
         <a href="{{ path('admin_event_index') }}" class="{{ route starts with 'admin_event_' ? 'is-active' }}">Événements</a>
-        {# Lien Parties: nécessite un événement. On utilise event si dispo, sinon current.event si dispo, sinon fallback Événements #}
+        {# Lien Parties: nécessite un événement. On utilise event si dispo, sinon current.event si dispo, sinon les parties de l'événement courant #}
         {% set gamesHref = null %}
         {% if event is defined and event %}
           {% set gamesHref = path('admin_game_index', {id: event.id}) %}
         {% elseif current is defined and current and current.event %}
           {% set gamesHref = path('admin_game_index', {id: current.event.id}) %}
         {% endif %}
-        <a href="{{ gamesHref ?? path('admin_event_index') }}" class="{{ route starts with 'admin_game_' ? 'is-active' }}">Parties</a>
+        <a href="{{ gamesHref ?? path('admin_game_current') }}" class="{{ route starts with 'admin_game_' ? 'is-active' }}">Parties</a>
         <a href="{{ path('admin_card_index') }}" class="{{ route starts with 'admin_card_' ? 'is-active' }}">Cartons</a>
         <a href="{{ path('admin_player_index') }}" class="{{ route starts with 'admin_player_' ? 'is-active' }}">Joueurs</a>
         <a href="{{ path('app_logout') }}">Déconnexion</a>

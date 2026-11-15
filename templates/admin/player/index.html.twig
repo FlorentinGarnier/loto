@@ -10,12 +10,21 @@
       <a href="{{ path('admin_player_new') }}" class="btn btn--primary btn--small">Nouveau joueur</a>
     </div>
   </div>
+  <form method="get" class="search" style="margin-bottom: 16px">
+    <input type="search" name="search" value="{{ search }}" placeholder="Rechercher par nom, courriel ou téléphone…" class="input" aria-label="Rechercher un joueur" />
+    <button type="submit" class="btn btn--dark">Rechercher</button>
+    {% if search %}
+      <a href="{{ path('admin_player_index') }}" class="btn">Réinitialiser</a>
+    {% endif %}
+  </form>
+  <p class="muted" style="margin-bottom: 8px">{{ players|length }} joueur{{ players|length > 1 ? 's' : '' }}{{ search ? ' pour « ' ~ search ~ ' »' : '' }}</p>
+
   <div class="table-scroll">
     <table class="table">
       <thead>
         <tr>
-          <th>ID</th>
           <th>Nom</th>
+          <th>Cartons</th>
           <th>Email</th>
           <th>Téléphone</th>
           <th>Événement</th>
@@ -25,8 +34,8 @@
       <tbody>
         {% for p in players %}
           <tr>
-            <td class="data">{{ p.id }}</td>
             <td>{{ p.name }}</td>
+            <td class="data">{{ p.cards|length }}</td>
             <td>{{ p.email ?: '—' }}</td>
             <td class="data">{{ p.phone ?: '—' }}</td>
             <td>{{ p.event.name ?: '—' }}</td>
@@ -42,7 +51,7 @@
             </td>
           </tr>
         {% else %}
-          <tr><td class="empty" colspan="6">Aucun joueur.</td></tr>
+          <tr><td class="empty" colspan="6">{{ search ? 'Aucun joueur ne correspond à cette recherche.' : 'Aucun joueur pour le moment.' }}</td></tr>
         {% endfor %}
       </tbody>
     </table>

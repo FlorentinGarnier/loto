@@ -118,6 +118,18 @@ button, input, select, textarea { font: inherit; color: inherit; }
     text-decoration: none;
     transition: background 0.3s;
 }
+@media (max-width: 720px) {
+    .topbar__links {
+        flex: 1 1 100%;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        margin: 0 calc(var(--espace) * -1);
+        padding: 0 var(--espace);
+        scrollbar-width: none;
+    }
+    .topbar__links::-webkit-scrollbar { display: none; }
+    .topbar__links a { flex: 0 0 auto; min-height: 44px; }
+}
 .topbar__links a:hover { background: var(--couleur-brume); }
 .topbar__links a.is-active { background: var(--couleur-encre); color: var(--couleur-blanc); }
 
@@ -242,6 +254,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .table .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .table .empty { text-align: center; color: var(--couleur-encre-douce); }
 .is-sortable { cursor: move; }
+.is-dragging { opacity: 0.4; }
 
 /* Formulaires -------------------------------------------------------- */
 
@@ -339,6 +352,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
     transition: background 0.3s, color 0.3s, transform 0.3s;
 }
 button.cell { cursor: pointer; }
+button.cell[aria-busy="true"] { opacity: 0.5; cursor: progress; }
+/* Messages au-dessus de la grille : sans place perdue quand ils sont masqués */
+.grid-messages > * { margin-bottom: var(--espace); }
 button.cell:hover { background: var(--couleur-ligne); }
 .cell.is-drawn { background: var(--couleur-encre); color: var(--couleur-blanc); }
 button.cell.is-drawn:hover { background: #2A2A48; }
@@ -470,7 +486,6 @@ button.cell.is-drawn:hover { background: #2A2A48; }
     color: var(--sur-regle);
     font-weight: 700;
 }
-.screen__status { font-family: var(--police-donnees); font-size: 0.6em; letter-spacing: 0.1em; text-transform: uppercase; color: #A9ADC9; }
 .screen__main { display: grid; gap: clamp(16px, 2.5vw, 40px); grid-template-columns: minmax(0, 1fr); align-items: center; }
 @media (min-width: 900px) {
     .screen__main { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
@@ -486,7 +501,10 @@ button.cell.is-drawn:hover { background: #2A2A48; }
     color: var(--sur-regle);
     text-align: center;
 }
-.screen__label { font-family: var(--police-donnees); font-size: clamp(0.75rem, 1vw, 1rem); letter-spacing: 0.12em; text-transform: uppercase; }
+/* L'écran de salle est projeté par un vidéoprojecteur faible dans une salle éclairée :
+   pas de texte fin ni petit, pas de gris sur fond sombre pour une information utile,
+   et un état ne repose jamais sur la seule teinte (les couleurs sortent délavées). */
+.screen__label { font-family: var(--police-donnees); font-weight: 700; font-size: clamp(1rem, 1.5vw, 1.5rem); letter-spacing: 0.12em; text-transform: uppercase; }
 .screen__number {
     font-family: var(--police-titres);
     font-weight: 800;
@@ -496,19 +514,21 @@ button.cell.is-drawn:hover { background: #2A2A48; }
     font-variant-numeric: tabular-nums;
 }
 .screen__number.is-waiting { font-size: clamp(3rem, 8vw, 7rem); opacity: 0.6; }
-.screen__five { font-family: var(--police-donnees); font-size: clamp(1rem, 2vw, 2rem); letter-spacing: 0.1em; font-variant-numeric: tabular-nums; }
+.screen__five { font-family: var(--police-donnees); font-weight: 700; font-size: clamp(1.25rem, 2.4vw, 2.5rem); letter-spacing: 0.1em; font-variant-numeric: tabular-nums; }
 .screen .draw-grid { gap: clamp(4px, 0.6vw, 10px); }
 .screen .cell {
     min-height: 0;
     aspect-ratio: 1.25;
     background: #24243F;
     color: #8F93B5;
-    font-size: clamp(0.9rem, 2vw, 2rem);
+    font-size: clamp(1rem, 2.6vw, 2.75rem);
     font-weight: 700;
 }
 .screen .cell.is-drawn { background: var(--couleur-blanc); color: var(--couleur-encre); }
-.screen .cell.is-last { background: var(--regle); color: var(--sur-regle); }
-.screen__empty { margin: auto; font-size: clamp(1.25rem, 2.5vw, 2.5rem); color: #A9ADC9; }
+/* Le liseré blanc garde le dernier numéro repérable même si la couleur de la règle se confond avec le fond */
+.screen .cell.is-last { background: var(--regle); color: var(--sur-regle); box-shadow: 0 0 0 clamp(3px, 0.4vw, 6px) var(--couleur-blanc); }
+.screen__offline { padding: 6px 18px; border-radius: var(--rayon-pilule); background: var(--couleur-jaune); color: var(--couleur-encre); font-weight: 700; font-size: clamp(1rem, 1.5vw, 1.5rem); }
+.screen__empty { margin: auto; font-weight: 700; font-size: clamp(1.75rem, 4vw, 4rem); color: var(--couleur-blanc); }
 .screen__winner {
     display: flex;
     flex-direction: column;
@@ -521,7 +541,10 @@ button.cell.is-drawn:hover { background: #2A2A48; }
     text-align: center;
 }
 .screen__winner h2 { font-size: clamp(2rem, 5vw, 5rem); text-transform: uppercase; }
-.screen__winner p { font-size: clamp(1rem, 2vw, 2rem); font-weight: 600; }
+.screen__winner p { font-size: clamp(1.25rem, 2.6vw, 2.75rem); font-weight: 700; }
+/* Le carton gagnant occupe toute la largeur de son bloc, à la taille de l'image projetée */
+.screen__winner .loto-card { display: table; width: 100%; table-layout: fixed; }
+.screen__winner .loto-card td { width: auto; height: clamp(44px, 6.5vw, 110px); font-size: clamp(1.25rem, 3.2vw, 3.5rem); }
 
 .confetti {
     position: fixed;

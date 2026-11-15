@@ -7,6 +7,9 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    # 1 autorise app:seed:staging, qui efface toutes les données avant de charger le jeu de recette.
+    # Refusé par défaut : à n'activer que sur le staging (app.env) et en développement, jamais en production.
+    env(ALLOW_DATA_RESET): '0'
 
 services:
     # default configuration for services in *this* file

@@ -22,7 +22,6 @@
     <table class="table">
       <thead>
         <tr>
-          <th>ID</th>
           <th>Événement</th>
           <th>Référence</th>
           <th>Joueur</th>
@@ -33,7 +32,6 @@
       <tbody>
         {% for c in matrix %}
           <tr>
-            <td class="data">{{ c.id }}</td>
             <td>{{ c.event ? c.event.name : '—' }}</td>
             <td class="data">{{ c.reference }}</td>
             <td>{{ c.player ? c.player.name : '—' }}</td>
@@ -61,7 +59,7 @@
             </td>
           </tr>
         {% else %}
-          <tr><td class="empty" colspan="6">Aucun carton.</td></tr>
+          <tr><td class="empty" colspan="5">{{ search ? 'Aucun carton ne correspond à cette recherche.' : 'Aucun carton pour le moment.' }}</td></tr>
         {% endfor %}
       </tbody>
     </table>

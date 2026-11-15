@@ -11,11 +11,11 @@
       </trans-unit>
       <trans-unit id="UlmSkwY" resname="app.rules.QUINE">
         <source>app.rules.QUINE</source>
-        <target>1 ligne</target>
+        <target>Quine</target>
       </trans-unit>
       <trans-unit id="9_okIFE" resname="app.rules.DOUBLE_QUINE">
         <source>app.rules.DOUBLE_QUINE</source>
-        <target>2 lignes</target>
+        <target>Double quine</target>
       </trans-unit>
       <trans-unit id="qPMyEcu" resname="app.rules.FULL_CARD">
         <source>app.rules.FULL_CARD</source>
@@ -35,7 +35,7 @@
       </trans-unit>
       <trans-unit id="WinSrc1" resname="app.winner.SYSTEM">
         <source>app.winner.SYSTEM</source>
-        <target>Logiciel</target>
+        <target>Hors salle</target>
       </trans-unit>
       <trans-unit id="WinSrc2" resname="app.winner.OFFLINE">
         <source>app.winner.OFFLINE</source>
