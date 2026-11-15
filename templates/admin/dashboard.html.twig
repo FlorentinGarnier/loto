@@ -8,7 +8,8 @@
     gameId: current ? current.id : null,
     mercureUrl: app.request.server.get('MERCURE_PUBLIC_URL'),
     toggleUrl: current ? path('admin_toggle_number', {id: current.id, number: 0}) : null,
-    potentialsFragmentUrl: current ? path('admin_game_potentials_fragment', {id: current.id}) : null
+    potentialsFragmentUrl: current ? path('admin_game_potentials_fragment', {id: current.id}) : null,
+    stateUrl: current ? path('admin_game_state', {id: current.id}) : null
 }) }}>
     <div class="panel">
         <div class="panel__head">
@@ -28,18 +29,13 @@
                     <form method="post" action="{{ path('admin_game_finish', {id: current.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="btn btn--dark btn--small">Terminer</button></form>
                     <form method="post" action="{{ path('admin_game_next', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Passer à la partie suivante ? Les tirages seront transférés.' }) }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="btn btn--small">Partie suivante</button></form>
                     <form method="post" action="{{ path('admin_game_demarque', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Confirmer la démarque (réinitialiser tous les tirages) ?' }) }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="btn btn--danger btn--small">Démarque (reset)</button></form>
-                    {% if current.isFrozen %}
-                        <form method="post" action="{{ path('admin_game_unfreeze', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Dégeler la partie ? Les tirages seront à nouveau possibles.' }) }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button type="submit" class="btn btn--danger btn--small">Dégeler la partie</button></form>
-                    {% endif %}
+                    <form method="post" action="{{ path('admin_game_unfreeze', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Dégeler la partie ? Les tirages seront à nouveau possibles.' }) }} {{ stimulus_target('dashboard', 'unfreeze') }} {{ current.isFrozen ? '' : 'hidden' }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button type="submit" class="btn btn--danger btn--small">Dégeler la partie</button></form>
                 </div>
 
                 {# Alertes tableau de bord #}
                 {% set potentials_count = potentials|length %}
                 {% set validated_count = current.winners|length %}
                 <div class="stack stack--tight">
-                    {% if current.isFrozen %}
-                        <div class="alert alert--success" role="status">Cette partie est gelée. Les tirages ne sont pas autorisés.</div>
-                    {% endif %}
                     {% if current.status.value != 'RUNNING' %}
                         <div class="alert alert--warning">Aucune partie en cours. Démarrez une partie pour activer le tirage.</div>
                     {% endif %}
@@ -76,7 +72,12 @@
                     <div class="row muted">Dernier numéro :
                         <span {{ stimulus_target('dashboard', 'lastNumber') }} class="last-number {{ last ? 'is-set' }}">{{ last ?? '—' }}</span>
                     </div>
-                    <div class="row muted">Mercure : <span {{ stimulus_target('dashboard', 'mercureStatus') }} class="pill">…</span></div>
+                </div>
+                {# Messages posés au-dessus de la grille : c'est là que l'animateur regarde pendant le tirage #}
+                <div class="grid-messages">
+                    <div {{ stimulus_target('dashboard', 'freezeBanner') }} class="alert alert--success" role="status" {{ current.isFrozen ? '' : 'hidden' }}>Gagnant détecté : la partie est gelée. Les tirages sont bloqués tant qu'elle n'est pas dégelée.</div>
+                    <div {{ stimulus_target('dashboard', 'offline') }} class="alert alert--error" role="alert" hidden>Connexion temps réel perdue : cet écran ne se met plus à jour seul. Vérifiez que l'écran de salle suit toujours. Reconnexion en cours…</div>
+                    <div {{ stimulus_target('dashboard', 'gridMessage') }} class="alert alert--error" role="alert" hidden></div>
                 </div>
                 <div {{ stimulus_target('dashboard', 'grid') }} class="draw-grid">
                     {% for n in 1..90 %}

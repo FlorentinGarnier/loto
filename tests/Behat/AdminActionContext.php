@@ -73,6 +73,105 @@ final class AdminActionContext extends BaseContext
     }
 
     /**
+     * @When /^l'écran d'animation tire le numéro (\d+)$/
+     */
+    public function lEcranDAnimationTireLeNumero(int $number): void
+    {
+        $token = $this->adminToken();
+        $this->client->request(
+            'POST',
+            $this->resolvePath("/admin/game/{game}/toggle/{$number}"),
+            ['_token' => $token],
+            server: ['HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest', 'HTTP_ACCEPT' => 'application/json'],
+        );
+    }
+
+    /**
+     * @When /^l'écran d'animation relit l'état de la partie$/
+     */
+    public function lEcranDAnimationRelitLEtatDeLaPartie(): void
+    {
+        $this->client->request('GET', $this->resolvePath('/admin/game/{game}/state'));
+    }
+
+    /**
+     * @When /^l'écran de salle relit l'état$/
+     */
+    public function lEcranDeSalleRelitLEtat(): void
+    {
+        $this->client->request('GET', '/public/state');
+    }
+
+    /**
+     * @When /^j'ouvre l'écran de salle$/
+     */
+    public function jOuvreLEcranDeSalle(): void
+    {
+        $this->client->request('GET', '/public');
+        Assert::assertSame(200, $this->client->getResponse()->getStatusCode(), "L'écran de salle ne s'affiche pas");
+    }
+
+    /**
+     * @Then /^la réponse doit donner la raison "([^"]*)"$/
+     */
+    public function laReponseDoitDonnerLaRaison(string $reason): void
+    {
+        Assert::assertStringContainsString($reason, (string) ($this->jsonResponse()['message'] ?? ''));
+    }
+
+    /**
+     * @Then /^l'état renvoyé doit compter (\d+) numéros tirés$/
+     */
+    public function lEtatRenvoyeDoitCompterNumerosTires(int $count): void
+    {
+        Assert::assertCount($count, $this->state()['draws'] ?? null);
+    }
+
+    /**
+     * @Then /^l'état renvoyé doit indiquer une partie gelée$/
+     */
+    public function lEtatRenvoyeDoitIndiquerUnePartieGelee(): void
+    {
+        Assert::assertTrue($this->state()['isFrozen'] ?? null);
+    }
+
+    /**
+     * @Then /^l'état renvoyé ne doit pas indiquer une partie gelée$/
+     */
+    public function lEtatRenvoyeNeDoitPasIndiquerUnePartieGelee(): void
+    {
+        Assert::assertFalse($this->state()['isFrozen'] ?? null);
+    }
+
+    /**
+     * @Then /^l'état renvoyé ne doit désigner aucune partie$/
+     */
+    public function lEtatRenvoyeNeDoitDesignerAucunePartie(): void
+    {
+        $state = $this->state();
+        Assert::assertArrayHasKey('gameId', $state);
+        Assert::assertNull($state['gameId']);
+    }
+
+    /**
+     * @Then /^l'écran de salle doit être en attente$/
+     */
+    public function lEcranDeSalleDoitEtreEnAttente(): void
+    {
+        $crawler = $this->client->getCrawler();
+        Assert::assertNull($crawler->filter('#empty')->attr('hidden'), "Le message d'attente est masqué");
+        Assert::assertNotNull($crawler->filter('#main')->attr('hidden'), "Le tirage est affiché alors qu'aucune partie n'est en cours");
+    }
+
+    /**
+     * @Then /^l'écran de salle doit contenir la grille des 90 numéros$/
+     */
+    public function lEcranDeSalleDoitContenirLaGrilleDes90Numeros(): void
+    {
+        Assert::assertCount(90, $this->client->getCrawler()->filter('#grid .cell'));
+    }
+
+    /**
      * @Then /^la requête doit être refusée$/
      */
     public function laRequeteDoitEtreRefusee(): void
@@ -99,6 +198,29 @@ final class AdminActionContext extends BaseContext
         Assert::assertGreaterThan(0, $node->count(), "Bouton « {$button} » introuvable sur {$page}");
 
         $this->client->submit($node->form());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function jsonResponse(): array
+    {
+        $response = $this->client->getResponse();
+        Assert::assertStringContainsString('json', (string) $response->headers->get('Content-Type'), 'La réponse n\'est pas du JSON');
+
+        return json_decode((string) $response->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * État de la partie : la réponse elle-même, ou sa clé « state » pour un tirage.
+     *
+     * @return array<string, mixed>
+     */
+    private function state(): array
+    {
+        $json = $this->jsonResponse();
+
+        return $json['state'] ?? $json;
     }
 
     /**

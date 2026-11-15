@@ -7,13 +7,13 @@ use App\Entity\Event;
 use App\Entity\Game;
 use App\Entity\Winner;
 use App\Enum\GameStatus;
-use App\Enum\WinnerSource;
 use App\Repository\CardRepository;
 use App\Repository\EventRepository;
 use App\Repository\GameRepository;
 use App\Security\AdminCsrf;
 use App\Service\CardService;
 use App\Service\DrawService;
+use App\Service\GameStateBuilder;
 use App\Service\WinnerDetectionService;
 use App\Service\WinnerService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -39,6 +39,7 @@ final class AdminController extends AbstractController
         private readonly WinnerDetectionService $winnerService,
         private readonly WinnerService $winnerManagementService,
         private readonly CardService $cardService,
+        private readonly GameStateBuilder $stateBuilder,
         private readonly HubInterface $hub,
         private readonly UrlGeneratorInterface $urlGenerator,
         private readonly EntityManagerInterface $em,
@@ -86,33 +87,31 @@ final class AdminController extends AbstractController
 
     #[Route('/game/{id}/toggle/{number}', name: 'admin_toggle_number', requirements: ['number' => '\\d+'], methods: ['POST'])]
     #[IsCsrfTokenValid(AdminCsrf::TOKEN_ID)]
-    public function toggleNumber(Game $game, int $number): Response
+    public function toggleNumber(Request $request, Game $game, int $number): Response
     {
-        if (GameStatus::RUNNING !== $game->getStatus()) {
-            if ($this->isXmlHttpRequest()) {
-                return new JsonResponse(['error' => 'Game not running'], 400);
-            }
-            $this->addFlash('error', 'Impossible de cocher: la partie n\'est pas en cours.');
+        $refusal = match (true) {
+            GameStatus::RUNNING !== $game->getStatus() => ['not_running', 'La partie n\'est pas en cours : le numéro n\'a pas été tiré.'],
+            $game->isFrozen() => ['frozen', 'La partie est gelée (gagnant détecté) : le numéro n\'a pas été tiré.'],
+            default => null,
+        };
 
-            return $this->redirectToRoute('admin_dashboard');
-        }
-
-        // Vérifier si la partie est gelée
-        if ($game->isFrozen()) {
-            if ($this->isXmlHttpRequest()) {
-                return new JsonResponse(['error' => 'Game is frozen'], 400);
+        if (null !== $refusal) {
+            [$error, $message] = $refusal;
+            if ($request->isXmlHttpRequest()) {
+                // L'état joint permet à l'écran de se remettre d'accord avec le serveur
+                return new JsonResponse(['error' => $error, 'message' => $message, 'state' => $this->stateBuilder->build($game)], Response::HTTP_CONFLICT);
             }
-            $this->addFlash('error', 'Impossible de cocher: la partie est gelée (gagnant détecté).');
+            $this->addFlash('error', $message);
 
             return $this->redirectToRoute('admin_dashboard');
         }
 
         $cards = $this->cardRepo->findByEvent($game->getEvent());
         $result = $this->drawService->toggleNumber($game, $number, $cards);
-        $this->publishGameUpdate($game);
+        $state = $this->publishGameUpdate($game);
 
-        if ($this->isXmlHttpRequest()) {
-            return new JsonResponse($result);
+        if ($request->isXmlHttpRequest()) {
+            return new JsonResponse($result + ['state' => $state]);
         }
 
         if ($result['frozen']) {
@@ -120,6 +119,12 @@ final class AdminController extends AbstractController
         }
 
         return $this->redirectToRoute('admin_dashboard');
+    }
+
+    #[Route('/game/{id}/state', name: 'admin_game_state', methods: ['GET'])]
+    public function gameState(Game $game): JsonResponse
+    {
+        return new JsonResponse($this->stateBuilder->build($game));
     }
 
     #[Route('/game/{id}/start', name: 'admin_game_start', methods: ['POST'])]
@@ -261,13 +266,13 @@ final class AdminController extends AbstractController
 
     #[Route('/game/{id}/unfreeze', name: 'admin_game_unfreeze', methods: ['POST'])]
     #[IsCsrfTokenValid(AdminCsrf::TOKEN_ID)]
-    public function unfreezeGame(Game $game): JsonResponse|RedirectResponse
+    public function unfreezeGame(Request $request, Game $game): JsonResponse|RedirectResponse
     {
         $game->setIsFrozen(false);
         $this->em->persist($game);
         $this->em->flush();
         $this->publishGameUpdate($game);
-        if ($this->isXmlHttpRequest()) {
+        if ($request->isXmlHttpRequest()) {
             return new JsonResponse(['frozen' => false]);
         }
 
@@ -276,59 +281,25 @@ final class AdminController extends AbstractController
         return $this->redirectToRoute('admin_dashboard');
     }
 
-    private function publishGameUpdate(Game $game): void
+    /**
+     * Publie l'état de la partie vers l'écran d'animation et l'écran de salle.
+     *
+     * @return array<string, mixed> l'état publié
+     */
+    private function publishGameUpdate(Game $game): array
     {
+        $payload = $this->stateBuilder->build($game);
+
         try {
             $eventId = $game->getEvent()->getId();
-            $gameId = $game->getId();
-            $topic = "/events/{$eventId}/games/{$gameId}/state";
-
-            $cards = $this->cardRepo->findByEvent($game->getEvent());
-            $potentials = $this->winnerService->findPotentialWinners($game, $cards);
-
-            // Déterminer si on a un gagnant déclaré (SYSTEM)
-            $hasSystemWinner = false;
-            foreach ($game->getWinners() as $winner) {
-                if (WinnerSource::SYSTEM === $winner->getSource()) {
-                    $hasSystemWinner = true;
-                    break;
-                }
-            }
-
-            // Afficher le carton quand un gagnant potentiel est détecté (partie gelée)
-            $detectedCard = null;
-            if ($game->isFrozen() && \count($potentials) > 0) {
-                // Prendre le premier carton potentiel détecté
-                $firstPotential = $potentials[0];
-                $card = $firstPotential['card'];
-                $detectedCard = [
-                    'reference' => $card->getReference(),
-                    'grid' => $card->getFormattedGrid(),
-                    'player' => $card->getPlayer() ? $card->getPlayer()->getName() : null,
-                ];
-            }
-
-            $payload = [
-                'gameId' => $gameId,
-                'position' => $game->getPosition(),
-                'rule' => $game->getRule()->value,
-                'prize' => $game->getPrize(),
-                'status' => $game->getStatus()->value,
-                'draws' => array_map(fn ($d) => $d->getNumber(), $game->getDraws()->toArray()),
-                'potentialsCount' => \count($potentials),
-                'isFrozen' => $game->isFrozen(),
-                'freezeOrderIndex' => $game->getFreezeOrderIndex(),
-                'hasSystemWinner' => $hasSystemWinner,
-                'detectedCard' => $detectedCard,
-            ];
-            $update = new Update($topic, json_encode($payload));
-            $this->hub->publish($update);
-            // Also publish a general event topic for public
-            $publicTopic = "/events/{$eventId}/public";
-            $this->hub->publish(new Update($publicTopic, json_encode($payload)));
+            $json = json_encode($payload);
+            $this->hub->publish(new Update("/events/{$eventId}/games/{$game->getId()}/state", $json));
+            $this->hub->publish(new Update("/events/{$eventId}/public", $json));
         } catch (\Exception $e) {
             // En environnement de test, Mercure peut ne pas être disponible - ignorer silencieusement
         }
+
+        return $payload;
     }
 
     #[Route('/game/{id}/winner/offline', name: 'admin_winner_offline', methods: ['POST'])]
@@ -406,10 +377,5 @@ final class AdminController extends AbstractController
         $this->publishGameUpdate($game);
 
         return $this->redirectToRoute('admin_dashboard');
-    }
-
-    private function isXmlHttpRequest(): bool
-    {
-        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 'xmlhttprequest' === strtolower($_SERVER['HTTP_X_REQUESTED_WITH']);
     }
 }
