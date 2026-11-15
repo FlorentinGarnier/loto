@@ -6,12 +6,11 @@ namespace App\Tests\Behat;
 
 use Behat\Behat\Context\Context;
 use Behat\MinkExtension\Context\MinkContext;
+use Behat\Step\Then;
 
 final class FeatureContext extends MinkContext implements Context
 {
-    /**
-     * @Then /^Behat is set up$/
-     */
+    #[Then('/^Behat is set up$/')]
     public function behatIsSetUp(): void
     {
         // Pure assertion that does not require HTTP or the database
