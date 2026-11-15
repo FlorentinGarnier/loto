@@ -1,7 +1,7 @@
 # Page d'attente de quinou.fr, servie tant que le site vitrine n'existe pas.
 # Un seul fichier statique derrière Traefik ; indépendante de l'application et de ses déploiements.
 #
-# Sur le serveur : copier ce dossier (compose.yaml et public/) dans /opt/quinou-attente, puis
+# Sur le serveur : copier ce dossier (compose.yaml et public/) dans ~/quinou-attente (compte florentin), puis
 #   docker compose up -d
 # Mise à jour du texte : remplacer public/index.html, rien à redémarrer.
 # Retrait : docker compose down (quinou.fr repasse alors à la route suivante de Traefik).
