@@ -63,7 +63,7 @@ class Card
      * Returns the grid formatted for display in a traditional loto card layout.
      * Converts the stored grid (3 lines of 5 numbers) into a display grid
      * (3 lines of 9 columns) where each number is positioned in the column
-     * corresponding to its tens digit (0-9 for column 0, 10-19 for column 1, etc.).
+     * corresponding to its tens digit (0-9 for column 0, 10-19 for column 1, etc.; the last column holds 80-90).
      *
      * @return array<int, array<int, int|null>> 3 lines of 9 columns each
      */
@@ -75,7 +75,8 @@ class Card
         foreach ($this->grid as $k => $row) {
             foreach ($row as $n) {
                 for ($i = 0; $i < 9; ++$i) {
-                    if ((int) floor($n / 10) === $i) {
+                    // Le 90 partage la dernière colonne avec les 80-89
+                    if (min(8, (int) floor($n / 10)) === $i) {
                         $numbers[$k][$i] = $n;
                     }
                 }
