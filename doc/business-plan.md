@@ -8,7 +8,7 @@
 * **Le produit** : un service en ligne qui assiste l'animateur d'un loto associatif, détecte les cartons gagnants et affiche le tirage au public.
 * **Le marché** : des dizaines de milliers d'associations organisent des lotos pour se financer ; elles sont peu équipées, sensibles au prix et habituées à des outils gratuits ou à moins de 50 € par an.
 * **Le modèle** : une formule gratuite pour essayer, un pass à 19 € par événement, un abonnement à 59 € par an, une formule pro à 190 € par an.
-* **Le verdict** : le projet est rentable dès une centaine de clients parce que ses coûts sont très bas, mais il ne finance un salaire qu'autour de 1 000 clients payants. C'est un bon complément d'activité ; pour en faire une activité principale, il faut les extensions du lot 4 ou la clientèle des animateurs professionnels.
+* **Le verdict** : le projet est rentable dès une centaine de clients parce que ses coûts sont très bas, mais il ne finance un salaire qu'autour de 1 000 clients payants. C'est un bon complément d'activité ; pour en faire une activité principale, il faut les extensions du lot 5 ou la clientèle des animateurs professionnels.
 * **La prochaine étape** : trois associations pilotes et une prévente, avant de développer la facturation.
 
 ---
@@ -162,13 +162,13 @@ Ces charges n'incluent ni la rémunération du fondateur, ni les cotisations soc
 
 ### 7.5 Investissement initial
 
-L'essentiel de l'investissement est du temps de développement. Estimation pour atteindre l'ouverture commerciale (lots 0 à 2 du cahier des charges) :
+L'essentiel de l'investissement est du temps de développement. L'estimation ci-dessous a été faite sur l'ancien découpage, celui d'une application partagée entre toutes les organisations. Le cahier des charges retient depuis une instance par client, avec un portail séparé, et l'ouverture commerciale correspond maintenant aux lots 0 à 3 : **l'estimation est à refaire**. Le coût d'hébergement du §7.2 est à revoir aussi, puisque chaque client a ses propres conteneurs.
 
 | Lot | Charge estimée |
 | --- | --- |
 | 0 – Assainissement | 3 jours |
-| 1 – Multi-organisation | 15 jours |
-| 2 – Ouverture commerciale | 30 jours |
+| 1 – Multi-organisation (ancien découpage) | 15 jours |
+| 2 – Ouverture commerciale (ancien découpage) | 30 jours |
 | **Total** | **48 jours** |
 
 Si ce temps est fourni par le fondateur, le besoin de trésorerie se limite aux charges de l'année 1, soit environ 5 000 €. Sous-traité à 450 € par jour, il représenterait 21 600 €, ce que les résultats prévus ne remboursent pas avant l'année 3 dans le scénario prudent.
@@ -208,7 +208,7 @@ Tel quel, le projet est un **complément d'activité rentable**, pas une entrepr
 | Cadre légal mal compris par un client | Moyenne | Conditions d'utilisation, rappels dans l'interface, relecture par un juriste |
 | Taille de marché surestimée | Moyenne | Vérifier l'hypothèse du §2.2 pendant la phase pilote |
 | Charge de support le samedi soir | Moyenne | Aide en ligne, mode démonstration, support prioritaire réservé à la formule Pro |
-| Fuite de données de joueurs | Élevée | Cloisonnement testé, données minimales, suppression automatique |
+| Fuite de données de joueurs | Élevée | Une instance et une base par client, données minimales, suppression automatique |
 | Saisonnalité des revenus | Faible | Abonnement annuel, trésorerie lissée |
 
 ---
@@ -219,9 +219,9 @@ Tel quel, le projet est un **complément d'activité rentable**, pas une entrepr
 | --- | --- | --- |
 | **1. Pilote** (3 mois) | Lots 0 et 1, trois associations pilotes sur de vrais lotos, entretiens avec deux animateurs professionnels | Trois lotos animés sans incident ; au moins deux pilotes prêts à payer |
 | **2. Prévente** (1 mois) | Page de présentation, liste d'attente, offre de lancement | 30 préinscriptions ou 10 préventes |
-| **3. Ouverture** (3 mois) | Lot 2, lancement en septembre pour la saison | 80 clients payants sur la première saison |
-| **4. Fidélisation** | Lot 3 | Taux de réabonnement supérieur à 60 % |
-| **5. Changement d'échelle** | Lot 4 et leviers du §8 | Décision selon les résultats |
+| **3. Ouverture** (3 mois) | Lots 2 et 3, lancement en septembre pour la saison | 80 clients payants sur la première saison |
+| **4. Fidélisation** | Lot 4 | Taux de réabonnement supérieur à 60 % |
+| **5. Changement d'échelle** | Lot 5 et leviers du §8 | Décision selon les résultats |
 
 Si l'étape 1 ou 2 échoue, le projet s'arrête ou reste un outil interne, pour un coût limité au temps du pilote.
 
