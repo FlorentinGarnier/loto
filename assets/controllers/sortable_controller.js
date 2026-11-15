@@ -1,5 +1,6 @@
 import Sortable from 'sortablejs';
 import { Controller } from '@hotwired/stimulus';
+import { adminCsrfToken } from '../csrf.js';
 
 export default class extends Controller {
     static values = {
@@ -23,7 +24,7 @@ export default class extends Controller {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: JSON.stringify({ order: order })
+                body: JSON.stringify({ order: order, _token: adminCsrfToken() })
             });
 
             if (!response.ok) {

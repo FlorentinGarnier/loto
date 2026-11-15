@@ -575,6 +575,86 @@ final class WinnerContext extends BaseContext
     }
 
     /**
+     * @When /^je soumets la validation du carton "([^"]*)" sans jeton CSRF$/
+     */
+    public function jeSoumetsLaValidationDuCartonSansJetonCsrf(string $reference): void
+    {
+        $this->postWinnerValidation($reference, []);
+    }
+
+    /**
+     * @When /^je soumets la validation du carton "([^"]*)" avec un jeton CSRF invalide$/
+     */
+    public function jeSoumetsLaValidationDuCartonAvecUnJetonCsrfInvalide(string $reference): void
+    {
+        $this->postWinnerValidation($reference, ['_token' => 'jeton-invalide']);
+    }
+
+    /**
+     * @When /^je valide le carton "([^"]*)" depuis le tableau de bord$/
+     */
+    public function jeValideLeCartonDepuisLeTableauDeBord(string $reference): void
+    {
+        $card = $this->cardRepo->findOneBy(['reference' => $reference]);
+        Assert::assertNotNull($card, "Le carton '{$reference}' n'existe pas");
+
+        // Le formulaire affiché porte le jeton CSRF : on le soumet tel quel, comme l'animateur
+        $crawler = $this->client->request('GET', '/admin');
+        $input = $crawler->filter(sprintf('form[action$="/winner/validate"] input[name="card_id"][value="%d"]', $card->getId()));
+        Assert::assertCount(1, $input, "Le carton '{$reference}' n'est pas proposé à la validation sur le tableau de bord");
+
+        $this->client->submit($input->closest('form')->form());
+    }
+
+    /**
+     * @Then /^aucun gagnant ne doit être enregistré pour la partie d'ordre (\d+)$/
+     */
+    public function aucunGagnantNeDoitEtreEnregistrePourLaPartieDOrdre(int $position): void
+    {
+        $game = $this->findGameByPosition($position);
+        Assert::assertNotNull($game, "Aucune partie trouvée à la position {$position}");
+
+        $this->entityManager->refresh($game);
+        Assert::assertCount(0, $game->getWinners(), 'Un gagnant a été enregistré malgré le refus');
+    }
+
+    /**
+     * @Then /^le carton "([^"]*)" ne doit pas être bloqué$/
+     */
+    public function leCartonNeDoitPasEtreBloque(string $reference): void
+    {
+        $card = $this->cardRepo->findOneBy(['reference' => $reference]);
+        Assert::assertNotNull($card, "Le carton '{$reference}' n'existe pas");
+
+        $this->entityManager->refresh($card);
+        Assert::assertFalse($card->isBlocked(), "Le carton '{$reference}' est bloqué");
+    }
+
+    /**
+     * @param array<string, string> $extra Champs ajoutés à la requête (jeton, par exemple)
+     */
+    private function postWinnerValidation(string $reference, array $extra): void
+    {
+        $card = $this->cardRepo->findOneBy(['reference' => $reference]);
+        Assert::assertNotNull($card, "Le carton '{$reference}' n'existe pas");
+
+        $runningGame = null;
+        foreach ($this->gameRepo->findAll() as $game) {
+            if ('RUNNING' === $game->getStatus()->value) {
+                $runningGame = $game;
+                break;
+            }
+        }
+        Assert::assertNotNull($runningGame, 'Aucune partie en cours');
+
+        $this->client->request(
+            'POST',
+            sprintf('/admin/game/%d/winner/validate', $runningGame->getId()),
+            ['card_id' => $card->getId()] + $extra,
+        );
+    }
+
+    /**
      * @Then /^la partie d'ordre (\d+) ne doit plus avoir de gagnants$/
      */
     public function laPartieDOrdreNeDroitPlusAvoirDeGagnants(int $position): void

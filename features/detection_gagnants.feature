@@ -59,6 +59,30 @@ Fonctionnalité: Détection et validation des gagnants
         Et le gagnant doit référencer le carton "A001"
         Et le carton "A001" doit être bloqué avec la raison "WINNER_VALIDATED"
 
+    Scénario: Valider un gagnant système depuis le tableau de bord
+        Étant donné que la partie d'ordre 1 est en statut "RUNNING"
+        Et qu'un carton "A001" est détecté comme gagnant potentiel
+        Et que la partie d'ordre 1 est gelée
+        Quand je valide le carton "A001" depuis le tableau de bord
+        Alors un gagnant de source "SYSTEM" doit être enregistré pour la partie d'ordre 1
+        Et le carton "A001" doit être bloqué avec la raison "WINNER_VALIDATED"
+
+    Scénario: Refuser la validation d'un gagnant sans jeton CSRF
+        Étant donné que la partie d'ordre 1 est en statut "RUNNING"
+        Et qu'un carton "A001" est détecté comme gagnant potentiel
+        Et que la partie d'ordre 1 est gelée
+        Quand je soumets la validation du carton "A001" sans jeton CSRF
+        Alors aucun gagnant ne doit être enregistré pour la partie d'ordre 1
+        Et le carton "A001" ne doit pas être bloqué
+
+    Scénario: Refuser la validation d'un gagnant avec un jeton CSRF invalide
+        Étant donné que la partie d'ordre 1 est en statut "RUNNING"
+        Et qu'un carton "A001" est détecté comme gagnant potentiel
+        Et que la partie d'ordre 1 est gelée
+        Quand je soumets la validation du carton "A001" avec un jeton CSRF invalide
+        Alors aucun gagnant ne doit être enregistré pour la partie d'ordre 1
+        Et le carton "A001" ne doit pas être bloqué
+
     Scénario: Ajouter un gagnant offline (sans détection automatique)
         Étant donné que la partie d'ordre 1 est en statut "RUNNING"
         Et qu'un carton "A001" existe

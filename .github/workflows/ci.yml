@@ -1,0 +1,85 @@
+# Chaque demande de fusion : contrôles et construction des images.
+# Chaque fusion sur main : contrôles (sauf si la PR a déjà tout passé sur le même arbre), images publiées par digest,
+# déploiement automatique sur staging.
+# CI/CD commune à tous les projets : FlorentinGarnier/ci-symfony. Ce fichier ne contient que les réglages de Loto.
+name: CI
+
+on:
+    pull_request: ~
+    push:
+        branches: [main]
+
+permissions:
+    contents: read
+
+concurrency:
+    group: ci-${{ github.ref }}
+    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+    tested:
+        if: github.event_name == 'push'
+        uses: FlorentinGarnier/ci-symfony/.github/workflows/tested-tree.yml@19e1febea50c98db8a5fd812e90c6d3ca9e3d10a # v1.3.0
+        permissions:
+            actions: read
+            contents: read
+
+    # Specs PHPSpec (spec/) : règles métier des services et des entités, sans base de données.
+    # La CI commune ne lance que PHPUnit et Behat.
+    specs:
+        name: Specs PHPSpec
+        needs: tested
+        if: ${{ !cancelled() && needs.tested.outputs.tested != 'true' }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+              with:
+                  php-version: "8.4"
+                  extensions: apcu, intl, pdo_pgsql, zip
+                  tools: composer:v2
+                  coverage: none
+            - run: composer install --no-interaction --no-progress --prefer-dist --no-scripts
+            - run: vendor/bin/phpspec run --format=dot --no-interaction
+
+    checks:
+        needs: tested
+        if: ${{ !cancelled() && needs.tested.outputs.tested != 'true' }}
+        uses: FlorentinGarnier/ci-symfony/.github/workflows/ci.yml@19e1febea50c98db8a5fd812e90c6d3ca9e3d10a # v1.3.0
+        with:
+            php-version: "8.4"
+            php-extensions: apcu, intl, pdo_pgsql, zip
+            database: postgres
+            # Les scripts Composer sont joués (la CI commune les saute par défaut) : importmap:install installe les
+            # assets dont le gabarit de l'administration a besoin, et les scénarios Behat affichent ces pages.
+            composer-flags: --optimize-autoloader
+
+    # needs liste tous les contrôles : le marqueur d'arbre testé n'est écrit sur PR qu'une fois les images construites.
+    images:
+        needs: [tested, checks, specs]
+        if: >-
+            ${{ !cancelled() && (needs.tested.outputs.tested == 'true'
+            || (needs.checks.result == 'success' && needs.specs.result == 'success')) }}
+        uses: FlorentinGarnier/ci-symfony/.github/workflows/build.yml@19e1febea50c98db8a5fd812e90c6d3ca9e3d10a # v1.3.0
+        permissions:
+            contents: read
+            packages: write
+        with:
+            mark-tested-tree: true
+
+    staging:
+        if: ${{ !cancelled() && github.event_name == 'push' && needs.images.result == 'success' }}
+        needs: images
+        uses: FlorentinGarnier/ci-symfony/.github/workflows/deploy.yml@19e1febea50c98db8a5fd812e90c6d3ca9e3d10a # v1.3.0
+        with:
+            environment: staging
+            php_image: ${{ needs.images.outputs.php_image }}
+            web_image: ${{ needs.images.outputs.web_image }}
+            commit: ${{ github.sha }}
+            # Outil d'animation sans page à référencer : pas de robots.txt ni d'en-tête X-Robots-Tag par environnement.
+            check-indexing: false
+        secrets:
+            DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+            DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+            BASIC_AUTH: ${{ secrets.BASIC_AUTH }}
