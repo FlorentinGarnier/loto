@@ -171,6 +171,7 @@ class WinnerServiceSpec extends ObjectBehavior
             ->during('validateOfflineWinner', [$game, 'A001', $card]);
 
         $this->ensure($game->getWinners()->isEmpty(), 'Aucun gagnant ne doit être créé pour un carton bloqué.');
+        $this->ensure(!$game->isFrozen(), 'Un gagnant salle refusé ne doit pas geler la partie.');
     }
 
     // —— Reset global ————————————————————————————————————————————————

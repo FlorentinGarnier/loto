@@ -258,6 +258,19 @@ class DrawServiceSpec extends ObjectBehavior
         $em->flush()->shouldHaveBeenCalled();
     }
 
+    function it_unfreezes_every_game_when_clearing_the_draws_of_an_event()
+    {
+        $event = new Event('Loto', new \DateTimeImmutable('2026-01-01'));
+        $frozen = $this->createGame([1, 2, 3]);
+        $frozen->freeze(3);
+        $event->addGame($frozen);
+
+        $this->clearAllForEvent($event);
+
+        $this->ensure(!$frozen->isFrozen(), 'Une partie sans tirage ne doit pas rester gelée.');
+        $this->ensure(null === $frozen->getFreezeOrderIndex(), 'L\'index de gel doit être effacé.');
+    }
+
     /**
      * @param int[] $numbers Numéros tirés, dans l'ordre du tirage
      */

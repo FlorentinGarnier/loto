@@ -151,7 +151,7 @@ Le gel intervient automatiquement dès qu'un gagnant potentiel est détecté, ou
 
 **Gagnant système** : choisi parmi les gagnants potentiels, validé à la main. Contrôles : partie gelée, carton non bloqué, carton du même événement, règle respectée au moment du gel, pas de doublon. Effet : création du gagnant et blocage du carton.
 
-**Gagnant salle** : référence libre, carton associé facultatif. Gèle la partie si elle ne l'est pas. Si un carton est associé, il est bloqué.
+**Gagnant salle** : référence libre, carton associé facultatif. Gèle la partie si elle ne l'est pas. Si un carton est associé, il est bloqué. Un carton déjà bloqué est refusé sans geler la partie.
 
 Un carton bloqué n'apparaît plus dans les gagnants potentiels et ne peut plus gagner jusqu'à la démarque ou un reset global.
 
@@ -163,7 +163,7 @@ Un carton bloqué n'apparaît plus dans les gagnants potentiels et ne peut plus 
 ### 4.8 Démarque et resets
 
 * **Démarque d'une partie** (partie en cours uniquement) : supprime ses tirages, la dégèle, supprime ses gagnants et débloque leurs cartons.
-* **Resets de l'événement** : tous les tirages, tous les gagnants, ou désassociation de tous les joueurs.
+* **Resets de l'événement** : tous les tirages (les parties sont dégelées), tous les gagnants, ou désassociation de tous les joueurs.
 * Les actions destructrices demandent une confirmation.
 
 ### 4.9 Préparation de l'événement
@@ -333,9 +333,6 @@ Mentions légales, conditions générales de vente et d'utilisation, politique d
 | CSRF | Jeton facultatif sur la validation d'un gagnant | Jeton obligatoire partout |
 | Journal des actions | Annoncé dans l'ancien cahier des charges, absent du code | À créer (ANI-2) |
 | Facturation | Aucune | Formules, paiement, factures |
-| Repository des gagnants | `Winner` référence une classe `WinnerRepository` qui n'existe pas | À créer |
-| Gagnant salle refusé | La partie reste gelée si le carton associé est déjà bloqué | Vérifier le carton avant de geler |
-| Reset des tirages de l'événement | Ne dégèle pas les parties | Dégeler en même temps |
 
 ---
 
@@ -343,7 +340,7 @@ Mentions légales, conditions générales de vente et d'utilisation, politique d
 
 | Lot | Contenu | Résultat |
 | --- | --- | --- |
-| **0 – Assainissement** | Corrections du tableau des écarts qui ne dépendent pas du SaaS (CSRF, repository, gel, reset) | Socle fiable |
+| **0 – Assainissement** | Corrections du tableau des écarts qui ne dépendent pas du SaaS (jeton CSRF obligatoire) | Socle fiable |
 | **1 – Multi-organisation** | ORG-1 à ORG-3, ORG-6, EVT-1, CAR-1, CAR-3, PUB-1, PUB-2, §6.1, §6.2 | Plusieurs associations sur une même instance, en accès gratuit sur invitation |
 | **2 – Ouverture commerciale** | EVT-4, CAR-2, CAR-4, JOU-1, JOU-2, ANI-1, FAC-1 à FAC-5, EXP-1, §6.3 à §6.5 | Inscription libre et paiement en ligne |
 | **3 – Confort et fidélisation** | ORG-4, EVT-2, EVT-3, CAR-5, JOU-3, ANI-2, ANI-3, PUB-3, PUB-4, EXP-2, EXP-3 | Raisons de s'abonner à l'année |

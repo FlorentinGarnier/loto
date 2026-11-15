@@ -45,7 +45,8 @@ final class DrawService
     }
 
     /**
-     * Remove all draws for all games of an event.
+     * Remove all draws for all games of an event and unfreeze them:
+     * a frozen game without draws could not be played again.
      */
     public function clearAllForEvent(\App\Entity\Event $event): void
     {
@@ -54,6 +55,7 @@ final class DrawService
                 $game->removeDraw($d);
                 $this->em->remove($d);
             }
+            $game->unfreeze();
             $this->em->persist($game);
         }
         $this->em->flush();
