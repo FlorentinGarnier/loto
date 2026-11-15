@@ -204,7 +204,7 @@ final class AdminController extends AbstractController
     public function demarque(Game $game): RedirectResponse
     {
         if (GameStatus::RUNNING !== $game->getStatus()) {
-            $this->addFlash('error', 'Démarque impossible: la partie doit être en cours.');
+            $this->addFlash('error', 'Démarque impossible : la partie n\'est pas en cours.');
 
             return $this->redirectToRoute('admin_dashboard');
         }
@@ -239,7 +239,7 @@ final class AdminController extends AbstractController
     public function unassignAllPlayers(Event $event): RedirectResponse
     {
         $this->cardService->unassignAllPlayersForEvent($event);
-        $this->addFlash('success', 'Tous les joueurs ont été désassociés des cartons.');
+        $this->addFlash('success', 'Tous les joueurs ont été retirés de l\'événement.');
 
         return $this->redirectToRoute('admin_dashboard');
     }
@@ -348,7 +348,7 @@ final class AdminController extends AbstractController
             $this->winnerManagementService->validateOfflineWinner($game, $reference, $card);
             $this->addFlash('success', 'Gagnant en salle enregistré. La partie est gelée.');
         } catch (\RuntimeException $e) {
-            $this->addFlash('error', $e->getMessage());
+            $this->addFlash('error', $this->winnerRefusal($e));
         }
 
         $this->publishGameUpdate($game);
@@ -361,20 +361,20 @@ final class AdminController extends AbstractController
     {
         $cardId = (int) ($request->request->get('card_id') ?? 0);
         if ($cardId <= 0) {
-            $this->addFlash('error', 'Carte invalide.');
+            $this->addFlash('error', 'Carton introuvable. Rechargez la page, puis recommencez.');
 
             return $this->redirectToRoute('admin_dashboard');
         }
         // Jeton CSRF obligatoire : une requête sans jeton est refusée
         $token = $request->request->getString('_token');
         if (!$this->isCsrfTokenValid('validate_winner_'.$game->getId().'_'.$cardId, $token)) {
-            $this->addFlash('error', 'Token CSRF invalide.');
+            $this->addFlash('error', 'La page a expiré. Rechargez-la, puis recommencez.');
 
             return $this->redirectToRoute('admin_dashboard');
         }
         $card = $this->cardRepo->find($cardId);
         if (!$card || $card->getPlayer()?->getEvent()?->getId() !== $game->getEvent()?->getId()) {
-            $this->addFlash('error', 'La carte ne correspond pas a l\'evenement.');
+            $this->addFlash('error', 'Ce carton n\'appartient pas à cet événement.');
 
             return $this->redirectToRoute('admin_dashboard');
         }
@@ -390,7 +390,7 @@ final class AdminController extends AbstractController
             }
         }
         if (!$isPotential) {
-            $this->addFlash('error', 'La carte ne remplit pas les conditions de la règle.');
+            $this->addFlash('error', 'Ce carton ne remplit plus les conditions de la règle.');
 
             return $this->redirectToRoute('admin_dashboard');
         }
@@ -399,11 +399,25 @@ final class AdminController extends AbstractController
             $this->winnerManagementService->validateSystemWinner($game, $card);
             $this->addFlash('success', 'Gagnant validé et carton bloqué.');
         } catch (\RuntimeException $e) {
-            $this->addFlash('error', $e->getMessage());
+            $this->addFlash('error', $this->winnerRefusal($e));
         }
 
         $this->publishGameUpdate($game);
 
         return $this->redirectToRoute('admin_dashboard');
+    }
+
+    /**
+     * Raison d'un refus de validation, dans les mots de l'animateur :
+     * les messages des services sont techniques et en anglais.
+     */
+    private function winnerRefusal(\RuntimeException $e): string
+    {
+        return match ($e->getMessage()) {
+            'Cannot validate winner on non-frozen game' => 'La partie n\'est pas gelée : aucun gagnant ne peut être validé.',
+            'Cannot validate blocked card' => 'Ce carton a déjà gagné : il est bloqué.',
+            'Card already validated as winner for this game' => 'Ce carton est déjà validé comme gagnant de cette partie.',
+            default => 'Le gagnant n\'a pas pu être enregistré.',
+        };
     }
 }

@@ -149,7 +149,7 @@
                 <li data-id="{{ g.id }}" class="list__item is-sortable {{ (current and g.id == current.id) ? 'is-current' }}">
                     <div class="row">
                         <span class="handle" aria-hidden="true">☰</span>
-                        <span>#{{ g.position }} – {{ g.rule|trans }} – {{ g.prize }}</span>
+                        <span><span data-position>#{{ g.position }}</span> – {{ g.rule|trans }} – {{ g.prize }}</span>
                         {% if g.hallOnly %}<span class="pill pill--hall" title="Salle uniquement">Salle</span>{% endif %}
                         <span class="pill pill--{{ g.status.value|lower }}">{{ g.status|trans }}</span>
                     </div>

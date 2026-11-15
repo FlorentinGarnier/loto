@@ -176,7 +176,7 @@ final class AdminActionContext extends BaseContext
      */
     public function jOuvreLaPage(string $path): void
     {
-        $this->client->request('GET', $path);
+        $this->client->request('GET', str_contains($path, '{') ? $this->resolvePath($path) : $path);
         $this->followRedirects();
         Assert::assertSame(200, $this->client->getResponse()->getStatusCode(), "La page {$path} ne s'affiche pas");
     }

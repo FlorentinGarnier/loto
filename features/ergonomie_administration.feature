@@ -78,3 +78,12 @@ Fonctionnalité: Administration lisible pour un bénévole
         Alors la page doit contenir "Alice"
         Et la page ne doit pas contenir "Bernard"
         Et la page doit contenir "1 joueur"
+
+    Scénario: Les remises à zéro disent ce qu'elles effacent
+        Étant donné que la partie d'ordre 1 est en statut "RUNNING"
+        Et que les numéros "5,15,23" ont été tirés pour la partie d'ordre 1
+        Quand j'ouvre la page "/admin/events/{event}"
+        Alors la page doit contenir "3 numéros tirés"
+        Et la page doit proposer le bouton "Réinitialiser tous les tirages"
+        Et la page doit contenir "0 gagnant enregistré"
+        Et la page ne doit pas proposer le bouton "Supprimer tous les gagnants"

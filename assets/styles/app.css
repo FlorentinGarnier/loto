@@ -254,6 +254,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .table .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .table .empty { text-align: center; color: var(--couleur-encre-douce); }
 .is-sortable { cursor: move; }
+.is-dragging { opacity: 0.4; }
 
 /* Formulaires -------------------------------------------------------- */
 
