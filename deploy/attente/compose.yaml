@@ -1,0 +1,34 @@
+# Page d'attente de quinou.fr, servie tant que le site vitrine n'existe pas.
+# Un seul fichier statique derrière Traefik ; indépendante de l'application et de ses déploiements.
+#
+# Sur le serveur : copier ce dossier (compose.yaml et public/) dans /opt/quinou-attente, puis
+#   docker compose up -d
+# Mise à jour du texte : remplacer public/index.html, rien à redémarrer.
+# Retrait : docker compose down (quinou.fr repasse alors à la route suivante de Traefik).
+
+name: quinou-attente
+
+services:
+    web:
+        image: nginx:1.28-alpine
+        restart: unless-stopped
+        volumes:
+            # Le dossier est monté, pas le fichier : un index.html remplacé est servi sans redémarrage.
+            - ./public:/usr/share/nginx/html:ro
+        networks: [proxy]
+        labels:
+            - traefik.enable=true
+            - traefik.docker.network=proxy
+            - traefik.http.routers.quinou-attente.rule=Host(`quinou.fr`)
+            - traefik.http.routers.quinou-attente.entrypoints=websecure
+            - traefik.http.routers.quinou-attente.tls=true
+            - traefik.http.routers.quinou-attente.tls.certresolver=letsencrypt
+            - traefik.http.services.quinou-attente.loadbalancer.server.port=80
+        logging:
+            driver: json-file
+            options: { max-size: "5m", max-file: "2" }
+
+networks:
+    proxy:
+        external: true
+        name: proxy
