@@ -16,6 +16,7 @@ default:
         - App\Tests\Behat\ErrorContext
         - App\Tests\Behat\TransfertContext
         - App\Tests\Behat\AdminActionContext
+        - App\Tests\Behat\DatasetContext
   extensions:
     FriendsOfBehat\SymfonyExtension\ServiceContainer\SymfonyExtension:
       # Charge .env.test : les scénarios tournent sans variables d'environnement à fournir

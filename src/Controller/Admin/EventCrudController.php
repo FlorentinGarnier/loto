@@ -41,7 +41,7 @@ final class EventCrudController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->persist($event);
             $this->em->flush();
-            $this->addFlash('success', 'Événement créé');
+            $this->addFlash('success', 'Événement créé.');
 
             return $this->redirectToRoute('admin_event_index');
         }
@@ -66,7 +66,7 @@ final class EventCrudController extends AbstractController
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->flush();
-            $this->addFlash('success', 'Événement mis à jour');
+            $this->addFlash('success', 'Événement mis à jour.');
 
             return $this->redirectToRoute('admin_event_index');
         }
@@ -85,9 +85,9 @@ final class EventCrudController extends AbstractController
         if ($this->isCsrfTokenValid('delete_event_'.$event->getId(), $token)) {
             $this->em->remove($event);
             $this->em->flush();
-            $this->addFlash('success', 'Événement supprimé');
+            $this->addFlash('success', 'Événement supprimé.');
         } else {
-            $this->addFlash('error', 'Jeton CSRF invalide');
+            $this->addFlash('error', 'La page a expiré. Rechargez-la, puis recommencez.');
         }
 
         return $this->redirectToRoute('admin_event_index');

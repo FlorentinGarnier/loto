@@ -9,6 +9,15 @@ framework:
     #esi: true
     #fragments: true
 
+    # Le client HTTP ne sert qu'à publier vers le hub Mercure, sur le même hôte.
+    # Sans limite, un hub qui ne répond plus bloquerait chaque tirage une minute :
+    # on abandonne la publication au bout de 3 secondes, l'écran de salle se
+    # resynchronise ensuite seul (/public/state).
+    http_client:
+        default_options:
+            timeout: 2
+            max_duration: 3
+
 when@prod:
     framework:
         # Derrière Traefik puis Nginx : adresse du client et HTTPS lus dans les en-têtes transmis.

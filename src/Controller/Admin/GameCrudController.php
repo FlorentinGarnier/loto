@@ -41,7 +41,7 @@ final class GameCrudController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->persist($game);
             $this->em->flush();
-            $this->addFlash('success', 'Partie créée');
+            $this->addFlash('success', 'Partie créée.');
 
             return $this->redirectToRoute('admin_game_index', ['id' => $event->getId()]);
         }
@@ -63,7 +63,7 @@ final class GameCrudController extends AbstractController
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->flush();
-            $this->addFlash('success', 'Partie mise à jour');
+            $this->addFlash('success', 'Partie mise à jour.');
 
             return $this->redirectToRoute('admin_game_index', ['id' => $event->getId()]);
         }
@@ -86,9 +86,9 @@ final class GameCrudController extends AbstractController
         if ($this->isCsrfTokenValid('delete_game_'.$game->getId(), $token)) {
             $this->em->remove($game);
             $this->em->flush();
-            $this->addFlash('success', 'Partie supprimée');
+            $this->addFlash('success', 'Partie supprimée.');
         } else {
-            $this->addFlash('error', 'Jeton CSRF invalide');
+            $this->addFlash('error', 'La page a expiré. Rechargez-la, puis recommencez.');
         }
 
         return $this->redirectToRoute('admin_game_index', ['id' => $event->getId()]);

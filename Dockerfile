@@ -12,7 +12,8 @@ ARG NGINX_VERSION=1.28
 FROM php:${PHP_VERSION}-fpm-alpine AS php-base
 
 COPY --from=ghcr.io/mlocati/php-extension-installer:2 /usr/bin/install-php-extensions /usr/local/bin/
-RUN install-php-extensions apcu intl opcache pdo_pgsql zip
+# apk upgrade : correctifs de sécurité d'Alpine parus depuis la publication de l'image de base.
+RUN apk upgrade --no-cache && install-php-extensions apcu intl opcache pdo_pgsql zip
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 ENV COMPOSER_ALLOW_SUPERUSER=1 \
@@ -55,7 +56,8 @@ FROM nginx:${NGINX_VERSION}-alpine AS web
 
 ENV AUTH_BASIC=off
 COPY docker/nginx.conf.template /etc/nginx/templates/default.conf.template
-RUN rm -f /etc/nginx/conf.d/default.conf && touch /etc/nginx/htpasswd
+# Correctifs de sécurité d'Alpine parus depuis la publication de l'image de base (analyse Trivy de la release).
+RUN apk upgrade --no-cache && rm -f /etc/nginx/conf.d/default.conf && touch /etc/nginx/htpasswd
 COPY --from=build /srv/app/public /srv/app/public
 # La page de maintenance voyage dans l'image : aucun fichier côté serveur ne peut diverger de la CI.
 COPY deploy/maintenance /srv/maintenance

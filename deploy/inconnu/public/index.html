@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>Aucun loto à cette adresse · Quinou</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 240'%3E%3Crect width='240' height='240' rx='54' fill='%2314142B'/%3E%3Ccircle cx='80' cy='80' r='34' fill='%23FFCB00'/%3E%3Ccircle cx='160' cy='80' r='34' fill='%232459E6'/%3E%3Ccircle cx='80' cy='160' r='34' fill='%23FF4F9A'/%3E%3Ccircle cx='160' cy='160' r='34' fill='%2300B872'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@500;700&family=Figtree:wght@400;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap">
+    <style>
+        /* Jetons de doc/charte-graphique.md (les mêmes que assets/styles/app.css). */
+        :root {
+            --couleur-blanc: #FFFFFF;
+            --couleur-brume: #F4F5FB;
+            --couleur-encre: #14142B;
+            --couleur-encre-douce: #5B5F7A;
+            --couleur-jaune: #FFCB00;
+            --couleur-bleu: #2459E6;
+            --couleur-rose: #FF4F9A;
+            --couleur-vert: #00B872;
+            --couleur-gris-statut: #B9BDD1;
+            --couleur-ligne: #E3E5F0;
+            --police-titres: "Plus Jakarta Sans", "Trebuchet MS", sans-serif;
+            --police-texte: "Figtree", system-ui, sans-serif;
+            --police-donnees: "Azeret Mono", ui-monospace, Menlo, monospace;
+            --rayon-pilule: 999px;
+            --rayon-cellule: 8px;
+            --espace: 8px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--couleur-blanc);
+            color: var(--couleur-encre);
+            font: 400 17px/1.5 var(--police-texte);
+            -webkit-font-smoothing: antialiased;
+        }
+        .page {
+            width: 100%;
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 0 calc(var(--espace) * 3);
+        }
+
+        header.page { padding-top: calc(var(--espace) * 4); }
+        .logo { display: block; width: 148px; height: auto; }
+
+        main.page {
+            flex: 1;
+            display: grid;
+            align-content: center;
+            padding-top: calc(var(--espace) * 7);
+            padding-bottom: calc(var(--espace) * 7);
+        }
+        .etiquette {
+            margin: 0;
+            font: 500 12px/1.4 var(--police-donnees);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--couleur-encre-douce);
+        }
+        h1 {
+            margin: calc(var(--espace) * 2) 0 calc(var(--espace) * 4);
+            max-width: 12em;
+            font: 800 clamp(40px, 5.4vw, 72px)/1.03 var(--police-titres);
+            letter-spacing: -0.035em;
+            text-wrap: balance;
+        }
+        /* Soulignement du titre : une barre en quatre segments aux couleurs des pastilles. */
+        .souligne {
+            white-space: nowrap;
+            padding-bottom: 0.08em;
+            background:
+                linear-gradient(to right,
+                    var(--couleur-jaune) 0 25%, var(--couleur-bleu) 25% 50%,
+                    var(--couleur-rose) 50% 75%, var(--couleur-vert) 75% 100%)
+                left bottom / 100% 0.1em no-repeat;
+        }
+
+        /* L'adresse demandée, présentée comme une ligne de carton : référence, puis pastille de statut. */
+        .adresse {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: calc(var(--espace) * 1.5);
+            align-items: center;
+            max-width: 34em;
+            margin: 0 0 calc(var(--espace) * 3);
+            padding: var(--espace) calc(var(--espace) * 1.5);
+            border-radius: var(--rayon-cellule);
+            background: var(--couleur-brume);
+        }
+        .adresse[hidden] { display: none; }
+        .adresse__nom {
+            min-width: 0;
+            font: 700 14px/1.4 var(--police-donnees);
+            overflow-wrap: anywhere;
+        }
+        .pastille {
+            display: block;
+            padding: 7px 10px;
+            border-radius: var(--rayon-cellule);
+            background: var(--couleur-gris-statut);
+            color: var(--couleur-encre);
+            font: 700 13px/1.2 var(--police-texte);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .intro { margin: 0 0 calc(var(--espace) * 4); max-width: 34em; color: var(--couleur-encre-douce); }
+        .intro strong { color: var(--couleur-encre); font-weight: 600; white-space: nowrap; }
+
+        .bouton {
+            justify-self: start;
+            display: inline-flex;
+            align-items: center;
+            min-height: 48px;
+            padding: 0 calc(var(--espace) * 3);
+            border-radius: var(--rayon-pilule);
+            background: var(--couleur-bleu);
+            color: var(--couleur-blanc);
+            font: 700 17px/1 var(--police-texte);
+            text-decoration: none;
+            transition: background-color 300ms ease;
+        }
+        .bouton:hover { background: var(--couleur-encre); }
+        .bouton:focus-visible { outline: 3px solid var(--couleur-bleu); outline-offset: 2px; }
+
+        footer.page {
+            padding-top: calc(var(--espace) * 3);
+            padding-bottom: calc(var(--espace) * 4);
+            border-top: 1px solid var(--couleur-ligne);
+            color: var(--couleur-encre-douce);
+            font-size: 15px;
+        }
+        footer p { margin: 0; }
+
+        @media (min-width: 900px) {
+            .page { padding: 0 calc(var(--espace) * 5); }
+            header.page { padding-top: calc(var(--espace) * 5); }
+        }
+        @media (max-width: 420px) {
+            .adresse { grid-template-columns: 1fr; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .bouton { transition: none; }
+        }
+    </style>
+</head>
+<body>
+    <header class="page">
+        <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="-12 -64 690 214" role="img" aria-label="Quinou">
+            <circle cx="20" cy="28" r="20" fill="#FFCB00"/>
+            <circle cx="68" cy="28" r="20" fill="#2459E6"/>
+            <circle cx="20" cy="76" r="20" fill="#FF4F9A"/>
+            <circle cx="68" cy="76" r="20" fill="#00B872"/>
+            <g transform="translate(118 0)">
+                <g fill="none" stroke="#14142B" stroke-width="28">
+                    <circle cx="50" cy="50" r="36"/>
+                    <path d="M86 0V138"/>
+                    <path d="M126 0V57A29 29 0 0 0 184 57V0M184 0V100"/>
+                    <path d="M224 0V100"/>
+                    <path d="M264 100V43A29 29 0 0 1 322 43V100M264 0V100"/>
+                    <circle cx="399" cy="50" r="36"/>
+                    <path d="M476 0V57A29 29 0 0 0 534 57V0M534 0V100"/>
+                </g>
+                <circle cx="224" cy="-34" r="17" fill="#14142B"/>
+            </g>
+        </svg>
+    </header>
+
+    <main class="page">
+        <p class="etiquette">Erreur 404</p>
+        <h1>Aucun loto à <span class="souligne">cette adresse</span>.</h1>
+        <!-- Affichée seulement si le navigateur peut lire l'adresse demandée. -->
+        <p class="adresse" id="adresse" hidden>
+            <span class="adresse__nom" id="adresse-nom"></span>
+            <span class="pastille">Introuvable</span>
+        </p>
+        <p class="intro">
+            L'adresse d'un loto s'écrit <strong>nom-de-l-association.quinou.fr</strong>.
+            Vérifiez le nom, ou demandez le lien à l'association qui organise le loto.
+        </p>
+        <a class="bouton" href="https://quinou.fr/">Aller sur quinou.fr</a>
+    </main>
+
+    <footer class="page">
+        <p>Quinou, l'outil de loto des associations de parents d'élèves et des clubs.</p>
+    </footer>
+
+    <script>
+        // L'adresse tapée est montrée telle quelle, pour que la faute de frappe saute aux yeux.
+        (function () {
+            var nom = window.location.hostname;
+            if (!/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(nom)) return;
+            document.getElementById('adresse-nom').textContent = nom;
+            document.getElementById('adresse').hidden = false;
+        })();
+    </script>
+</body>
+</html>

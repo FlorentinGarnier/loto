@@ -10,7 +10,7 @@ export default class extends Controller {
     connect() {
         this.sortable = new Sortable(this.element, {
             animation: 150,
-            ghostClass: 'bg-blue-100',
+            ghostClass: 'is-dragging',
             onEnd: this.onEnd.bind(this)
         });
     }
@@ -28,22 +28,24 @@ export default class extends Controller {
             });
 
             if (!response.ok) {
-                console.error('Failed to save order');
+                this.restore();
             } else {
                 this.updatePositionNumbers();
             }
         } catch (error) {
-            console.error('Error saving order:', error);
+            this.restore();
         }
     }
 
+    // L'ordre n'a pas été enregistré : on réaffiche celui du serveur plutôt qu'un ordre faux
+    restore() {
+        window.location.reload();
+    }
+
     updatePositionNumbers() {
-        const rows = this.element.querySelectorAll('tr[data-id]');
-        rows.forEach((row, index) => {
-            const positionCell = row.querySelector('td:first-child');
-            if (positionCell) {
-                positionCell.textContent = `#${index + 1}`;
-            }
+        this.element.querySelectorAll('[data-id]').forEach((item, index) => {
+            const position = item.querySelector('[data-position]');
+            if (position) position.textContent = `#${index + 1}`;
         });
     }
 }

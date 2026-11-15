@@ -26,22 +26,57 @@
     <a class="btn btn--dark" href="{{ path('admin_event_export_winners', {id: event.id}) }}">Exporter les gagnants (CSV)</a>
   </div>
 
+  {# Chaque remise à zéro dit ce qu'elle efface et combien ; sans rien à effacer, pas de bouton #}
+  {% set draws_count = event.games|reduce((c, g) => c + g.draws|length, 0) %}
+  {% set winners_count = event.games|reduce((c, g) => c + g.winners|length, 0) %}
+  {% set players_count = event.players|length %}
   <div class="section section--ruled">
     <h2>Remises à zéro</h2>
-    <div class="row">
-      <form method="post" action="{{ path('admin_event_reset_all_draws', {id: event.id}) }}" onsubmit="return confirm('Confirmer la remise à zéro de tous les tirages de cet événement ?');">
-        <input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}">
-        <button type="submit" class="btn btn--danger">Réinitialiser tous les tirages</button>
-      </form>
-      <form method="post" action="{{ path('admin_event_reset_all_winners', {id: event.id}) }}" onsubmit="return confirm('Confirmer la suppression de tous les gagnants de cet événement ?');">
-        <input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}">
-        <button type="submit" class="btn btn--danger">Supprimer tous les gagnants</button>
-      </form>
-      <form method="post" action="{{ path('admin_event_unassign_all_players', {id: event.id}) }}" onsubmit="return confirm('Confirmer la désassociation de tous les joueurs des cartons ?');">
-        <input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}">
-        <button type="submit" class="btn btn--danger">Désassocier tous les joueurs</button>
-      </form>
-    </div>
+    <p class="muted" style="margin-bottom: 12px">Ces actions sont définitives.</p>
+    <ul class="list">
+      <li class="list__item">
+        <div class="grow">
+          <strong>Numéros tirés</strong>
+          <div class="muted">{{ draws_count }} numéro{{ draws_count > 1 ? 's' }} tiré{{ draws_count > 1 ? 's' }} sur l'ensemble des parties. Les parties gelées sont dégelées, les gagnants sont conservés.</div>
+        </div>
+        {% if draws_count > 0 %}
+          <form method="post" action="{{ path('admin_event_reset_all_draws', {id: event.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Effacer les ' ~ draws_count ~ ' numéros tirés de « ' ~ event.name ~ ' » ? Cette action est définitive.' }) }}>
+            <input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}">
+            <button type="submit" class="btn btn--danger btn--small">Réinitialiser tous les tirages</button>
+          </form>
+        {% else %}
+          <span class="muted">Rien à effacer</span>
+        {% endif %}
+      </li>
+      <li class="list__item">
+        <div class="grow">
+          <strong>Gagnants</strong>
+          <div class="muted">{{ winners_count }} gagnant{{ winners_count > 1 ? 's' }} enregistré{{ winners_count > 1 ? 's' }}. Leurs cartons sont débloqués et peuvent gagner à nouveau.</div>
+        </div>
+        {% if winners_count > 0 %}
+          <form method="post" action="{{ path('admin_event_reset_all_winners', {id: event.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Supprimer les ' ~ winners_count ~ ' gagnants de « ' ~ event.name ~ ' » ? Pensez à exporter la liste avant. Cette action est définitive.' }) }}>
+            <input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}">
+            <button type="submit" class="btn btn--danger btn--small">Supprimer tous les gagnants</button>
+          </form>
+        {% else %}
+          <span class="muted">Rien à effacer</span>
+        {% endif %}
+      </li>
+      <li class="list__item">
+        <div class="grow">
+          <strong>Joueurs de l'événement</strong>
+          <div class="muted">{{ players_count }} joueur{{ players_count > 1 ? 's' }} rattaché{{ players_count > 1 ? 's' }} à cet événement. Les joueurs et leurs cartons restent enregistrés, mais ne jouent plus dans cet événement.</div>
+        </div>
+        {% if players_count > 0 %}
+          <form method="post" action="{{ path('admin_event_unassign_all_players', {id: event.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Retirer les ' ~ players_count ~ ' joueurs de « ' ~ event.name ~ ' » ? Leurs cartons ne joueront plus dans cet événement.' }) }}>
+            <input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}">
+            <button type="submit" class="btn btn--danger btn--small">Retirer tous les joueurs</button>
+          </form>
+        {% else %}
+          <span class="muted">Rien à retirer</span>
+        {% endif %}
+      </li>
+    </ul>
   </div>
 </div>
 {% endblock %}
