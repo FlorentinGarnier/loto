@@ -51,6 +51,9 @@ jobs:
             php-version: "8.4"
             php-extensions: apcu, intl, pdo_pgsql, zip
             database: postgres
+            # Les scripts Composer sont joués (la CI commune les saute par défaut) : importmap:install installe les
+            # assets dont le gabarit de l'administration a besoin, et les scénarios Behat affichent ces pages.
+            composer-flags: --optimize-autoloader
 
     # needs liste tous les contrôles : le marqueur d'arbre testé n'est écrit sur PR qu'une fois les images construites.
     images:

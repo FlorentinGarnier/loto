@@ -11,6 +11,7 @@ use App\Enum\WinnerSource;
 use App\Repository\CardRepository;
 use App\Repository\EventRepository;
 use App\Repository\GameRepository;
+use App\Security\AdminCsrf;
 use App\Service\CardService;
 use App\Service\DrawService;
 use App\Service\WinnerDetectionService;
@@ -25,6 +26,7 @@ use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Mercure\Update;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Http\Attribute\IsCsrfTokenValid;
 
 #[Route('/admin')]
 final class AdminController extends AbstractController
@@ -83,6 +85,7 @@ final class AdminController extends AbstractController
     }
 
     #[Route('/game/{id}/toggle/{number}', name: 'admin_toggle_number', requirements: ['number' => '\\d+'], methods: ['POST'])]
+    #[IsCsrfTokenValid(AdminCsrf::TOKEN_ID)]
     public function toggleNumber(Game $game, int $number): Response
     {
         if (GameStatus::RUNNING !== $game->getStatus()) {
@@ -120,6 +123,7 @@ final class AdminController extends AbstractController
     }
 
     #[Route('/game/{id}/start', name: 'admin_game_start', methods: ['POST'])]
+    #[IsCsrfTokenValid(AdminCsrf::TOKEN_ID)]
     public function startGame(Game $game): RedirectResponse
     {
         $event = $game->getEvent();
@@ -135,6 +139,7 @@ final class AdminController extends AbstractController
     }
 
     #[Route('/game/{id}/finish', name: 'admin_game_finish', methods: ['POST'])]
+    #[IsCsrfTokenValid(AdminCsrf::TOKEN_ID)]
     public function finishGame(Game $game): RedirectResponse
     {
         $game->setStatus(GameStatus::FINISHED);
@@ -145,6 +150,7 @@ final class AdminController extends AbstractController
     }
 
     #[Route('/game/{id}/next', name: 'admin_game_next', methods: ['POST'])]
+    #[IsCsrfTokenValid(AdminCsrf::TOKEN_ID)]
     public function nextGame(Game $game): RedirectResponse
     {
         $event = $game->getEvent();
@@ -175,6 +181,7 @@ final class AdminController extends AbstractController
     }
 
     #[Route('/game/{id}/demarque', name: 'admin_game_demarque', methods: ['POST'])]
+    #[IsCsrfTokenValid(AdminCsrf::TOKEN_ID)]
     public function demarque(Game $game): RedirectResponse
     {
         if (GameStatus::RUNNING !== $game->getStatus()) {
@@ -189,6 +196,7 @@ final class AdminController extends AbstractController
     }
 
     #[Route('/event/{id}/reset-all-draws', name: 'admin_event_reset_all_draws', methods: ['POST'])]
+    #[IsCsrfTokenValid(AdminCsrf::TOKEN_ID)]
     public function resetAllDraws(Event $event): RedirectResponse
     {
         $this->drawService->clearAllForEvent($event);
@@ -198,6 +206,7 @@ final class AdminController extends AbstractController
     }
 
     #[Route('/event/{id}/reset-all-winners', name: 'admin_event_reset_all_winners', methods: ['POST'])]
+    #[IsCsrfTokenValid(AdminCsrf::TOKEN_ID)]
     public function resetAllWinners(Event $event): RedirectResponse
     {
         $this->winnerManagementService->clearAllForEvent($event);
@@ -207,6 +216,7 @@ final class AdminController extends AbstractController
     }
 
     #[Route('/event/{id}/unassign-all-players', name: 'admin_event_unassign_all_players', methods: ['POST'])]
+    #[IsCsrfTokenValid(AdminCsrf::TOKEN_ID)]
     public function unassignAllPlayers(Event $event): RedirectResponse
     {
         $this->cardService->unassignAllPlayersForEvent($event);
@@ -216,6 +226,7 @@ final class AdminController extends AbstractController
     }
 
     #[Route('/game/reorder', name: 'admin_game_reorder', methods: ['POST'])]
+    #[IsCsrfTokenValid(AdminCsrf::TOKEN_ID)]
     public function reorderGames(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -249,6 +260,7 @@ final class AdminController extends AbstractController
     }
 
     #[Route('/game/{id}/unfreeze', name: 'admin_game_unfreeze', methods: ['POST'])]
+    #[IsCsrfTokenValid(AdminCsrf::TOKEN_ID)]
     public function unfreezeGame(Game $game): JsonResponse|RedirectResponse
     {
         $game->setIsFrozen(false);

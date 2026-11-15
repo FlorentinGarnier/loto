@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus'
+import { adminCsrfToken } from '../csrf.js'
 
 export default class extends Controller {
   static targets = ['feedback', 'list', 'hint']
@@ -48,7 +49,7 @@ export default class extends Controller {
       const res = await fetch(`/admin/players/${this.playerIdValue}/cards/assign`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ref, createIfMissing })
+        body: JSON.stringify({ ref, createIfMissing, _token: adminCsrfToken() })
       })
       let data = {}
       const isJson = res.headers.get('content-type')?.includes('json')
@@ -115,7 +116,11 @@ export default class extends Controller {
 
     const backup = li.cloneNode(true)
     try {
-      const res = await fetch(`/admin/players/${this.playerIdValue}/cards/${encodeURIComponent(ref)}`, { method: 'DELETE' })
+      const res = await fetch(`/admin/players/${this.playerIdValue}/cards/${encodeURIComponent(ref)}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ _token: adminCsrfToken() })
+      })
       if (res.status === 204) {
         li.remove()
         this.toastUndo(ref, backup)
@@ -138,7 +143,7 @@ export default class extends Controller {
       try {
         const res = await fetch(`/admin/players/${this.playerIdValue}/cards/assign`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ref, createIfMissing: false })
+          body: JSON.stringify({ ref, createIfMissing: false, _token: adminCsrfToken() })
         })
         if (res.ok) {
           this.listTarget.prepend(backupNode)

@@ -165,6 +165,7 @@ Un carton bloqué n'apparaît plus dans les gagnants potentiels et ne peut plus 
 * **Démarque d'une partie** (partie en cours uniquement) : supprime ses tirages, la dégèle, supprime ses gagnants et débloque leurs cartons.
 * **Resets de l'événement** : tous les tirages (les parties sont dégelées), tous les gagnants, ou désassociation de tous les joueurs.
 * Les actions destructrices demandent une confirmation.
+* Toute action qui modifie des données exige un jeton CSRF : formulaires, suppressions, validation des gagnants et actions d'animation (tirage, enchaînement des parties, démarque, resets, dégel, réordonnancement, attribution de cartons).
 
 ### 4.9 Préparation de l'événement
 
@@ -330,7 +331,6 @@ Mentions légales, conditions générales de vente et d'utilisation, politique d
 | Référence de carton | Unique sur toute la base | Unique par organisation |
 | Import de cartons | Ligne de commande | Interface web |
 | Temps réel | Sujets Mercure construits sur l'identifiant de l'événement | Sujets non devinables, abonnements autorisés |
-| CSRF | Jeton vérifié sur les formulaires, les suppressions et la validation d'un gagnant ; absent des actions d'animation (tirage, démarrage et enchaînement des parties, démarque, resets, dégel, réordonnancement, attribution de cartons) | Jeton obligatoire partout |
 | Journal des actions | Annoncé dans l'ancien cahier des charges, absent du code | À créer (ANI-2) |
 | Facturation | Aucune | Formules, paiement, factures |
 
@@ -340,7 +340,7 @@ Mentions légales, conditions générales de vente et d'utilisation, politique d
 
 | Lot | Contenu | Résultat |
 | --- | --- | --- |
-| **0 – Assainissement** | Corrections du tableau des écarts qui ne dépendent pas du SaaS (jeton CSRF sur les actions d'animation) | Socle fiable |
+| **0 – Assainissement** | Corrections qui ne dépendent pas du SaaS : gel, resets, repository, jeton CSRF obligatoire sur toutes les actions (fait) | Socle fiable |
 | **1 – Multi-organisation** | ORG-1 à ORG-3, ORG-6, EVT-1, CAR-1, CAR-3, PUB-1, PUB-2, §6.1, §6.2 | Plusieurs associations sur une même instance, en accès gratuit sur invitation |
 | **2 – Ouverture commerciale** | EVT-4, CAR-2, CAR-4, JOU-1, JOU-2, ANI-1, FAC-1 à FAC-5, EXP-1, §6.3 à §6.5 | Inscription libre et paiement en ligne |
 | **3 – Confort et fidélisation** | ORG-4, EVT-2, EVT-3, CAR-5, JOU-3, ANI-2, ANI-3, PUB-3, PUB-4, EXP-2, EXP-3 | Raisons de s'abonner à l'année |

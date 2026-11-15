@@ -23,12 +23,12 @@
         {% if current %}
             <div class="flex flex-wrap items-center gap-4 mb-4">
                 <div><span class="font-semibold">Partie courante:</span> #{{ current.position }} ({{ current.rule|trans }}) – Lot: {{ current.prize }} – Statut: <span class="px-2 py-1 rounded text-white {{ current.status.value == 'RUNNING' ? 'bg-green-600' : (current.status.value == 'FINISHED' ? 'bg-gray-600' : 'bg-amber-600') }}">{{ current.status.value }}</span>{% if current.hallOnly %} – <span class="px-2 py-1 rounded bg-indigo-600 text-white text-xs uppercase font-bold">Salle uniquement</span>{% endif %}</div>
-                <form method="post" action="{{ path('admin_game_start', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Démarrer cette partie ? Les tirages en cours seront transférés.' }) }}><button class="px-3 py-1 bg-blue-600 text-white rounded">Démarrer</button></form>
-                <form method="post" action="{{ path('admin_game_finish', {id: current.id}) }}"><button class="px-3 py-1 bg-gray-700 text-white rounded">Terminer</button></form>
-                <form method="post" action="{{ path('admin_game_next', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Passer à la partie suivante ? Les tirages seront transférés.' }) }}><button class="px-3 py-1 bg-purple-700 text-white rounded">Partie suivante</button></form>
-                <form method="post" action="{{ path('admin_game_demarque', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Confirmer la démarque (réinitialiser tous les tirages) ?' }) }}><button class="px-3 py-1 bg-amber-700 text-white rounded">Démarque (reset)</button></form>
+                <form method="post" action="{{ path('admin_game_start', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Démarrer cette partie ? Les tirages en cours seront transférés.' }) }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="px-3 py-1 bg-blue-600 text-white rounded">Démarrer</button></form>
+                <form method="post" action="{{ path('admin_game_finish', {id: current.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="px-3 py-1 bg-gray-700 text-white rounded">Terminer</button></form>
+                <form method="post" action="{{ path('admin_game_next', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Passer à la partie suivante ? Les tirages seront transférés.' }) }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="px-3 py-1 bg-purple-700 text-white rounded">Partie suivante</button></form>
+                <form method="post" action="{{ path('admin_game_demarque', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Confirmer la démarque (réinitialiser tous les tirages) ?' }) }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="px-3 py-1 bg-amber-700 text-white rounded">Démarque (reset)</button></form>
                 {% if current.isFrozen %}
-                    <form method="post" action="{{ path('admin_game_unfreeze', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Dégeler la partie ? Les tirages seront à nouveau possibles.' }) }}><button type="submit" class="px-3 py-1 bg-red-600 text-white rounded">🔓 Dégeler la partie</button></form>
+                    <form method="post" action="{{ path('admin_game_unfreeze', {id: current.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Dégeler la partie ? Les tirages seront à nouveau possibles.' }) }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button type="submit" class="px-3 py-1 bg-red-600 text-white rounded">🔓 Dégeler la partie</button></form>
                 {% endif %}
             </div>
 
@@ -131,7 +131,7 @@
                         {% if g.hallOnly %}<span class="text-xs px-1 py-0.5 rounded bg-indigo-100 text-indigo-700 font-semibold" title="Salle uniquement">SALLE</span>{% endif %}
                         <span class="ml-2 text-xs px-2 py-0.5 rounded {{ g.status.value == 'RUNNING' ? 'bg-green-600 text-white' : (g.status.value == 'FINISHED' ? 'bg-gray-600 text-white' : 'bg-amber-600 text-white') }}">{{ g.status.value|trans }}</span>
                     </div>
-                    <form method="post" action="{{ path('admin_game_start', {id: g.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Basculer vers cette partie ? Les tirages en cours seront transférés.' }) }}><button class="px-2 py-1 text-sm bg-blue-600 text-white rounded">Basculer</button></form>
+                    <form method="post" action="{{ path('admin_game_start', {id: g.id}) }}" {{ stimulus_controller('confirm-action', { message: 'Basculer vers cette partie ? Les tirages en cours seront transférés.' }) }}><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}"><button class="px-2 py-1 text-sm bg-blue-600 text-white rounded">Basculer</button></form>
                 </li>
             {% endfor %}
         </ul>
