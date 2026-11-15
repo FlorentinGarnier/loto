@@ -3,6 +3,9 @@ mercure:
         default:
             url: '%env(MERCURE_URL)%'
             public_url: '%env(MERCURE_PUBLIC_URL)%'
+            # Le hub déployé (dunglas/mercure 0.16) parle le protocole 0.x. À passer en 1.0 avec le hub,
+            # en ajoutant alors les déclarations iss, sub et client_id sous jwt.claims.
+            protocol_version: '0.x'
             jwt:
                 secret: '%env(MERCURE_JWT_SECRET)%'
                 publish: '*'

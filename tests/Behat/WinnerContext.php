@@ -14,6 +14,10 @@ use App\Repository\PlayerRepository;
 use App\Service\WinnerDetectionService;
 use App\Service\WinnerService;
 use Behat\Gherkin\Node\TableNode;
+use Behat\Hook\BeforeScenario;
+use Behat\Step\Given;
+use Behat\Step\Then;
+use Behat\Step\When;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Assert;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -40,18 +44,14 @@ final class WinnerContext extends BaseContext
         $this->winnerService = $winnerService;
     }
 
-    /**
-     * @BeforeScenario
-     */
+    #[BeforeScenario]
     public function resetContextState(): void
     {
         $this->potentialWinners = [];
         $this->publishedState = [];
     }
 
-    /**
-     * @Given /^un carton "([^"]*)" existe avec la grille suivante:$/
-     */
+    #[Given('/^un carton "([^"]*)" existe avec la grille suivante:$/')]
     public function quUnCartonExisteAvecLaGrilleSuivante(string $reference, TableNode $table): void
     {
         $grid = [];
@@ -87,9 +87,7 @@ final class WinnerContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @When /^la détection automatique s'exécute$/
-     */
+    #[When('/^la détection automatique s\'exécute$/')]
     public function laDetectionAutomatiqueExecute(): void
     {
         $events = $this->eventRepo->findAll();
@@ -117,9 +115,7 @@ final class WinnerContext extends BaseContext
         $this->potentialWinners = $this->winnerDetectionService->findPotentialWinners($runningGame, $cards);
     }
 
-    /**
-     * @Given /^la partie d'ordre (\d+) est marquée "salle uniquement"$/
-     */
+    #[Given('/^la partie d\'ordre (\\d+) est marquée "salle uniquement"$/')]
     public function laPartieDOrdreEstMarqueeSalleUniquement(int $position): void
     {
         $game = $this->findGameByPosition($position);
@@ -129,9 +125,7 @@ final class WinnerContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @Then /^le carton "([^"]*)" ne doit pas être détecté comme gagnant potentiel$/
-     */
+    #[Then('/^le carton "([^"]*)" ne doit pas être détecté comme gagnant potentiel$/')]
     public function leCartonNeDoitPasEtreDetecteCommeGagnantPotentiel(string $reference): void
     {
         $found = false;
@@ -146,9 +140,7 @@ final class WinnerContext extends BaseContext
         Assert::assertFalse($found, "Le carton '{$reference}' a été détecté comme gagnant potentiel (alors qu'il ne devrait pas)");
     }
 
-    /**
-     * @Then /^le carton "([^"]*)" doit être détecté comme gagnant potentiel$/
-     */
+    #[Then('/^le carton "([^"]*)" doit être détecté comme gagnant potentiel$/')]
     public function leCartonDoitEtreDetecteCommeGagnantPotentiel(string $reference): void
     {
         $found = false;
@@ -163,9 +155,7 @@ final class WinnerContext extends BaseContext
         Assert::assertTrue($found, "Le carton '{$reference}' n'a pas été détecté comme gagnant potentiel");
     }
 
-    /**
-     * @Then /^la partie d'ordre (\d+) doit être gelée$/
-     */
+    #[Then('/^la partie d\'ordre (\\d+) doit être gelée$/')]
     public function laPartieDOrdreDoitEtreGelee(int $position): void
     {
         $game = $this->findGameByPosition($position);
@@ -175,9 +165,7 @@ final class WinnerContext extends BaseContext
         Assert::assertTrue($game->isFrozen(), "La partie n'est pas gelée");
     }
 
-    /**
-     * @Then /^l'index de gel doit correspondre au numéro (\d+)$/
-     */
+    #[Then('/^l\'index de gel doit correspondre au numéro (\\d+)$/')]
     public function lIndexDeGelDoitCorrespondreAuNumero(int $number): void
     {
         $events = $this->eventRepo->findAll();
@@ -211,9 +199,7 @@ final class WinnerContext extends BaseContext
         Assert::assertTrue($found, "Le numéro {$number} ne correspond pas à l'index de gel");
     }
 
-    /**
-     * @Given /^tous les numéros du carton "([^"]*)" ont été tirés$/
-     */
+    #[Given('/^tous les numéros du carton "([^"]*)" ont été tirés$/')]
     public function queTousLesNumerosduCartonOntEtesTires(string $reference): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -254,9 +240,7 @@ final class WinnerContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @Given /^un carton "([^"]*)" est détecté comme gagnant potentiel$/
-     */
+    #[Given('/^un carton "([^"]*)" est détecté comme gagnant potentiel$/')]
     public function quUnCartonEstDetecteCommeGagnantPotentiel(string $reference): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -325,9 +309,7 @@ final class WinnerContext extends BaseContext
         Assert::assertTrue($found, "Le carton n'est pas un gagnant potentiel");
     }
 
-    /**
-     * @When /^je valide le carton "([^"]*)" comme gagnant$/
-     */
+    #[When('/^je valide le carton "([^"]*)" comme gagnant$/')]
     public function jeValidleLeCartonCommeGagnant(string $reference): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -349,9 +331,7 @@ final class WinnerContext extends BaseContext
         $this->winnerService->validateSystemWinner($runningGame, $card);
     }
 
-    /**
-     * @Then /^un gagnant de source "([^"]*)" doit être enregistré pour la partie d'ordre (\d+)$/
-     */
+    #[Then('/^un gagnant de source "([^"]*)" doit être enregistré pour la partie d\'ordre (\\d+)$/')]
     public function unGagnantDeSourceDoitEtreEnregistrePourLaPartieDOrdre(string $source, int $position): void
     {
         $game = $this->findGameByPosition($position);
@@ -370,9 +350,7 @@ final class WinnerContext extends BaseContext
         Assert::assertTrue($found, "Aucun gagnant de source '{$source}' trouvé");
     }
 
-    /**
-     * @Then /^le gagnant doit référencer le carton "([^"]*)"$/
-     */
+    #[Then('/^le gagnant doit référencer le carton "([^"]*)"$/')]
     public function leGagnantDoitReferencerLeCarton(string $reference): void
     {
         $events = $this->eventRepo->findAll();
@@ -391,9 +369,7 @@ final class WinnerContext extends BaseContext
         Assert::assertTrue($found, "Aucun gagnant ne référence le carton '{$reference}'");
     }
 
-    /**
-     * @Then /^le carton "([^"]*)" doit être bloqué avec la raison "([^"]*)"$/
-     */
+    #[Then('/^le carton "([^"]*)" doit être bloqué avec la raison "([^"]*)"$/')]
     public function leCartonDoitEtreBloquAvecLaRaison(string $reference, string $reason): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -405,9 +381,7 @@ final class WinnerContext extends BaseContext
         Assert::assertEquals($reason, $card->getBlockedReason()?->value, 'La raison de blocage ne correspond pas');
     }
 
-    /**
-     * @When /^j'ajoute manuellement le carton "([^"]*)" comme gagnant offline$/
-     */
+    #[When('/^j\'ajoute manuellement le carton "([^"]*)" comme gagnant offline$/')]
     public function jAjouteManuellementLeCartonCommeGagnantOffline(string $reference): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -429,9 +403,7 @@ final class WinnerContext extends BaseContext
         $this->winnerService->validateOfflineWinner($runningGame, $reference, $card);
     }
 
-    /**
-     * @When /^j'ajoute manuellement la référence "([^"]*)" comme gagnant offline sans carton$/
-     */
+    #[When('/^j\'ajoute manuellement la référence "([^"]*)" comme gagnant offline sans carton$/')]
     public function jAjouteManuellementLaReferenceCommeGagnantOfflineSansCarton(string $reference): void
     {
         $events = $this->eventRepo->findAll();
@@ -450,9 +422,7 @@ final class WinnerContext extends BaseContext
         $this->winnerService->validateOfflineWinner($runningGame, $reference, null);
     }
 
-    /**
-     * @Then /^le gagnant doit avoir la référence "([^"]*)"$/
-     */
+    #[Then('/^le gagnant doit avoir la référence "([^"]*)"$/')]
     public function leGagnantDoitAvoirLaReference(string $reference): void
     {
         $events = $this->eventRepo->findAll();
@@ -471,9 +441,7 @@ final class WinnerContext extends BaseContext
         Assert::assertTrue($found, "Aucun gagnant avec la référence '{$reference}' trouvé");
     }
 
-    /**
-     * @Given /^les cartons suivants existent:$/
-     */
+    #[Given('/^les cartons suivants existent:$/')]
     public function queLesCartonsSuivantsExistent(TableNode $table): void
     {
         // Récupérer l'événement courant
@@ -511,17 +479,13 @@ final class WinnerContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @Then /^(\d+) cartons? gagnants? potentiels? doit être détectés?$/
-     */
+    #[Then('/^(\\d+) cartons? gagnants? potentiels? doit être détectés?$/')]
     public function cartonsGagnantsPotentielsDoitEtreDetectes(int $expectedCount): void
     {
         Assert::assertCount($expectedCount, $this->potentialWinners, 'Le nombre de gagnants potentiels ne correspond pas');
     }
 
-    /**
-     * @Then /^le carton "([^"]*)" doit être dans la liste des gagnants potentiels$/
-     */
+    #[Then('/^le carton "([^"]*)" doit être dans la liste des gagnants potentiels$/')]
     public function leCartonDoitEtreDansLaListeDesGagnantsPotentiels(string $reference): void
     {
         $found = false;
@@ -536,9 +500,7 @@ final class WinnerContext extends BaseContext
         Assert::assertTrue($found, "Le carton '{$reference}' n'est pas dans la liste des gagnants potentiels");
     }
 
-    /**
-     * @Then /^le carton "([^"]*)" ne doit pas être dans la liste des gagnants potentiels$/
-     */
+    #[Then('/^le carton "([^"]*)" ne doit pas être dans la liste des gagnants potentiels$/')]
     public function leCartonNeDroitPasEtreDansLaListeDesGagnantsPotentiels(string $reference): void
     {
         foreach ($this->potentialWinners as $potential) {
@@ -546,9 +508,7 @@ final class WinnerContext extends BaseContext
         }
     }
 
-    /**
-     * @Given /^la partie d'ordre (\d+) a un gagnant validé$/
-     */
+    #[Given('/^la partie d\'ordre (\\d+) a un gagnant validé$/')]
     public function queLaPartieDOrdreAUnGagnantValide(int $position): void
     {
         $game = $this->findGameByPosition($position);
@@ -563,9 +523,7 @@ final class WinnerContext extends BaseContext
         $this->winnerService->validateSystemWinner($game, $card);
     }
 
-    /**
-     * @When /^je réinitialise tous les gagnants de l'événement "([^"]*)"$/
-     */
+    #[When('/^je réinitialise tous les gagnants de l\'événement "([^"]*)"$/')]
     public function jeReinitialiseTousLesGagnantsDeLEvenement(string $eventName): void
     {
         $event = $this->eventRepo->findOneBy(['name' => $eventName]);
@@ -574,25 +532,19 @@ final class WinnerContext extends BaseContext
         $this->winnerService->clearAllForEvent($event);
     }
 
-    /**
-     * @When /^je soumets la validation du carton "([^"]*)" sans jeton CSRF$/
-     */
+    #[When('/^je soumets la validation du carton "([^"]*)" sans jeton CSRF$/')]
     public function jeSoumetsLaValidationDuCartonSansJetonCsrf(string $reference): void
     {
         $this->postWinnerValidation($reference, []);
     }
 
-    /**
-     * @When /^je soumets la validation du carton "([^"]*)" avec un jeton CSRF invalide$/
-     */
+    #[When('/^je soumets la validation du carton "([^"]*)" avec un jeton CSRF invalide$/')]
     public function jeSoumetsLaValidationDuCartonAvecUnJetonCsrfInvalide(string $reference): void
     {
         $this->postWinnerValidation($reference, ['_token' => 'jeton-invalide']);
     }
 
-    /**
-     * @When /^je valide le carton "([^"]*)" depuis le tableau de bord$/
-     */
+    #[When('/^je valide le carton "([^"]*)" depuis le tableau de bord$/')]
     public function jeValideLeCartonDepuisLeTableauDeBord(string $reference): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -606,9 +558,7 @@ final class WinnerContext extends BaseContext
         $this->client->submit($input->closest('form')->form());
     }
 
-    /**
-     * @Then /^aucun gagnant ne doit être enregistré pour la partie d'ordre (\d+)$/
-     */
+    #[Then('/^aucun gagnant ne doit être enregistré pour la partie d\'ordre (\\d+)$/')]
     public function aucunGagnantNeDoitEtreEnregistrePourLaPartieDOrdre(int $position): void
     {
         $game = $this->findGameByPosition($position);
@@ -618,9 +568,7 @@ final class WinnerContext extends BaseContext
         Assert::assertCount(0, $game->getWinners(), 'Un gagnant a été enregistré malgré le refus');
     }
 
-    /**
-     * @Then /^le carton "([^"]*)" ne doit pas être bloqué$/
-     */
+    #[Then('/^le carton "([^"]*)" ne doit pas être bloqué$/')]
     public function leCartonNeDoitPasEtreBloque(string $reference): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -654,9 +602,7 @@ final class WinnerContext extends BaseContext
         );
     }
 
-    /**
-     * @Then /^la partie d'ordre (\d+) ne doit plus avoir de gagnants$/
-     */
+    #[Then('/^la partie d\'ordre (\\d+) ne doit plus avoir de gagnants$/')]
     public function laPartieDOrdreNeDroitPlusAvoirDeGagnants(int $position): void
     {
         $game = $this->findGameByPosition($position);
@@ -666,9 +612,7 @@ final class WinnerContext extends BaseContext
         Assert::assertCount(0, $game->getWinners(), 'La partie a encore des gagnants');
     }
 
-    /**
-     * @Then /^tous les cartons bloqués doivent être débloqués$/
-     */
+    #[Then('/^tous les cartons bloqués doivent être débloqués$/')]
     public function tousLesCartonsBloquesDoiventEtreDebloques(): void
     {
         $cards = $this->cardRepo->findAll();
@@ -679,9 +623,7 @@ final class WinnerContext extends BaseContext
         }
     }
 
-    /**
-     * @Given /^un carton "([^"]*)" avec joueur "([^"]*)" existe avec la grille suivante:$/
-     */
+    #[Given('/^un carton "([^"]*)" avec joueur "([^"]*)" existe avec la grille suivante:$/')]
     public function quUnCartonAvecJoueurExisteAvecLaGrilleSuivante(string $reference, string $playerName, TableNode $table): void
     {
         $grid = [];
@@ -722,9 +664,7 @@ final class WinnerContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @When /^la détection automatique s'exécute et publie l'état via Mercure$/
-     */
+    #[When('/^la détection automatique s\'exécute et publie l\'état via Mercure$/')]
     public function laDetectionAutomatiqueExecuteEtPublieLEtatViaMercure(): void
     {
         $this->laDetectionAutomatiqueExecute();
@@ -761,9 +701,7 @@ final class WinnerContext extends BaseContext
         ];
     }
 
-    /**
-     * @Then /^l'état publié doit contenir les informations du carton détecté:$/
-     */
+    #[Then('/^l\'état publié doit contenir les informations du carton détecté:$/')]
     public function lEtatPublieDoitContenirLesInformationsduCartonDetecte(TableNode $table): void
     {
         Assert::assertArrayHasKey('detectedCard', $this->publishedState, "La clé 'detectedCard' n'existe pas dans l'état publié");
@@ -779,9 +717,7 @@ final class WinnerContext extends BaseContext
         }
     }
 
-    /**
-     * @Then /^l'état publié doit contenir la grille formatée du carton$/
-     */
+    #[Then('/^l\'état publié doit contenir la grille formatée du carton$/')]
     public function lEtatPublieDoitContenirLaGrilleFormateeduCarton(): void
     {
         Assert::assertNotNull($this->publishedState['detectedCard'], "Aucun carton détecté dans l'état publié");
