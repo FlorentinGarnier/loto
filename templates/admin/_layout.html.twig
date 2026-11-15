@@ -7,50 +7,34 @@
 
 {% block body %}
   {% set route = app.request.attributes.get('_route') %}
-  <nav class="mb-6 bg-white shadow rounded">
-    <div class="px-4 py-3 flex items-center justify-between">
-      <div class="font-bold text-lg">
-        <a href="{{ path('admin_dashboard') }}">Admin Loto</a>
+  <div class="page">
+    <nav class="topbar" aria-label="Navigation principale">
+      <a class="topbar__logo" href="{{ path('admin_dashboard') }}">
+        <img src="{{ asset('brand/quinou-logo.svg') }}" alt="Quinou">
+      </a>
+      <div class="topbar__links">
+        <a href="{{ path('admin_dashboard') }}" class="{{ route starts with 'admin_dashboard' ? 'is-active' }}">Tableau de bord</a>
+        <a href="{{ path('admin_event_index') }}" class="{{ route starts with 'admin_event_' ? 'is-active' }}">Événements</a>
+        {# Lien Parties: nécessite un événement. On utilise event si dispo, sinon current.event si dispo, sinon fallback Événements #}
+        {% set gamesHref = null %}
+        {% if event is defined and event %}
+          {% set gamesHref = path('admin_game_index', {id: event.id}) %}
+        {% elseif current is defined and current and current.event %}
+          {% set gamesHref = path('admin_game_index', {id: current.event.id}) %}
+        {% endif %}
+        <a href="{{ gamesHref ?? path('admin_event_index') }}" class="{{ route starts with 'admin_game_' ? 'is-active' }}">Parties</a>
+        <a href="{{ path('admin_card_index') }}" class="{{ route starts with 'admin_card_' ? 'is-active' }}">Cartons</a>
+        <a href="{{ path('admin_player_index') }}" class="{{ route starts with 'admin_player_' ? 'is-active' }}">Joueurs</a>
+        <a href="{{ path('app_logout') }}">Déconnexion</a>
       </div>
-      <ul class="flex items-center gap-2 text-sm">
-        <li>
-          <a href="{{ path('admin_dashboard') }}"
-             class="px-3 py-2 rounded {{ route starts with 'admin_dashboard' ? 'bg-blue-600 text-white' : 'hover:bg-gray-100' }}">Tableau de bord</a>
-        </li>
-        <li>
-          <a href="{{ path('admin_event_index') }}"
-             class="px-3 py-2 rounded {{ route starts with 'admin_event_' ? 'bg-blue-600 text-white' : 'hover:bg-gray-100' }}">Événements</a>
-        </li>
-        <li>
-          {# Lien Parties: nécessite un événement. On utilise event si dispo, sinon current.event si dispo, sinon fallback Événements #}
-          {% set gamesHref = null %}
-          {% if event is defined and event %}
-            {% set gamesHref = path('admin_game_index', {id: event.id}) %}
-          {% elseif current is defined and current and current.event %}
-            {% set gamesHref = path('admin_game_index', {id: current.event.id}) %}
-          {% endif %}
-          <a href="{{ gamesHref ?? path('admin_event_index') }}"
-             class="px-3 py-2 rounded {{ route starts with 'admin_game_' ? 'bg-blue-600 text-white' : 'hover:bg-gray-100' }}">Parties</a>
-        </li>
-        <li>
-          <a href="{{ path('admin_card_index') }}"
-             class="px-3 py-2 rounded {{ route starts with 'admin_card_' ? 'bg-blue-600 text-white' : 'hover:bg-gray-100' }}">Cartons</a>
-        </li>
-        <li>
-          <a href="{{ path('admin_player_index') }}"
-             class="px-3 py-2 rounded {{ route starts with 'admin_player_' ? 'bg-blue-600 text-white' : 'hover:bg-gray-100' }}">Joueurs</a>
-        </li>
-          <li>
-              <a href="{{ path('app_logout') }}"
-                 class="px-3 py-2 rounded hover:bg-gray-100">
-                  Déconnexion
-              </a>
-          </li>
-      </ul>
-    </div>
-  </nav>
+    </nav>
 
-  {% block admin_body %}{% endblock %}
+    <div class="stack stack--tight">
+      {% include 'admin/_flashes.html.twig' %}
+    </div>
+
+    {% block admin_body %}{% endblock %}
+  </div>
 {% endblock %}
 
 {% block scripts %}

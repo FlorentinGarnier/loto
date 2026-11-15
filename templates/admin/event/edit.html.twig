@@ -3,8 +3,13 @@
 {% block title %}Éditer l'événement {{ event.name }}{% endblock %}
 
 {% block admin_body %}
-<div class="bg-white rounded shadow p-6">
-  <h1 class="text-2xl font-bold mb-4">Éditer l'événement</h1>
+<div class="panel">
+  <div class="panel__head">
+    <h1>Éditer l'événement</h1>
+    <div class="row">
+      <a href="{{ path('admin_event_index') }}" class="btn btn--small">Retour</a>
+    </div>
+  </div>
   {% include 'admin/event/_form.html.twig' with {form: form} %}
 </div>
 {% endblock %}

@@ -3,48 +3,51 @@
 {% block title %}Parties – {{ event.name }}{% endblock %}
 
 {% block admin_body %}
-<div class="bg-white rounded shadow p-6">
-  <div class="flex items-center justify-between mb-4">
-    <h1 class="text-2xl font-bold">Parties – {{ event.name }} ({{ event.date|date('Y-m-d') }})</h1>
-    <div class="space-x-2">
-      <a href="{{ path('admin_event_index') }}" class="px-3 py-2 bg-gray-200 rounded">Événements</a>
-      <a href="{{ path('admin_game_new', {id: event.id}) }}" class="px-3 py-2 bg-blue-600 text-white rounded">Nouvelle partie</a>
+<div class="panel">
+  <div class="panel__head">
+    <h1>Parties – {{ event.name }} ({{ event.date|date('d/m/Y') }})</h1>
+    <div class="row">
+      <a href="{{ path('admin_event_index') }}" class="btn btn--small">Événements</a>
+      <a href="{{ path('admin_game_new', {id: event.id}) }}" class="btn btn--primary btn--small">Nouvelle partie</a>
     </div>
   </div>
-
   {% if games is empty %}
-    <p class="text-gray-600">Aucune partie définie pour cet événement.</p>
+    <p class="muted">Aucune partie définie pour cet événement.</p>
   {% else %}
-    <table class="min-w-full border">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="p-2 text-left border">Ordre</th>
-          <th class="p-2 text-left border">Règle</th>
-          <th class="p-2 text-left border">Lot</th>
-          <th class="p-2 text-left border">Statut</th>
-          <th class="p-2 text-left border">Actions</th>
-        </tr>
-      </thead>
-      <tbody
-        data-controller="sortable"
-        data-sortable-url-value="{{ path('admin_game_reorder', {id: event.id}) }}">
-        {% for g in games %}
-          <tr class="border-b cursor-move" data-id="{{ g.id }}">
-            <td class="p-2 border">#{{ g.position }}</td>
-            <td class="p-2 border">{{ g.rule.value }}</td>
-            <td class="p-2 border">{{ g.prize }}</td>
-            <td class="p-2 border">{{ g.status.value }}</td>
-            <td class="p-2 border space-x-2">
-              <a class="px-2 py-1 text-sm bg-amber-500 text-white rounded" href="{{ path('admin_game_edit', {id: event.id, gameId: g.id}) }}">Éditer</a>
-              <form class="inline" method="post" action="{{ path('admin_game_delete', {id: event.id, gameId: g.id}) }}" onsubmit="return confirm('Supprimer cette partie ?');">
-                <input type="hidden" name="_token" value="{{ csrf_token('delete_game_' ~ g.id) }}" />
-                <button class="px-2 py-1 text-sm bg-red-600 text-white rounded">Supprimer</button>
-              </form>
-            </td>
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Ordre</th>
+            <th>Règle</th>
+            <th>Lot</th>
+            <th>Statut</th>
+            <th>Actions</th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody
+          data-controller="sortable"
+          data-sortable-url-value="{{ path('admin_game_reorder', {id: event.id}) }}">
+          {% for g in games %}
+            <tr class="is-sortable" data-id="{{ g.id }}">
+              <td class="data">#{{ g.position }}</td>
+              <td>{{ g.rule.value }}</td>
+              <td>{{ g.prize }}</td>
+              <td><span class="pill pill--{{ g.status.value|lower }}">{{ g.status.value }}</span></td>
+              <td>
+                <div class="actions">
+                  <a class="btn btn--small" href="{{ path('admin_game_edit', {id: event.id, gameId: g.id}) }}">Éditer</a>
+                  <form class="inline-form" method="post" action="{{ path('admin_game_delete', {id: event.id, gameId: g.id}) }}" onsubmit="return confirm('Supprimer cette partie ?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete_game_' ~ g.id) }}" />
+                    <button class="btn btn--danger btn--small">Supprimer</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   {% endif %}
 </div>
 {% endblock %}

@@ -1,22 +1,8 @@
-{% form_theme form 'tailwind_2_layout.html.twig' %}
-
-<form method="post">
-    {{ form_start(form) }}
-    <div class="space-y-4">
-        <div>
-            {{ form_label(form.name) }}
-            {{ form_widget(form.name, {attr: {class: 'mt-1 block w-full border rounded p-2'}}) }}
-            {{ form_errors(form.name) }}
-        </div>
-        <div>
-            {{ form_label(form.date) }}
-            {{ form_widget(form.date, {attr: {class: 'mt-1 block w-full border rounded p-2'}}) }}
-            {{ form_errors(form.date) }}
-        </div>
-        <div class="pt-2">
-            <button class="px-4 py-2 bg-blue-600 text-white rounded">Enregistrer</button>
-            <a href="{{ path('admin_event_index') }}" class="ml-2 px-4 py-2 bg-gray-200 rounded">Annuler</a>
-        </div>
+{{ form_start(form, {attr: {class: 'form'}}) }}
+    {{ form_row(form.name) }}
+    {{ form_row(form.date) }}
+    <div class="form__actions">
+        <button class="btn btn--primary">Enregistrer</button>
+        <a href="{{ path('admin_event_index') }}" class="btn">Annuler</a>
     </div>
-    {{ form_end(form) }}
-</form>
+{{ form_end(form) }}

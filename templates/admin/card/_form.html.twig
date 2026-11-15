@@ -1,12 +1,8 @@
-{% form_theme form 'tailwind_2_layout.html.twig' %}
-
-{{ form_start(form) }}
-  <div class="space-y-4">
-    {{ form_row(form.reference, {attr: {class: 'mt-1 block w-full border rounded p-2'}}) }}
-    {{ form_row(form.gridText, {attr: {class: 'mt-1 block w-full border rounded p-2'}}) }}
-  </div>
-  <div class="mt-4">
-    <button class="px-4 py-2 bg-blue-600 text-white rounded">Enregistrer</button>
-    <a href="{{ path('admin_card_index') }}" class="ml-2 px-4 py-2 bg-gray-200 rounded">Annuler</a>
-  </div>
+{{ form_start(form, {attr: {class: 'form'}}) }}
+    {{ form_row(form.reference) }}
+    {{ form_row(form.gridText) }}
+    <div class="form__actions">
+        <button class="btn btn--primary">Enregistrer</button>
+        <a href="{{ path('admin_card_index') }}" class="btn">Annuler</a>
+    </div>
 {{ form_end(form) }}

@@ -3,35 +3,45 @@
 {% block title %}Événement {{ event.name }}{% endblock %}
 
 {% block admin_body %}
-<div class="bg-white rounded shadow p-6">
-  <div class="flex items-center justify-between mb-4">
-    <h1 class="text-2xl font-bold">{{ event.name }}</h1>
-    <a href="{{ path('admin_event_index') }}" class="px-3 py-2 bg-gray-200 rounded">Retour</a>
+<div class="panel">
+  <div class="panel__head">
+    <h1>{{ event.name }}</h1>
+    <div class="row">
+      <a href="{{ path('admin_event_index') }}" class="btn btn--small">Retour</a>
+    </div>
   </div>
-
-  <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <dl class="details">
     <div>
-      <dt class="text-sm text-gray-500">Nom</dt>
-      <dd class="text-lg">{{ event.name }}</dd>
+      <dt>Nom</dt>
+      <dd>{{ event.name }}</dd>
     </div>
     <div>
-      <dt class="text-sm text-gray-500">Date</dt>
-      <dd class="text-lg">{{ event.date|date('Y-m-d') }}</dd>
+      <dt>Date</dt>
+      <dd>{{ event.date|date('d/m/Y') }}</dd>
     </div>
   </dl>
 
-  <div class="mt-6 flex gap-3 flex-wrap">
-    <a class="px-3 py-2 bg-purple-600 text-white rounded" href="{{ path('admin_game_index', {id: event.id}) }}">Gérer les parties</a>
-    <a class="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700" href="{{ path('admin_event_export_winners', {id: event.id}) }}">Exporter les gagnants (CSV)</a>
-    <form method="post" action="{{ path('admin_event_reset_all_draws', {id: event.id}) }}" onsubmit="return confirm('Confirmer la remise à zéro de tous les tirages de cet événement ?');"><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}">
-      <button type="submit" class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700">Réinitialiser tous les tirages</button>
-    </form>
-    <form method="post" action="{{ path('admin_event_reset_all_winners', {id: event.id}) }}" onsubmit="return confirm('Confirmer la suppression de tous les gagnants de cet événement ?');"><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}">
-      <button type="submit" class="px-3 py-2 bg-orange-600 text-white rounded hover:bg-orange-700">Supprimer tous les gagnants</button>
-    </form>
-    <form method="post" action="{{ path('admin_event_unassign_all_players', {id: event.id}) }}" onsubmit="return confirm('Confirmer la désassociation de tous les joueurs des cartons ?');"><input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}">
-      <button type="submit" class="px-3 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700">Désassocier tous les joueurs</button>
-    </form>
+  <div class="section row">
+    <a class="btn btn--primary" href="{{ path('admin_game_index', {id: event.id}) }}">Gérer les parties</a>
+    <a class="btn btn--dark" href="{{ path('admin_event_export_winners', {id: event.id}) }}">Exporter les gagnants (CSV)</a>
+  </div>
+
+  <div class="section section--ruled">
+    <h2>Remises à zéro</h2>
+    <div class="row">
+      <form method="post" action="{{ path('admin_event_reset_all_draws', {id: event.id}) }}" onsubmit="return confirm('Confirmer la remise à zéro de tous les tirages de cet événement ?');">
+        <input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}">
+        <button type="submit" class="btn btn--danger">Réinitialiser tous les tirages</button>
+      </form>
+      <form method="post" action="{{ path('admin_event_reset_all_winners', {id: event.id}) }}" onsubmit="return confirm('Confirmer la suppression de tous les gagnants de cet événement ?');">
+        <input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}">
+        <button type="submit" class="btn btn--danger">Supprimer tous les gagnants</button>
+      </form>
+      <form method="post" action="{{ path('admin_event_unassign_all_players', {id: event.id}) }}" onsubmit="return confirm('Confirmer la désassociation de tous les joueurs des cartons ?');">
+        <input type="hidden" name="_token" value="{{ csrf_token('admin_action') }}">
+        <button type="submit" class="btn btn--danger">Désassocier tous les joueurs</button>
+      </form>
+    </div>
   </div>
 </div>
 {% endblock %}
