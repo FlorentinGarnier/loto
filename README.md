@@ -90,7 +90,7 @@ features/             Scénarios Behat (tests fonctionnels)
 migrations/           Migrations Doctrine
 public/               Point d'entrée web (index.php)
 src/
-  ├── Command/        Commandes CLI (ImportCardsCommand, SeedDemoCommand)
+  ├── Command/        Commandes CLI (ImportCardsCommand, SeedDemoCommand, SeedStagingCommand)
   ├── Controller/     Contrôleurs HTTP
   │   ├── Admin/      Zone d'administration
   │   ├── AdminController.php
@@ -198,6 +198,7 @@ php bin/console cache:clear                        # Vider le cache
 php bin/console debug:container                    # Lister les services
 php bin/console debug:router                       # Lister les routes
 php bin/console app:seed:demo                      # Créer données de démo
+make seed-staging                                  # Effacer la base et charger le jeu de données de recette (voir 14)
 php bin/console app:cards:import 0 <fichier>       # Importer des cartons (0 = sans vérifier d'événement)
 ```
 
@@ -263,3 +264,30 @@ Le projet utilise la CI/CD commune aux projets Symfony : `FlorentinGarnier/ci-sy
 Seul `.github/workflows/ci.yml` contient des réglages propres au projet. Le dossier `deploy/` fournit le Compose du serveur (base, php, web, Mercure, page de maintenance) et les modèles `app.env`, `stack.env` et `mercure.env`.
 
 Prérequis côté serveur et côté GitHub (environnements `staging` et `production`, variables et secrets) : voir le README de `ci-symfony`.
+
+14) Jeu de données de recette
+
+`php bin/console app:seed:staging` efface toutes les données et charge une soirée de loto en cours, pour tester sans tout ressaisir. Le contenu vient d'une graine fixe : chaque chargement redonne exactement les mêmes joueurs, cartons et tirages. Aucune donnée réelle (adresses en `example.test`, téléphones en `06 39 98`, tranche réservée à la fiction).
+
+Contenu :
+
+- **Grand loto du comité des fêtes** (daté du jour du chargement) : 12 parties, 40 joueurs, 150 cartons `C-0001` à `C-0150`.
+  - 109 cartons sont attribués à 36 joueurs ; 41 cartons sont libres et 4 joueurs n'ont pas encore de carton, pour tester l'attribution.
+  - Parties 1 à 3 terminées, avec leurs gagnants validés (cartons `C-0057`, `C-0043`, `C-0105`, désormais bloqués) et un gagnant salle sur la partie 2.
+  - Partie 4 (quine, coffret de vins) en cours avec 21 numéros tirés. **Cocher le 41 fait gagner le carton `C-0099` de Ginette Rousseau** et gèle la partie.
+  - Partie 7 en « salle uniquement ».
+- **Loto de printemps** (six mois plus tôt) : 6 parties terminées, toutes en « salle uniquement », avec des gagnants saisis à la main ; utile pour l'export CSV et la liste des événements.
+
+La soirée est jouée par les services de l'application (tirage, détection, validation, partie suivante, démarque) : l'état chargé est un état que l'application sait produire. Les scénarios de `features/jeu_de_donnees_recette.feature` vérifient le contenu, la reproductibilité et le numéro gagnant annoncé.
+
+La commande est refusée tant que `ALLOW_DATA_RESET` ne vaut pas `1` : staging et production tournent tous deux avec `APP_ENV=prod`, seule cette variable les distingue. En mode interactif, elle demande confirmation en listant ce qui va être effacé. La purge et le chargement se font dans une seule transaction.
+
+En développement : `make seed-staging`.
+
+Sur le staging, une seule fois : mettre `ALLOW_DATA_RESET=1` dans `app.env` de l'environnement de staging, puis recréer le conteneur `php` pour qu'il relise le fichier. Ensuite, à chaque fois qu'on veut repartir de l'état de départ, depuis le dossier de l'environnement :
+
+```bash
+docker compose --env-file stack.env --env-file current.env -f compose.yaml exec php php bin/console app:seed:staging
+```
+
+Ne jamais mettre `ALLOW_DATA_RESET=1` dans l'`app.env` de production.
