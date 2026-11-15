@@ -1,0 +1,7 @@
+# Essai d'une instance sur un poste de développement, sans Traefik : publie le serveur web sur 127.0.0.1.
+# Ajouté par provision.sh quand LOCAL_PORT est défini. Le temps réel (Mercure) n'est pas joignable dans ce mode.
+
+services:
+    web:
+        ports:
+            - "127.0.0.1:${LOCAL_PORT:?required}:80"

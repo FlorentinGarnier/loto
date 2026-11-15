@@ -1,0 +1,29 @@
+# Socle commun à toutes les instances clientes : un seul serveur PostgreSQL, une base et un rôle par client.
+# Lancé et tenu à jour par provision.sh ; ne pas le lancer à la main.
+#
+# Le serveur n'est joignable que par le réseau ${DB_NETWORK}, où seuls les conteneurs php des instances sont branchés.
+# Aucun port n'est publié sur la machine.
+
+services:
+    postgres:
+        image: postgres:16-alpine
+        container_name: ${POSTGRES_CONTAINER:?required}
+        restart: unless-stopped
+        env_file: postgres.env
+        volumes: ["postgres:/var/lib/postgresql/data"]
+        networks: [db]
+        healthcheck:
+            test: [CMD-SHELL, "pg_isready -U postgres"]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+        logging:
+            driver: json-file
+            options: { max-size: "10m", max-file: "3" }
+
+networks:
+    db:
+        name: ${DB_NETWORK:?required}
+
+volumes:
+    postgres: {}
