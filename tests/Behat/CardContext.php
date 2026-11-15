@@ -12,6 +12,10 @@ use App\Repository\EventRepository;
 use App\Repository\GameRepository;
 use App\Repository\PlayerRepository;
 use Behat\Gherkin\Node\TableNode;
+use Behat\Hook\BeforeScenario;
+use Behat\Step\Given;
+use Behat\Step\Then;
+use Behat\Step\When;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Assert;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -32,18 +36,14 @@ final class CardContext extends BaseContext
         parent::__construct($entityManager, $eventRepo, $gameRepo, $cardRepo, $playerRepo, $client);
     }
 
-    /**
-     * @BeforeScenario
-     */
+    #[BeforeScenario]
     public function resetCardsArray(): void
     {
         $this->cards = [];
         $this->currentCard = null;
     }
 
-    /**
-     * @When /^je crée un carton avec la référence "([^"]*)" et la grille suivante:$/
-     */
+    #[When('/^je crée un carton avec la référence "([^"]*)" et la grille suivante:$/')]
     public function jeCreerUnCartonAvecLaReferenceEtLaGrilleSuivante(string $reference, TableNode $table): void
     {
         $grid = [];
@@ -64,9 +64,7 @@ final class CardContext extends BaseContext
         $this->currentCard = $card;
     }
 
-    /**
-     * @Then /^le carton "([^"]*)" doit exister$/
-     */
+    #[Then('/^le carton "([^"]*)" doit exister$/')]
     public function leCartonDoitExister(string $reference): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -74,9 +72,7 @@ final class CardContext extends BaseContext
         $this->currentCard = $card;
     }
 
-    /**
-     * @Then /^le carton "([^"]*)" doit contenir les numéros "([^"]*)" sur la ligne (\d+)$/
-     */
+    #[Then('/^le carton "([^"]*)" doit contenir les numéros "([^"]*)" sur la ligne (\\d+)$/')]
     public function leCartonDoitContenirLesNumerosSurLaLigne(string $reference, string $numbers, int $line): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -88,9 +84,7 @@ final class CardContext extends BaseContext
         Assert::assertEquals($expectedNumbers, $actualNumbers, "Les numéros de la ligne {$line} ne correspondent pas");
     }
 
-    /**
-     * @Given /^un carton "([^"]*)" existe$/
-     */
+    #[Given('/^un carton "([^"]*)" existe$/')]
     public function quUnCartonExiste(string $reference): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -106,9 +100,7 @@ final class CardContext extends BaseContext
         $this->currentCard = $card;
     }
 
-    /**
-     * @When /^j'associe le carton "([^"]*)" au joueur "([^"]*)"$/
-     */
+    #[When('/^j\'associe le carton "([^"]*)" au joueur "([^"]*)"$/')]
     public function jAssocieLeCartonAuJoueur(string $reference, string $playerName): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -121,9 +113,7 @@ final class CardContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @Then /^le carton "([^"]*)" doit être associé au joueur "([^"]*)"$/
-     */
+    #[Then('/^le carton "([^"]*)" doit être associé au joueur "([^"]*)"$/')]
     public function leCartonDoitEtreAssocieAuJoueur(string $reference, string $playerName): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -134,9 +124,7 @@ final class CardContext extends BaseContext
         Assert::assertEquals($playerName, $player->getName(), 'Le joueur associé ne correspond pas');
     }
 
-    /**
-     * @When /^je bloque le carton "([^"]*)" pour la raison "([^"]*)"$/
-     */
+    #[When('/^je bloque le carton "([^"]*)" pour la raison "([^"]*)"$/')]
     public function jeBloqueLeCartonPourLaRaison(string $reference, string $reason): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -146,9 +134,7 @@ final class CardContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @Then /^le carton "([^"]*)" doit être bloqué$/
-     */
+    #[Then('/^le carton "([^"]*)" doit être bloqué$/')]
     public function leCartonDoitEtreBloque(string $reference): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -158,9 +144,7 @@ final class CardContext extends BaseContext
         Assert::assertTrue($card->isBlocked(), "Le carton n'est pas bloqué");
     }
 
-    /**
-     * @Then /^le carton "([^"]*)" doit avoir la raison de blocage "([^"]*)"$/
-     */
+    #[Then('/^le carton "([^"]*)" doit avoir la raison de blocage "([^"]*)"$/')]
     public function leCartonDoitAvoirLaRaisonDeBlocage(string $reference, string $expectedReason): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -170,9 +154,7 @@ final class CardContext extends BaseContext
         Assert::assertEquals($expectedReason, $card->getBlockedReason()?->value, 'La raison de blocage ne correspond pas');
     }
 
-    /**
-     * @Given /^le carton "([^"]*)" est bloqué pour la raison "([^"]*)"$/
-     */
+    #[Given('/^le carton "([^"]*)" est bloqué pour la raison "([^"]*)"$/')]
     public function queLeCartonEstBloquePourLaRaison(string $reference, string $reason): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -182,9 +164,7 @@ final class CardContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @When /^je débloque le carton "([^"]*)"$/
-     */
+    #[When('/^je débloque le carton "([^"]*)"$/')]
     public function jeDébloqueLeCarton(string $reference): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -194,9 +174,7 @@ final class CardContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @Then /^le carton "([^"]*)" ne doit plus être bloqué$/
-     */
+    #[Then('/^le carton "([^"]*)" ne doit plus être bloqué$/')]
     public function leCartonNeDroitPlusEtreBloque(string $reference): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -206,9 +184,7 @@ final class CardContext extends BaseContext
         Assert::assertFalse($card->isBlocked(), 'Le carton est encore bloqué');
     }
 
-    /**
-     * @Given /^les cartons suivants existent pour l'événement "([^"]*)":$/
-     */
+    #[Given('/^les cartons suivants existent pour l\'événement "([^"]*)":$/')]
     public function queLesCartonsSuivantsExistentPourLEvenement(string $eventName, TableNode $table): void
     {
         $event = $this->eventRepo->findOneBy(['name' => $eventName]);
@@ -243,9 +219,7 @@ final class CardContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @When /^je liste les cartons de l'événement "([^"]*)"$/
-     */
+    #[When('/^je liste les cartons de l\'événement "([^"]*)"$/')]
     public function jeListeLesCartonsDeLEvenement(string $eventName): void
     {
         $event = $this->eventRepo->findOneBy(['name' => $eventName]);
@@ -259,17 +233,13 @@ final class CardContext extends BaseContext
         // Sinon, on garde les cartons déjà créés dans $this->cards
     }
 
-    /**
-     * @Then /^je dois voir (\d+) cartons$/
-     */
+    #[Then('/^je dois voir (\\d+) cartons$/')]
     public function jeDoisVoirCartons(int $expectedCount): void
     {
         Assert::assertCount($expectedCount, $this->cards, 'Le nombre de cartons ne correspond pas');
     }
 
-    /**
-     * @Then /^le carton "([^"]*)" ne doit pas avoir de joueur associé$/
-     */
+    #[Then('/^le carton "([^"]*)" ne doit pas avoir de joueur associé$/')]
     public function leCartonNeDroitPasAvoirDeJoueurAssocie(string $reference): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);

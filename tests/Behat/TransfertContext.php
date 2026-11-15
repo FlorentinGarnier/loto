@@ -11,13 +11,14 @@ use App\Enum\BlockedReason;
 use App\Enum\GameStatus;
 use App\Enum\WinnerSource;
 use Behat\Gherkin\Node\TableNode;
+use Behat\Step\Given;
+use Behat\Step\Then;
+use Behat\Step\When;
 use PHPUnit\Framework\Assert;
 
 final class TransfertContext extends BaseContext
 {
-    /**
-     * @Given /^un carton "([^"]*)" existe avec une ligne complète sur les numéros "([^"]*)"$/
-     */
+    #[Given('/^un carton "([^"]*)" existe avec une ligne complète sur les numéros "([^"]*)"$/')]
     public function quUnCartonExisteAvecUneLigneCompleteSurLesNumeros(string $reference, string $numbers): void
     {
         $numbersArray = array_map('intval', explode(',', $numbers));
@@ -39,9 +40,7 @@ final class TransfertContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @Given /^le carton "([^"]*)" a été détecté comme gagnant potentiel$/
-     */
+    #[Given('/^le carton "([^"]*)" a été détecté comme gagnant potentiel$/')]
     public function queLeCartonAEteDetecteCommeGagnantPotentiel(string $reference): void
     {
         // Créer le carton s'il n'existe pas
@@ -67,9 +66,7 @@ final class TransfertContext extends BaseContext
         }
     }
 
-    /**
-     * @Given /^la partie d'ordre (\d+) est gelée$/
-     */
+    #[Given('/^la partie d\'ordre (\\d+) est gelée$/')]
     public function quelaPartieDOrdreEstGelee(int $position): void
     {
         $game = $this->findGameByPosition($position);
@@ -79,9 +76,7 @@ final class TransfertContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @When /^je valide le carton "([^"]*)" comme gagnant et passe à la partie suivante$/
-     */
+    #[When('/^je valide le carton "([^"]*)" comme gagnant et passe à la partie suivante$/')]
     public function jeValideLeCartonCommeGagnantEtPasseALaPartieSuivante(string $reference): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -106,9 +101,7 @@ final class TransfertContext extends BaseContext
         $this->transferDrawsAndMoveToNextGame($currentGame);
     }
 
-    /**
-     * @When /^j'ajoute manuellement le carton "([^"]*)" comme gagnant offline et passe à la partie suivante$/
-     */
+    #[When('/^j\'ajoute manuellement le carton "([^"]*)" comme gagnant offline et passe à la partie suivante$/')]
     public function jAjouteManuellementLeCartonCommeGagnantOfflineEtPasseALaPartieSuivante(string $reference): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -134,9 +127,7 @@ final class TransfertContext extends BaseContext
         $this->transferDrawsAndMoveToNextGame($currentGame);
     }
 
-    /**
-     * @When /^je termine la partie d'ordre (\d+) et passe à la suivante en conservant les tirages$/
-     */
+    #[When('/^je termine la partie d\'ordre (\\d+) et passe à la suivante en conservant les tirages$/')]
     public function jeTermineLaPartieDOrdreEtPasseALaSuivanteEnConservantLesTirages(int $position): void
     {
         $currentGame = $this->findGameByPosition($position);
@@ -146,9 +137,7 @@ final class TransfertContext extends BaseContext
         $this->transferDrawsAndMoveToNextGame($currentGame);
     }
 
-    /**
-     * @Given /^un carton "([^"]*)" avec deux lignes complètes est détecté comme gagnant$/
-     */
+    #[Given('/^un carton "([^"]*)" avec deux lignes complètes est détecté comme gagnant$/')]
     public function quUnCartonAvecDeuxLignesCompletesEstDetecteCommeGagnant(string $reference): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -172,17 +161,13 @@ final class TransfertContext extends BaseContext
         }
     }
 
-    /**
-     * @When /^je valide le carton "([^"]*)" et passe à la partie suivante$/
-     */
+    #[When('/^je valide le carton "([^"]*)" et passe à la partie suivante$/')]
     public function jeValideLeCartonEtPasseALaPartieSuivante(string $reference): void
     {
         $this->jeValideLeCartonCommeGagnantEtPasseALaPartieSuivante($reference);
     }
 
-    /**
-     * @Given /^les numéros suivants ont été tirés dans cet ordre pour la partie d'ordre (\d+):$/
-     */
+    #[Given('/^les numéros suivants ont été tirés dans cet ordre pour la partie d\'ordre (\\d+):$/')]
     public function queLesNumerosSuivantsOntEteTiresDansCetOrdrePourLaPartieDOrdre(int $position, TableNode $table): void
     {
         $game = $this->findGameByPosition($position);
@@ -204,9 +189,7 @@ final class TransfertContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @Then /^la partie d'ordre (\d+) doit avoir les numéros tirés dans l'ordre suivant:$/
-     */
+    #[Then('/^la partie d\'ordre (\\d+) doit avoir les numéros tirés dans l\'ordre suivant:$/')]
     public function laPartieDOrdreDevoirAvoirLesNumerosTiresDansLOrdreSuivant(int $position, TableNode $table): void
     {
         $game = $this->findGameByPosition($position);
@@ -228,17 +211,13 @@ final class TransfertContext extends BaseContext
         Assert::assertEquals($expectedDraws, $actualDraws, "L'ordre des tirages ne correspond pas");
     }
 
-    /**
-     * @Given /^un carton "([^"]*)" a été détecté comme gagnant potentiel$/
-     */
+    #[Given('/^un carton "([^"]*)" a été détecté comme gagnant potentiel$/')]
     public function quUnCartonAEteDetecteCommeGagnantPotentiel(string $reference): void
     {
         $this->queLeCartonAEteDetecteCommeGagnantPotentiel($reference);
     }
 
-    /**
-     * @When /^je refuse le gagnant et dégèle la partie d'ordre (\d+)$/
-     */
+    #[When('/^je refuse le gagnant et dégèle la partie d\'ordre (\\d+)$/')]
     public function jeRefuseLeGagnantEtDegelelaPartieDOrdre(int $position): void
     {
         $game = $this->findGameByPosition($position);
@@ -249,9 +228,7 @@ final class TransfertContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @Given /^un autre carton "([^"]*)" est détecté comme gagnant$/
-     */
+    #[Given('/^un autre carton "([^"]*)" est détecté comme gagnant$/')]
     public function quUnAutreCartonEstDetecteCommeGagnant(string $reference): void
     {
         $card = $this->cardRepo->findOneBy(['reference' => $reference]);
@@ -275,9 +252,7 @@ final class TransfertContext extends BaseContext
         }
     }
 
-    /**
-     * @Given /^un carton gagnant est validé pour la partie d'ordre (\d+)$/
-     */
+    #[Given('/^un carton gagnant est validé pour la partie d\'ordre (\\d+)$/')]
     public function quUnCartonGagnantEstValidePourLaPartieDOrdre(int $position): void
     {
         $game = $this->findGameByPosition($position);
@@ -303,9 +278,7 @@ final class TransfertContext extends BaseContext
         $this->entityManager->flush();
     }
 
-    /**
-     * @When /^je passe à la partie d'ordre (\d+) en conservant les tirages$/
-     */
+    #[When('/^je passe à la partie d\'ordre (\\d+) en conservant les tirages$/')]
     public function jePasseALaPartieDOrdreEnConservantLesTirages(int $targetPosition): void
     {
         $currentGames = $this->gameRepo->findBy(['status' => GameStatus::RUNNING]);
@@ -315,9 +288,7 @@ final class TransfertContext extends BaseContext
         $this->transferDrawsAndMoveToSpecificGame($currentGame, $targetPosition);
     }
 
-    /**
-     * @Then /^seuls les numéros valides \(entre 1 et 90\) doivent être transférés à la partie d'ordre (\d+)$/
-     */
+    #[Then('/^seuls les numéros valides \\(entre 1 et 90\\) doivent être transférés à la partie d\'ordre (\\d+)$/')]
     public function seulsLesNumerosValidesDoiventEtreTransferesALaPartieDOrdre(int $position): void
     {
         $game = $this->findGameByPosition($position);
@@ -330,18 +301,14 @@ final class TransfertContext extends BaseContext
         }
     }
 
-    /**
-     * @Given /^la partie d'ordre (\d+) a déjà le numéro (\d+) tiré \(cas improbable\)$/
-     */
+    #[Given('/^la partie d\'ordre (\\d+) a déjà le numéro (\\d+) tiré \\(cas improbable\\)$/')]
     public function quelaPartieDOrdreADejaLeNumeroTire(int $position, int $number): void
     {
         // Cette étape ne fait rien car elle représente un état hypothétique
         // La logique de gestion des doublons sera testée dans l'assertion
     }
 
-    /**
-     * @Then /^la partie d'ordre (\d+) doit avoir exactement (\d+) numéros tirés sans doublon$/
-     */
+    #[Then('/^la partie d\'ordre (\\d+) doit avoir exactement (\\d+) numéros tirés sans doublon$/')]
     public function laPartieDOrdreDevoirAvoirExactementNumerosTiresSansDoublon(int $position, int $expectedCount): void
     {
         $game = $this->findGameByPosition($position);

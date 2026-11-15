@@ -191,7 +191,7 @@ Export CSV des gagnants d'un événement : partie, règle, lot, ordre de victoir
 
 ### 4.12 Pile technique
 
-Symfony 7.4, PHP ≥ 8.2, PostgreSQL 16, Mercure, Twig + Stimulus + Turbo (AssetMapper), Docker, déploiement par GitHub Actions. Tests : PHPSpec (unitaires) et Behat (fonctionnels).
+Symfony 8.1, PHP ≥ 8.4, PostgreSQL 16, Mercure, Twig + Stimulus + Turbo (AssetMapper), Docker, déploiement par GitHub Actions. Tests : PHPSpec (unitaires) et Behat (fonctionnels).
 
 ---
 

@@ -1,12 +1,12 @@
-Loto Quine/Bingo – Admin & Affichage Public (Symfony 7.4)
+Loto Quine/Bingo – Admin & Affichage Public (Symfony 8.1)
 
-Application Symfony 7.4 pour gérer un loto/quine (administration) et un affichage public en temps réel via Mercure.
+Application Symfony 8.1 pour gérer un loto/quine (administration) et un affichage public en temps réel via Mercure.
 
 Ce document explique l’installation, l’exécution, les tests et les conventions du projet. Pour les détails fonctionnels complets, consultez `doc/spec.md`.
 
 1) Périmètre et pile technique
 - PHP: >= 8.2 (CLI de dev 8.3)
-- Symfony: 7.4.*
+- Symfony: 8.1.*
 - Base de données: PostgreSQL 16 (Docker Compose)
 - Temps réel: Mercure Hub (image `dunglas/mercure`)
 - Mail de dev: Mailpit
@@ -63,7 +63,7 @@ PHPSpec (Tests unitaires)
 
 Behat (Tests fonctionnels)
 - Framework de tests comportementaux en langage naturel (Gherkin)
-- Config: `behat.yml.dist` (créez `behat.yml` local pour overrides si besoin)
+- Config: `behat.dist.php` (créez `behat.php` local pour overrides si besoin)
 - Exécution: composer behat ou vendor/bin/behat
 - Scénarios dans `features/*.feature`
 - Contexts de test dans `tests/Behat/`

@@ -11,7 +11,7 @@
 # Tests
 tests/
 features/
-behat.yml.dist
+behat.dist.php
 phpunit.dist.xml
 .phpunit.cache/
 
