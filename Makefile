@@ -1,4 +1,4 @@
-.PHONY: provision instances-backup help install start stop restart logs db-create db-migrate db-reset test test-unit test-functional cs-check cs-fix clear cache seed seed-staging docker-up docker-down docker-restart db-diff test-behat-verbose test-db-reset routes services entities console import-cards watch watch-stop
+.PHONY: provision instances-backup instances-update help install start stop restart logs db-create db-migrate db-reset test test-unit test-functional cs-check cs-fix clear cache seed seed-staging docker-up docker-down docker-restart db-diff test-behat-verbose test-db-reset routes services entities console import-cards watch watch-stop
 
 .DEFAULT_GOAL := help
 
@@ -106,6 +106,9 @@ provision: ## Crée ou répare l'instance d'un client, sur la machine qui porte 
 
 instances-backup: ## Sauvegarde la base de toutes les instances, ou d'une seule (CLIENT=identifiant)
 	deploy/instances/backup.sh $(CLIENT)
+
+instances-update: ## Met toutes les instances à la version voulue, une par une (PHP_IMAGE=… WEB_IMAGE=…, CLIENT=identifiant, FORCE=1)
+	deploy/instances/update.sh $(if $(FORCE),--force) $(CLIENT)
 
 ## —— 🎨 Qualité de code ————————————————————————————————————————————————————
 cs-check: ## Vérifie le style de code

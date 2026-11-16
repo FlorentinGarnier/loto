@@ -10,9 +10,10 @@
 # démarrage, sonde de santé. L'instance répond ensuite sur https://<client>.<domaine>.
 #
 # Ce que la commande écrit, sous INSTANCES_ROOT :
-#   images.env                     version servie aux instances (PHP_IMAGE, WEB_IMAGE)
+#   images.env                     version voulue pour les instances (PHP_IMAGE, WEB_IMAGE)
 #   socle/                         serveur PostgreSQL commun et son mot de passe
-#   instances/<client>/            compose.yaml, stack.env, app.env, mercure.env, etat, provision.log, backups/
+#   instances/<client>/            compose.yaml, stack.env, app.env, mercure.env, images.env (version en service),
+#                                  etat, provision.log, backups/
 # Les fichiers de secrets ne sont écrits qu'une fois : une relance garde les mêmes.
 #
 # Réglages (variables d'environnement) :
@@ -42,8 +43,8 @@ quinou socle traefik mercure autodiscover autoconfig cloud"
 log() { printf '[provision %s] %s\n' "$(date '+%T')" "$*"; }
 die() { printf '[provision] ERREUR : %s\n' "$*" >&2; exit 1; }
 secret() { openssl rand -hex 32; }
-# Valeur d'une variable d'un fichier d'environnement ; vide si elle est absente.
-conf() { { grep -E "^$2=" "$1" 2>/dev/null || true; } | tail -n1 | cut -d= -f2-; }
+# shellcheck source=deploy/instances/lib.sh
+. "$here/lib.sh"
 
 # ------------------------------------------------------------------ Contrôles
 [[ -n "$client" ]] || { echo "Usage : $(basename "$0") <client>" >&2; exit 2; }
@@ -69,23 +70,10 @@ dir="$root/instances/$client"
 mkdir -p "$root" 2> /dev/null || die "impossible de créer $root : le créer une fois avec les droits root, au nom de ce compte"
 [[ -w "$root" ]] || die "$root n'est pas inscriptible par ce compte"
 
-# Une seule création à la fois.
-lock="$root/.verrou"
-mkdir "$lock" 2> /dev/null || die "une autre création est en cours ($lock). Si ce n'est pas le cas : rmdir $lock"
+lock_instances
 state() { [[ -d "$dir" ]] && printf '%s\n' "$1" > "$dir/etat"; return 0; }
-trap 'rmdir "$lock" 2> /dev/null || true' EXIT
+trap unlock_instances EXIT
 trap 'failed_line=$LINENO failed_command=$BASH_COMMAND; state "en erreur"; printf "[provision] ERREUR ligne %s : %s\n" "$failed_line" "$failed_command" >&2' ERR
-
-# Sortie d'une commande gardée dans un journal, affichée seulement en cas d'échec.
-quiet_log=/dev/null
-quiet() {
-    if ! "$@" > "$quiet_log" 2>&1; then
-        [[ "$quiet_log" == /dev/null ]] || cat "$quiet_log" >&2
-        return 1
-    fi
-}
-# Une image est utilisable si elle est déjà sur la machine ou si elle se télécharge.
-image_ready() { docker image inspect "$1" > /dev/null 2>&1 || docker pull --quiet "$1" > /dev/null 2>&1; }
 
 # ------------------------------------------------------------------ Images
 if [[ -n "${PHP_IMAGE:-}" || -n "${WEB_IMAGE:-}" ]]; then
@@ -186,14 +174,8 @@ else
     [[ -n "$db_password" ]] || die "DB_PASSWORD absent de $dir/stack.env"
 fi
 
-local_port=$(conf stack.env LOCAL_PORT)
-compose() {
-    if [[ -n "$local_port" ]]; then
-        docker compose --env-file stack.env --env-file "$root/images.env" -f compose.yaml -f compose.local.yaml "$@"
-    else
-        docker compose --env-file stack.env --env-file "$root/images.env" -f compose.yaml "$@"
-    fi
-}
+# L'instance prend la version voulue : une création, ou une relance, la met à ce niveau.
+cp "$root/images.env" images.env
 compose config --quiet
 
 # ------------------------------------------------------------------ Rôle et base du client
@@ -211,19 +193,11 @@ SQL
 
 # ------------------------------------------------------------------ Migrations et démarrage
 log "migrations"
-quiet compose run --rm --no-deps php php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
-if compose run --rm --no-deps php php bin/console list --raw 2> /dev/null | grep '^messenger:setup-transports ' > /dev/null; then
-    quiet compose run --rm --no-deps php php bin/console messenger:setup-transports --no-interaction
-fi
+migrate
 log "démarrage"
 quiet compose up -d --force-recreate --quiet-pull
 
-healthy=false
-for _ in $(seq 1 30); do
-    if compose exec -T web wget -q -O /dev/null http://127.0.0.1/healthz 2> /dev/null; then healthy=true; break; fi
-    sleep 2
-done
-if [[ "$healthy" != true ]]; then
+if ! wait_healthy; then
     compose ps
     compose logs --tail 30 php web || true
     die "l'instance ne répond pas sur /healthz ; corriger puis relancer la même commande"
