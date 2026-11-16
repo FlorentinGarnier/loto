@@ -20,13 +20,19 @@ final class PublicController extends AbstractController
     }
 
     /**
-     * L'adresse nue mène à l'administration (ou à la connexion) :
-     * l'écran de salle s'ouvre depuis le menu, sur le poste relié au vidéoprojecteur.
+     * L'adresse nue : l'organisateur connecté va à l'administration,
+     * le visiteur choisit entre suivre le tirage et se connecter.
      */
     #[Route('/', name: 'home')]
     public function home(): Response
     {
-        return $this->redirectToRoute('admin_dashboard');
+        if ($this->isGranted('ROLE_ADMIN')) {
+            return $this->redirectToRoute('admin_dashboard');
+        }
+
+        return $this->render('public/home.html.twig', [
+            'event' => $this->eventRepo->findLatest(),
+        ]);
     }
 
     #[Route('/public', name: 'public_display')]

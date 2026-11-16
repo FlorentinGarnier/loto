@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ event ? event.name : 'Quinou' }}{% endblock %}
+
+{% block body %}
+<main class="login">
+    <div class="login__box home">
+        <img class="login__logo" src="{{ asset('brand/quinou-logo.svg') }}" alt="Quinou">
+        <h1>{{ event ? event.name : 'Loto' }}</h1>
+        <p class="home__text">Suivez les numéros tirés sur votre téléphone, sans rien installer.</p>
+        <a class="btn btn--primary btn--block" href="{{ path('public_display') }}">Suivre le tirage en direct</a>
+        <a class="home__admin" href="{{ path('app_login') }}">Espace organisateur</a>
+    </div>
+</main>
+{% endblock %}
