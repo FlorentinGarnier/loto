@@ -10,9 +10,8 @@ framework:
     #fragments: true
 
     # Le client HTTP ne sert qu'à publier vers le hub Mercure, sur le même hôte.
-    # Sans limite, un hub qui ne répond plus bloquerait chaque tirage une minute :
-    # on abandonne la publication au bout de 3 secondes, l'écran de salle se
-    # resynchronise ensuite seul (/public/state).
+    # La publication part après la réponse (GameStatePublisher) ; ce délai évite
+    # qu'un hub qui ne répond plus retienne un processus PHP une minute.
     http_client:
         default_options:
             timeout: 2

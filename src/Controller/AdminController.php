@@ -12,6 +12,7 @@ use App\Security\AdminCsrf;
 use App\Service\CardService;
 use App\Service\DrawService;
 use App\Service\GameStateBuilder;
+use App\Service\GameStatePublisher;
 use App\Service\WinnerDetectionService;
 use App\Service\WinnerService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -20,8 +21,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Mercure\HubInterface;
-use Symfony\Component\Mercure\Update;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsCsrfTokenValid;
@@ -38,7 +37,7 @@ final class AdminController extends AbstractController
         private readonly WinnerService $winnerManagementService,
         private readonly CardService $cardService,
         private readonly GameStateBuilder $stateBuilder,
-        private readonly HubInterface $hub,
+        private readonly GameStatePublisher $publisher,
         private readonly UrlGeneratorInterface $urlGenerator,
         private readonly EntityManagerInterface $em,
     ) {
@@ -296,28 +295,17 @@ final class AdminController extends AbstractController
     }
 
     /**
-     * Publie l'état de la partie vers l'écran d'animation et l'écran de salle.
+     * Construit l'état de la partie et le met en attente d'envoi aux écrans :
+     * la publication part après la réponse, pour ne jamais faire attendre l'animateur.
      *
-     * @return array<string, mixed> l'état publié
+     * @return array<string, mixed> l'état de la partie
      */
     private function publishGameUpdate(Game $game): array
     {
-        $payload = $this->stateBuilder->build($game);
+        $state = $this->stateBuilder->build($game);
+        $this->publisher->queue($game, $state);
 
-        try {
-            $eventId = $game->getEvent()->getId();
-            $json = json_encode($payload);
-            // Une seule publication pour l'écran d'animation et l'écran de salle :
-            // si le hub ne répond pas, on n'attend qu'une fois
-            $this->hub->publish(new Update(
-                ["/events/{$eventId}/games/{$game->getId()}/state", "/events/{$eventId}/public"],
-                $json,
-            ));
-        } catch (\Exception $e) {
-            // En environnement de test, Mercure peut ne pas être disponible - ignorer silencieusement
-        }
-
-        return $payload;
+        return $state;
     }
 
     #[Route('/game/{id}/winner/offline', name: 'admin_winner_offline', methods: ['POST'])]
