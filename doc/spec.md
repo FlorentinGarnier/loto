@@ -45,6 +45,8 @@ Les logiciels de loto existants se limitent presque tous à l'affichage du tirag
 
 S'y ajoute, en SaaS, l'absence d'installation : un navigateur et une connexion suffisent.
 
+Le message commercial tient en une phrase : l'organisateur enregistre ses parties, ses lots et ses propres cartons, et le jour J tout se déroule sur une mer d'huile. Le produit accepte donc tout carton de loto traditionnel, quelle que soit sa marque, à une seule condition : une référence et une grille propres à chaque carton (CAR-1, CAR-4, CAR-7).
+
 ---
 
 ## 2. Cadre réglementaire
@@ -233,6 +235,8 @@ La colonne « Où » dit quel logiciel porte l'exigence : **A** pour l'applicati
 | CAR-4 | Contrôle de validité d'une grille à la saisie : 3 lignes de 5 numéros entre 1 et 90, sans doublon. | M |
 | CAR-5 | Génération de planches de cartons en PDF à imprimer, pour les associations sans stock de cartons. | S |
 | CAR-6 | Bibliothèque des séries de cartons du commerce, pour éviter la saisie. | C |
+| CAR-7 | La grille d'un carton est unique **par organisation** : un carton dont la grille existe déjà sous une autre référence est refusé, à la saisie comme à l'import, avec la référence du carton en double. | M |
+| CAR-8 | Aucune marque ni série de cartons n'est imposée : tout carton conforme à CAR-4 est accepté. | M |
 
 ### 5.4 Joueurs
 
@@ -447,6 +451,7 @@ Mentions légales, conditions générales de vente et d'utilisation, politique d
 | Sauvegarde | Non vérifiée | `pg_dump` quotidien par base, restauration testée |
 | Événement courant | Le dernier événement créé, pour l'admin comme pour le public | Choix de l'événement animé ; adresse publique par événement |
 | Import de cartons | Ligne de commande | Interface web |
+| Unicité des cartons | Référence unique ; deux cartons peuvent avoir la même grille | Référence et grille uniques (CAR-7) |
 | Temps réel | Sujets Mercure construits sur l'identifiant de l'événement | Sujets non devinables, abonnements autorisés |
 | Journal des actions | Annoncé dans l'ancien cahier des charges, absent du code | À créer (ANI-2) |
 | Facturation | Aucune | Formules, paiement Mollie, factures, cycle de vie des instances |
@@ -459,7 +464,7 @@ Mentions légales, conditions générales de vente et d'utilisation, politique d
 | --- | --- | --- |
 | **0 – Assainissement** | Corrections qui ne dépendent pas du SaaS : gel, resets, repository, jeton CSRF obligatoire sur toutes les actions (fait) | Socle fiable |
 | **1 – Instances créées à la main** | DNS et certificat génériques, routage par sous-domaine, EXP-4, EXP-6, sauvegarde par base, ORG-2, ORG-3, EVT-1, PUB-1, PUB-2, §6.2 | L'exploitant crée une instance par association pilote, en accès gratuit |
-| **2 – Portail** | Dépôt du portail, site vitrine, ORG-1, ORG-6, ORG-7, EXP-1, EXP-5, worker de provisionnement, tunnel sans paiement (TUN-1 à TUN-5, TUN-11), EVT-4, CAR-2, CAR-4, JOU-1, JOU-2, ANI-1 | Une association s'inscrit seule et reçoit son instance |
+| **2 – Portail** | Dépôt du portail, site vitrine, ORG-1, ORG-6, ORG-7, EXP-1, EXP-5, worker de provisionnement, tunnel sans paiement (TUN-1 à TUN-5, TUN-11), EVT-4, CAR-2, CAR-4, CAR-7, CAR-8, JOU-1, JOU-2, ANI-1 | Une association s'inscrit seule et reçoit son instance |
 | **3 – Facturation et ouverture** | FAC-1 à FAC-5, FAC-7, tunnel avec paiement (TUN-6 à TUN-10, TUN-12 à TUN-16, TUN-18 à TUN-21), §6.3 à §6.5 | Paiement en ligne, ouverture commerciale |
 | **4 – Confort et fidélisation** | ORG-4, EVT-2, EVT-3, CAR-5, JOU-3, ANI-2, ANI-3, PUB-3, PUB-4, EXP-2, EXP-3, TUN-17 | Raisons de s'abonner à l'année |
 | **5 – Extensions** | ORG-5, ORG-8, CAR-6, ANI-4, PUB-5, FAC-6, vente de cartons en amont (sous réserve juridique) | Nouvelles sources de revenu |

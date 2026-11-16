@@ -77,7 +77,11 @@ Les prix viennent des sites des éditeurs ou de leurs revendeurs et peuvent avoi
 
 ## 4. Positionnement
 
-> Le loto sans contestation : chaque carton gagnant est repéré à l'instant du gain, devant toute la salle.
+> Vous enregistrez vos parties, vos lots et vos propres cartons. Le jour J, tout se déroule sur une mer d'huile.
+
+**Avant le loto.** L'organisateur saisit ses parties et ses lots, puis enregistre les cartons qu'il possède déjà. Le service accepte tout carton de loto traditionnel (trois lignes de cinq numéros, de 1 à 90), quelle que soit sa marque. Une seule contrainte : chaque carton porte une référence et une grille qui lui sont propres. C'est un argument face à Winloto, dont la détection est liée à des marques de cartons.
+
+**Le jour J.** Chaque carton gagnant est repéré à l'instant du gain et affiché devant toute la salle, la partie se fige pour trancher les égalités, et le registre des gagnants est prêt pour la remise des lots. L'ancien message, « le loto sans contestation », devient la preuve de cette promesse.
 
 Trois promesses, dans cet ordre : **fiable** le soir de l'événement, **prêt en un quart d'heure**, **moins cher qu'un lot de consolation**.
 
