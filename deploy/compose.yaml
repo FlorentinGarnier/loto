@@ -80,6 +80,11 @@ services:
             - traefik.http.routers.${COMPOSE_PROJECT_NAME}-mercure.tls=true
             - traefik.http.routers.${COMPOSE_PROJECT_NAME}-mercure.tls.certresolver=${TRAEFIK_CERTRESOLVER:?required}
             - traefik.http.routers.${COMPOSE_PROJECT_NAME}-mercure.service=${COMPOSE_PROJECT_NAME}-mercure
+            # En recette, le navigateur joint au hub l'en-tête Authorization de l'authentification Nginx (même hôte).
+            # Le hub n'accepte que « Bearer » et répondrait 401 : l'en-tête est retiré avant lui (valeur vide).
+            # L'application publie en interne, sans passer par Traefik : son jeton n'est pas concerné.
+            - traefik.http.routers.${COMPOSE_PROJECT_NAME}-mercure.middlewares=${COMPOSE_PROJECT_NAME}-mercure-anonyme
+            - traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-mercure-anonyme.headers.customrequestheaders.Authorization=
             - traefik.http.services.${COMPOSE_PROJECT_NAME}-mercure.loadbalancer.server.port=80
         logging: *logging
 
