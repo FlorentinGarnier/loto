@@ -12,6 +12,11 @@ Fonctionnalité: Administration lisible pour un bénévole
             | 1     | QUINE        | Machine à café |
             | 2     | DOUBLE_QUINE | Bon d'achat    |
 
+    Scénario: L'adresse du site mène au tableau de bord, qui donne accès à l'écran de salle
+        Quand j'ouvre la page "/"
+        Alors la page doit contenir "Tableau de bord"
+        Et la page doit contenir "Écran de salle"
+
     Scénario: Le tableau de bord parle le vocabulaire du loto, pas celui du code
         Étant donné que la partie d'ordre 1 est en statut "RUNNING"
         Quand j'ouvre la page "/admin"
