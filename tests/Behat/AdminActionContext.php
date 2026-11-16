@@ -184,6 +184,14 @@ final class AdminActionContext extends BaseContext
         Assert::assertNotContains($label, $this->buttonLabels(), "Bouton « {$label} » présent");
     }
 
+    #[Then('/^la page doit proposer le lien "([^"]*)" vers "([^"]*)"$/')]
+    public function laPageDoitProposerLeLienVers(string $label, string $path): void
+    {
+        $link = $this->client->getCrawler()->selectLink($label);
+        Assert::assertGreaterThan(0, $link->count(), "Lien « {$label} » absent");
+        Assert::assertSame($path, $link->attr('href'));
+    }
+
     #[Then('/^la requête doit être refusée$/')]
     public function laRequeteDoitEtreRefusee(): void
     {
