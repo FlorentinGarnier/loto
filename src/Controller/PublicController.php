@@ -19,10 +19,14 @@ final class PublicController extends AbstractController
     ) {
     }
 
+    /**
+     * L'adresse nue mène à l'administration (ou à la connexion) :
+     * l'écran de salle s'ouvre depuis le menu, sur le poste relié au vidéoprojecteur.
+     */
     #[Route('/', name: 'home')]
     public function home(): Response
     {
-        return $this->redirectToRoute('public_display');
+        return $this->redirectToRoute('admin_dashboard');
     }
 
     #[Route('/public', name: 'public_display')]

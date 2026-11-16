@@ -25,6 +25,8 @@
         <a href="{{ gamesHref ?? path('admin_game_current') }}" class="{{ route starts with 'admin_game_' ? 'is-active' }}">Parties</a>
         <a href="{{ path('admin_card_index') }}" class="{{ route starts with 'admin_card_' ? 'is-active' }}">Cartons</a>
         <a href="{{ path('admin_player_index') }}" class="{{ route starts with 'admin_player_' ? 'is-active' }}">Joueurs</a>
+        {# Nouvel onglet : il se glisse ensuite sur le vidéoprojecteur sans quitter l'administration #}
+        <a href="{{ path('public_display') }}" target="_blank" rel="noopener">Écran de salle</a>
         <a href="{{ path('app_logout') }}">Déconnexion</a>
       </div>
     </nav>
