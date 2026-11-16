@@ -259,11 +259,13 @@ Le projet utilise la CI/CD commune aux projets Symfony : `FlorentinGarnier/ci-sy
 
 - Demande de fusion : contrôles communs (Composer validate et audit, lint Twig/YAML/conteneur, assets, migrations sur base vide + `schema:validate`, PHPUnit, Behat), specs PHPSpec, construction des images `php` et `web`.
 - Fusion sur `main` : images publiées par digest sur GHCR, déploiement automatique sur staging, tests de fumée sur `/healthz`, retour arrière si échec.
-- GitHub Release publiée : mise en production des images validées en staging.
+- GitHub Release publiée : notes de version rédigées (`changelog.yml`). Une release ne déploie rien.
+
+Il n'y a pas de production unique : chaque client a son instance, créée et mise à jour sur le serveur par les scripts de `deploy/instances/` (`make provision`, `make instances-update`, voir `doc/spec.md` §6.1).
 
 Seul `.github/workflows/ci.yml` contient des réglages propres au projet. Le dossier `deploy/` fournit le Compose du serveur (base, php, web, Mercure, page de maintenance) et les modèles `app.env`, `stack.env` et `mercure.env`.
 
-Prérequis côté serveur et côté GitHub (environnements `staging` et `production`, variables et secrets) : voir le README de `ci-symfony`.
+Prérequis côté serveur et côté GitHub (environnement `staging`, variables et secrets) : voir le README de `ci-symfony`.
 
 14) Jeu de données de recette
 
