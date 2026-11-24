@@ -191,6 +191,29 @@
             text-align: center;
         }
 
+        /* Points clés : quatre panneaux Brume, sans couleur vive (la couleur reste réservée aux états du produit). */
+        .points { padding-bottom: calc(var(--espace) * 7); }
+        .points h2 {
+            margin: 0 0 calc(var(--espace) * 4);
+            font: 700 clamp(28px, 3.2vw, 40px)/1.15 var(--police-titres);
+            letter-spacing: -0.02em;
+            text-wrap: balance;
+        }
+        .points ul {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            gap: calc(var(--espace) * 2);
+        }
+        .points li {
+            padding: calc(var(--espace) * 3);
+            border-radius: var(--rayon-panneau);
+            background: var(--couleur-brume);
+        }
+        .points h3 { margin: 0 0 var(--espace); font: 600 20px/1.25 var(--police-titres); }
+        .points p { margin: 0; color: var(--couleur-encre-douce); }
+
         footer.page {
             padding-top: calc(var(--espace) * 3);
             padding-bottom: calc(var(--espace) * 4);
@@ -204,6 +227,13 @@
             .page { padding: 0 calc(var(--espace) * 5); }
             header.page { padding-top: calc(var(--espace) * 5); }
             main.page { grid-template-columns: 5fr 6fr; gap: calc(var(--espace) * 9); }
+            .points { padding-bottom: calc(var(--espace) * 11); }
+        }
+        @media (min-width: 640px) {
+            .points ul { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (min-width: 1040px) {
+            .points ul { grid-template-columns: repeat(4, 1fr); }
         }
         @media (max-width: 420px) {
             .numero { min-width: 104px; }
@@ -300,6 +330,28 @@
             <p class="gel" aria-hidden="true">Quine au 11e numéro · carton 0417</p>
         </div>
     </main>
+
+    <section class="page points" aria-labelledby="points-titre">
+        <h2 id="points-titre">Votre loto se passe comme d'habitude.</h2>
+        <ul>
+            <li>
+                <h3>Le tirage reste en salle</h3>
+                <p>Votre boulier, votre animateur, vos joueurs autour des tables. Quinou suit les numéros annoncés et ne tire rien à votre place.</p>
+            </li>
+            <li>
+                <h3>Vos cartons, quelle que soit la marque</h3>
+                <p>Vous enregistrez les cartons que vous avez déjà. Il suffit que chacun ait sa référence et sa grille.</p>
+            </li>
+            <li>
+                <h3>Le gain figé au bon numéro</h3>
+                <p>Quand un carton hors salle gagne, la partie s'arrête au numéro exact. Les égalités se tranchent sans discussion.</p>
+            </li>
+            <li>
+                <h3>Rien à installer</h3>
+                <p>Un navigateur suffit, sur l'ordinateur de la salle comme sur un téléphone.</p>
+            </li>
+        </ul>
+    </section>
 
     <footer class="page">
         <p>Quinou, l'outil de loto des associations de parents d'élèves et des clubs.</p>
